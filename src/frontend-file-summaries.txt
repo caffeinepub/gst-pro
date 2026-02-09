@@ -1,0 +1,3 @@
+{
+  "frontend/src/components/ProfileSetupDialog.tsx": "Modal dialog that prompts new users to enter their name on first login, using the correct showCloseButton prop instead of hideClose."
+}

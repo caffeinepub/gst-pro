@@ -1,0 +1,225 @@
+{
+  "kind": "build_request",
+  "title": "GST Pro — GST Billing (Invoicing) Application",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Create the application branding and shell for a GST billing app named \"GST Pro\", including app title, navigation, and core pages scaffold (Dashboard, Customers, Items, Invoices, Settings).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The app name \"GST Pro\" is visible in the header/sidebar and browser title.",
+        "Navigation routes exist for Dashboard, Customers, Items, Invoices, and Settings.",
+        "Each page renders a clear heading and empty-state content when no data exists."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Implement Internet Identity sign-in/out and ensure all GST Pro data is scoped to the signed-in user (Principal).",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Unauthenticated users are prompted to sign in before accessing app data.",
+        "After sign-in, created customers/items/invoices are only visible to the same signed-in Principal.",
+        "Sign out returns the app to an unauthenticated state with no private data shown."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add business profile settings needed for invoicing: business name, address, GSTIN, state, and default invoice prefix/starting number.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A Settings page allows viewing/editing business profile fields.",
+        "Business profile is persisted and reloaded on refresh.",
+        "Invoice creation uses the saved defaults (prefix/starting number) when generating the next invoice number."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Implement Customer management: create, edit, list, and delete customers with fields: customer name, billing address, GSTIN (optional), state, and contact info (optional).",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Customers can be created, edited, and deleted from the UI.",
+        "Customer list shows key fields and supports basic search/filter by name.",
+        "Customer data persists across refresh for the signed-in user."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Implement Item/Service catalog management: create, edit, list, and delete items with fields: name, description (optional), HSN/SAC (optional), unit price, and default GST rate.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Items can be created, edited, and deleted from the UI.",
+        "Items list shows name, price, and GST rate and supports basic search/filter by name.",
+        "Item data persists across refresh for the signed-in user."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Implement invoice creation and editing with line items (item/service, quantity, unit price, discount optional), automatic calculations for taxable value and GST amounts, and support for intra-state (CGST+SGST) vs inter-state (IGST) based on business/customer state.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "User can select a customer and add/remove multiple line items.",
+        "Totals update automatically: subtotal/taxable amount, CGST/SGST or IGST, and grand total.",
+        "Tax type switches correctly based on state comparison (same state => CGST+SGST; different state => IGST).",
+        "Invoices have an invoice number, invoice date, and due date (optional)."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Add invoice listing and details view with status management (e.g., Draft/Finalized) and safe deletion rules.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Invoices page lists invoices with number, customer, date, total, and status.",
+        "Invoice detail page shows full breakdown including GST components and line items.",
+        "Users can delete invoices; if status rules are implemented, the UI prevents disallowed actions and shows an explanatory message."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Provide invoice printing/export via a print-friendly invoice layout (browser print) that includes business details, customer details, invoice metadata, line items, GST breakdown, and totals.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Invoice detail includes a Print action that opens a print-friendly layout.",
+        "Printed output includes GSTIN fields (where available), states, invoice number/date, and a clear tax breakdown (CGST/SGST or IGST).",
+        "Layout remains readable on A4/Letter paper sizes."
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Persist all GST Pro data (business profile, customers, items, invoices) in the Motoko canister with stable storage so it survives canister upgrades.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Data remains after page refresh and after redeploy/upgrade (using stable storage patterns).",
+        "All storage is scoped by Principal so multiple users can use the app independently."
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Apply a coherent visual theme for GST Pro across the app (colors, typography, spacing, and component styling) suitable for a professional billing tool; avoid blue/purple as the primary palette.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All core pages share consistent typography, spacing, and component styles.",
+        "Primary UI palette is not blue/purple (except where unavoidable in existing components).",
+        "Forms, tables, and call-to-action buttons look consistent across pages."
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "text": "Generate and include basic static brand assets for GST Pro (logo + small app icon) and render them in the UI (header/login/loading states as appropriate).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2"
+        ],
+        "quotes": [
+          "CREATE an application for gst billing in name is gst pro"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Generated images are stored under frontend/public/assets/generated and are referenced directly by the frontend.",
+        "Logo is displayed in the app shell (e.g., sidebar/header).",
+        "App icon is visible where appropriate (e.g., favicon/app header)."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor (all logic in backend/main.mo).",
+    "Do not modify frontend files under immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "No external databases or third-party auth providers; use Internet Identity only.",
+    "No real-time features (no WebSockets)."
+  ],
+  "nonGoals": [
+    "Full accounting ledger, profit/loss, or inventory stock tracking.",
+    "E-way bill generation or government portal integrations.",
+    "Online payments, payment links, or Stripe integration.",
+    "Multi-organization roles/permissions beyond per-Principal data separation.",
+    "Emailing invoices via SMTP/SendGrid/Mailgun or other external email services."
+  ],
+  "imageRequirements": {
+    "required": [
+      "Minimal \"GST Pro\" wordmark logo, clean geometric style, dark text on light background (gst-pro-logo.dim_1200x300.png)",
+      "Simple app icon with \"GP\" monogram, flat design, high contrast (gst-pro-icon.dim_256x256.png)"
+    ],
+    "edits": []
+  }
+}

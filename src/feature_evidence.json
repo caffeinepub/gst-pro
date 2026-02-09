@@ -1,0 +1,225 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-create-the-application-branding-and-shell-for-a-gst-billing-app-named-gst-pro-including-app-title-navigation-and-core-pages-scaffold-dashboard-customers-items-invoices-settings",
+      "featureTitle": "Create the application branding and shell for a GST billing app named \"GST Pro\", including app title, navigation, and core pages scaffold (Dashboard, Customers, Items, Invoices, Settings).",
+      "files": [
+        "frontend/index.html",
+        "frontend/src/App.tsx",
+        "frontend/src/components/AppShell.tsx",
+        "frontend/src/pages/CustomersPage.tsx",
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/pages/InvoicesPage.tsx",
+        "frontend/src/pages/ItemsPage.tsx",
+        "frontend/src/pages/SettingsPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-internet-identity-sign-in-out-and-ensure-all-gst-pro-data-is-scoped-to-the-signed-in-user-principal",
+      "featureTitle": "Implement Internet Identity sign-in/out and ensure all GST Pro data is scoped to the signed-in user (Principal).",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AuthGate.tsx",
+        "frontend/src/components/LoginButton.tsx",
+        "frontend/src/components/ProfileSetupDialog.tsx",
+        "frontend/src/hooks/useCurrentUserProfile.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-business-profile-settings-needed-for-invoicing-business-name-address-gstin-state-and-default-invoice-prefix-starting-number",
+      "featureTitle": "Add business profile settings needed for invoicing: business name, address, GSTIN, state, and default invoice prefix/starting number.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/InvoiceEditorPage.tsx",
+        "frontend/src/pages/SettingsPage.tsx",
+        "frontend/src/utils/invoiceNumbering.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-customer-management-create-edit-list-and-delete-customers-with-fields-customer-name-billing-address-gstin-optional-state-and-contact-info-optional",
+      "featureTitle": "Implement Customer management: create, edit, list, and delete customers with fields: customer name, billing address, GSTIN (optional), state, and contact info (optional).",
+      "files": [
+        "frontend/src/components/customers/CustomerFormDialog.tsx",
+        "frontend/src/components/customers/CustomersTable.tsx",
+        "frontend/src/pages/CustomersPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-item-service-catalog-management-create-edit-list-and-delete-items-with-fields-name-description-optional-hsn-sac-optional-unit-price-and-default-gst-rate",
+      "featureTitle": "Implement Item/Service catalog management: create, edit, list, and delete items with fields: name, description (optional), HSN/SAC (optional), unit price, and default GST rate.",
+      "files": [
+        "frontend/src/components/items/ItemFormDialog.tsx",
+        "frontend/src/components/items/ItemsTable.tsx",
+        "frontend/src/pages/ItemsPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-invoice-creation-and-editing-with-line-items-item-service-quantity-unit-price-discount-optional-automatic-calculations-for-taxable-value-and-gst-amounts-and-support-for-intra-state-cgst-sgst-vs-inter-state-igst-based-on-business-customer-state",
+      "featureTitle": "Implement invoice creation and editing with line items (item/service, quantity, unit price, discount optional), automatic calculations for taxable value and GST amounts, and support for intra-state (CGST+SGST) vs inter-state (IGST) based on business/customer state.",
+      "files": [
+        "frontend/src/components/invoices/InvoiceLineItemsEditor.tsx",
+        "frontend/src/pages/InvoiceEditorPage.tsx",
+        "frontend/src/utils/gstCalculations.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-invoice-listing-and-details-view-with-status-management-e-g-draft-finalized-and-safe-deletion-rules",
+      "featureTitle": "Add invoice listing and details view with status management (e.g., Draft/Finalized) and safe deletion rules.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/invoices/InvoiceStatusBadge.tsx",
+        "frontend/src/pages/InvoiceDetailPage.tsx",
+        "frontend/src/pages/InvoicesPage.tsx",
+        "frontend/src/utils/invoiceRules.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-provide-invoice-printing-export-via-a-print-friendly-invoice-layout-browser-print-that-includes-business-details-customer-details-invoice-metadata-line-items-gst-breakdown-and-totals",
+      "featureTitle": "Provide invoice printing/export via a print-friendly invoice layout (browser print) that includes business details, customer details, invoice metadata, line items, GST breakdown, and totals.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/index.css",
+        "frontend/src/pages/InvoiceDetailPage.tsx",
+        "frontend/src/pages/InvoicePrintPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-coherent-visual-theme-for-gst-pro-across-the-app-colors-typography-spacing-and-component-styling-suitable-for-a-professional-billing-tool-avoid-blue-purple-as-the-primary-palette",
+      "featureTitle": "Apply a coherent visual theme for GST Pro across the app (colors, typography, spacing, and component styling) suitable for a professional billing tool; avoid blue/purple as the primary palette.",
+      "files": [
+        "frontend/src/components/AppShell.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-10"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-generate-and-include-basic-static-brand-assets-for-gst-pro-logo-small-app-icon-and-render-them-in-the-ui-header-login-loading-states-as-appropriate",
+      "featureTitle": "Generate and include basic static brand assets for GST Pro (logo + small app icon) and render them in the UI (header/login/loading states as appropriate).",
+      "files": [
+        "frontend/index.html",
+        "frontend/src/components/AppShell.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-11"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

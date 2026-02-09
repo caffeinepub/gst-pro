@@ -1,0 +1,111 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-09T13:27:05.754Z",
+  "summary": "Diff adds a new Motoko backend actor with types and per-Principal maps plus a large new React frontend shell (routing via TanStack Router, AuthGate using Internet Identity, customers/items UI, invoice line-item editor, theme + print CSS, and generated asset references). However, several invoicing and persistence requirements are either missing or not evidenced in the shown diff, and some unrequested access-control/admin-token functionality appears added.",
+  "missing_requirements": [
+    {
+      "id": "REQ-6",
+      "requirement": "Invoice creation/editing must include invoice number, invoice date, due date (optional), automatic taxable/GST calculations, and intra-state (CGST+SGST) vs inter-state (IGST) switching based on business/customer state.",
+      "reason": "Backend Invoice type shown lacks invoice number/date/due date and any calculated totals/GST breakdown fields; diff evidence does not show calculation logic or state-based CGST/SGST vs IGST switching (only a line-items editor UI is shown).",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/components/invoices/InvoiceLineItemsEditor.tsx"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Invoice listing and invoice details view with status management and safe deletion rules.",
+      "reason": "While an InvoiceStatusBadge component exists, the diff evidence does not show an invoices list page, invoice detail page, deletion rules, or the backend methods to list/get/delete invoices with status constraints.",
+      "evidence": [
+        "frontend/src/components/invoices/InvoiceStatusBadge.tsx",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "requirement": "Invoice printing/export via a print-friendly invoice layout with business/customer details, metadata, line items, GST breakdown, and totals; include a Print action.",
+      "reason": "Print-oriented CSS exists, but there is no evidenced invoice detail/print layout component nor a Print action in the shown diff.",
+      "evidence": [
+        "frontend/src/index.css"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "requirement": "Persist all GST Pro data in Motoko stable storage so it survives canister upgrades (using stable storage patterns), scoped by Principal.",
+      "reason": "backend/main.mo shows in-memory Maps labeled 'Stable Storage' but no Motoko stable variables and no preupgrade/postupgrade hooks are evidenced; as shown, this would not survive upgrades.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-11",
+      "requirement": "Generated logo + icon images must be stored under frontend/public/assets/generated and referenced directly by the frontend.",
+      "reason": "Frontend references the generated asset paths, but the actual image files under frontend/public/assets/generated are not evidenced in the provided diff summary (they may be in omitted files, but not shown).",
+      "evidence": [
+        "frontend/src/components/AppShell.tsx",
+        "frontend/src/components/AuthGate.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Admin/role-based access control initialization via a secret URL parameter (caffeineAdminToken) and backend authorization mixins.",
+      "reason": "BuildRequest specifies Internet Identity only and no advanced org roles/permissions beyond per-Principal data separation; introducing admin secret-token initialization and authorization mixins is not requested.",
+      "evidence": [
+        "frontend/src/hooks/useActor.ts",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "User profile onboarding dialog and user profile storage (name).",
+      "reason": "BuildRequest does not ask for a separate user profile feature; only business profile settings are required.",
+      "evidence": [
+        "frontend/src/components/ProfileSetupDialog.tsx",
+        "frontend/src/hooks/useCurrentUserProfile.ts",
+        "backend/main.mo"
+      ]
+    }
+  ],
+  "confidence": 0.68,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/components/AppShell.tsx",
+    "frontend/src/components/AuthGate.tsx",
+    "frontend/src/components/LoginButton.tsx",
+    "frontend/src/components/ProfileSetupDialog.tsx",
+    "frontend/src/components/customers/CustomerFormDialog.tsx",
+    "frontend/src/components/customers/CustomersTable.tsx",
+    "frontend/src/components/invoices/InvoiceLineItemsEditor.tsx",
+    "frontend/src/components/invoices/InvoiceStatusBadge.tsx",
+    "frontend/src/components/items/ItemFormDialog.tsx",
+    "frontend/src/components/items/ItemsTable.tsx",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useCurrentUserProfile.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/pages/CustomersPage.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
+    "frontend/src/pages/InvoiceDetailPage.tsx",
+    "frontend/src/pages/InvoiceEditorPage.tsx",
+    "frontend/src/pages/InvoicePrintPage.tsx",
+    "frontend/src/pages/InvoicesPage.tsx",
+    "frontend/src/pages/ItemsPage.tsx",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/routeTree.tsx",
+    "frontend/src/utils/formatters.ts",
+    "frontend/src/utils/gstCalculations.ts",
+    "frontend/src/utils/invoiceNumbering.ts",
+    "frontend/src/utils/invoiceRules.ts",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}
