@@ -34,9 +34,11 @@ import InvoiceStatusBadge from '../components/invoices/InvoiceStatusBadge';
 import { calculateInvoiceTotals } from '../utils/gstCalculations';
 import { formatCurrency } from '../utils/formatters';
 import { formatInvoiceNumber } from '../utils/invoiceNumbering';
+import { formatInvoiceDate } from '../utils/dateFormat';
 import { canDeleteInvoice, getDeleteErrorMessage } from '../utils/invoiceRules';
 import { InvoiceStatus } from '../backend';
 import { toast } from 'sonner';
+import { getUserFacingError } from '../utils/userFacingError';
 
 export default function InvoiceDetailPage() {
   const navigate = useNavigate();
@@ -67,7 +69,8 @@ export default function InvoiceDetailPage() {
       await finalizeInvoice.mutateAsync(invoice.id);
       toast.success('Invoice finalized successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to finalize invoice');
+      const errorMessage = getUserFacingError(error);
+      toast.error(errorMessage);
     }
   };
 
@@ -77,7 +80,8 @@ export default function InvoiceDetailPage() {
       toast.success('Invoice deleted successfully');
       navigate({ to: '/invoices' });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete invoice');
+      const errorMessage = getUserFacingError(error);
+      toast.error(errorMessage);
     }
   };
 
@@ -178,6 +182,24 @@ export default function InvoiceDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
+              <CardTitle>Invoice Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">Invoice Number</div>
+                  <div className="font-medium">{formatInvoiceNumber(invoice.id, businessProfile)}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Invoice Date</div>
+                  <div className="font-medium">{formatInvoiceDate(invoice.invoiceDate)}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Customer Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -227,7 +249,12 @@ export default function InvoiceDetailPage() {
                     const total = amount - discount;
                     return (
                       <TableRow key={index}>
-                        <TableCell>{item?.name || 'Unknown Item'}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{item?.name || 'Unknown Item'}</div>
+                          {item?.description && (
+                            <div className="text-sm text-muted-foreground">{item.description}</div>
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">{lineItem.quantity}</TableCell>
                         <TableCell className="text-right">{formatCurrency(lineItem.unitPrice)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(discount)}</TableCell>
@@ -245,6 +272,61 @@ export default function InvoiceDetailPage() {
                       {formatCurrency(totals.subtotal)}
                     </TableCell>
                   </TableRow>
+                  {totals.totalDiscount > 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-right font-medium">
+                        Total Discount
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(totals.totalDiscount)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-right font-medium">
+                      Taxable Amount
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(totals.taxableAmount)}
+                    </TableCell>
+                  </TableRow>
+                  {totals.isInterState ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-right font-medium">
+                        IGST
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(totals.igst)}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <>
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-right font-medium">
+                          CGST
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(totals.cgst)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-right font-medium">
+                          SGST
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(totals.sgst)}
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  )}
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-right text-lg font-bold">
+                      Grand Total
+                    </TableCell>
+                    <TableCell className="text-right text-lg font-bold">
+                      {formatCurrency(totals.grandTotal)}
+                    </TableCell>
+                  </TableRow>
                 </TableFooter>
               </Table>
             </CardContent>
@@ -254,7 +336,7 @@ export default function InvoiceDetailPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Tax Summary</CardTitle>
+              <CardTitle>Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
@@ -290,43 +372,17 @@ export default function InvoiceDetailPage() {
               </div>
               <div className="border-t pt-3">
                 <div className="flex justify-between">
-                  <span className="font-semibold">Grand Total</span>
+                  <span className="font-semibold">Total</span>
                   <span className="text-lg font-bold">{formatCurrency(totals.grandTotal)}</span>
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground pt-2">
-                {totals.isInterState ? 'Inter-state' : 'Intra-state'} transaction
-              </div>
+              {customer && businessProfile && (
+                <div className="text-xs text-muted-foreground pt-2">
+                  {totals.isInterState ? 'Inter-state' : 'Intra-state'} transaction
+                </div>
+              )}
             </CardContent>
           </Card>
-
-          {businessProfile && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Business Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <div className="text-sm text-muted-foreground">Business Name</div>
-                  <div className="font-medium">{businessProfile.businessName}</div>
-                </div>
-                <div>
-                  <div className="text-sm text-muted-foreground">Address</div>
-                  <div className="font-medium">{businessProfile.address}</div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-muted-foreground">State</div>
-                    <div className="font-medium">{businessProfile.state}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">GSTIN</div>
-                    <div className="font-medium">{businessProfile.gstin}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </div>

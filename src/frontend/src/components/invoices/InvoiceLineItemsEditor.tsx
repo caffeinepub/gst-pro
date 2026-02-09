@@ -17,12 +17,14 @@ interface InvoiceLineItemsEditorProps {
   lineItems: LineItem[];
   onChange: (lineItems: LineItem[]) => void;
   availableItems: Item[];
+  onAddItem?: () => void;
 }
 
 export default function InvoiceLineItemsEditor({
   lineItems,
   onChange,
   availableItems,
+  onAddItem,
 }: InvoiceLineItemsEditorProps) {
   const addLineItem = () => {
     if (availableItems.length === 0) return;
@@ -60,8 +62,14 @@ export default function InvoiceLineItemsEditor({
 
   if (availableItems.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>No items available. Please add items first.</p>
+      <div className="text-center py-8">
+        <p className="text-muted-foreground mb-4">No items available. Please add an item first.</p>
+        {onAddItem && (
+          <Button type="button" onClick={onAddItem} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Item
+          </Button>
+        )}
       </div>
     );
   }
@@ -153,10 +161,18 @@ export default function InvoiceLineItemsEditor({
         </TableBody>
       </Table>
 
-      <Button type="button" variant="outline" onClick={addLineItem} className="gap-2">
-        <Plus className="h-4 w-4" />
-        Add Line Item
-      </Button>
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={addLineItem} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Line Item
+        </Button>
+        {onAddItem && (
+          <Button type="button" variant="outline" onClick={onAddItem} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Item
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

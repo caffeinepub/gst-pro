@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useGetItems } from '../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, AlertCircle } from 'lucide-react';
 import ItemsTable from '../components/items/ItemsTable';
 import ItemFormDialog from '../components/items/ItemFormDialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Item } from '../backend';
+import { getUserFacingError } from '../utils/userFacingError';
 
 export default function ItemsPage() {
-  const { data: items = [], isLoading } = useGetItems();
+  const { data: items = [], isLoading, isError, error } = useGetItems();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -39,6 +41,13 @@ export default function ItemsPage() {
           Add Item
         </Button>
       </div>
+
+      {isError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{getUserFacingError(error)}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">

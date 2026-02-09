@@ -24,6 +24,7 @@ import { Edit, Trash2, Package } from 'lucide-react';
 import type { Item } from '../../backend';
 import { formatCurrency } from '../../utils/formatters';
 import { toast } from 'sonner';
+import { getUserFacingError } from '../../utils/userFacingError';
 
 interface ItemsTableProps {
   items: Item[];
@@ -49,7 +50,8 @@ export default function ItemsTable({ items, isLoading, onEdit }: ItemsTableProps
         setDeleteDialogOpen(false);
         setItemToDelete(null);
       } catch (error: any) {
-        toast.error(error.message || 'Failed to delete item');
+        const errorMessage = getUserFacingError(error);
+        toast.error(errorMessage);
       }
     }
   };
@@ -78,7 +80,8 @@ export default function ItemsTable({ items, isLoading, onEdit }: ItemsTableProps
 
   return (
     <>
-      <Card>
+      {/* Desktop Table View */}
+      <Card className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -105,16 +108,18 @@ export default function ItemsTable({ items, isLoading, onEdit }: ItemsTableProps
                 <TableCell className="text-right">{item.defaultGstRate}%</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(item)}>
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="touch-target">
                       <Edit className="h-4 w-4" />
+                      <span className="ml-2">Edit</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteClick(item)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive touch-target"
                     >
                       <Trash2 className="h-4 w-4" />
+                      <span className="ml-2">Delete</span>
                     </Button>
                   </div>
                 </TableCell>
@@ -123,6 +128,56 @@ export default function ItemsTable({ items, isLoading, onEdit }: ItemsTableProps
           </TableBody>
         </Table>
       </Card>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {items.map((item) => (
+          <Card key={item.id.toString()} className="p-4">
+            <div className="space-y-3">
+              <div>
+                <div className="font-semibold text-lg">{item.name}</div>
+                {item.description && (
+                  <div className="text-sm text-muted-foreground">{item.description}</div>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <div className="text-muted-foreground">HSN/SAC</div>
+                  <div className="font-medium">{item.hsnSac || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">GST Rate</div>
+                  <div className="font-medium">{item.defaultGstRate}%</div>
+                </div>
+              </div>
+
+              <div className="text-lg font-semibold">{formatCurrency(item.unitPrice)}</div>
+
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => onEdit(item)} 
+                  className="flex-1 touch-target"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeleteClick(item)}
+                  className="flex-1 text-destructive hover:text-destructive touch-target"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

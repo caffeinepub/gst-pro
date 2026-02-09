@@ -23,6 +23,7 @@ import {
 import { Edit, Trash2, Users } from 'lucide-react';
 import type { Customer } from '../../backend';
 import { toast } from 'sonner';
+import { getUserFacingError } from '../../utils/userFacingError';
 
 interface CustomersTableProps {
   customers: Customer[];
@@ -48,7 +49,8 @@ export default function CustomersTable({ customers, isLoading, onEdit }: Custome
         setDeleteDialogOpen(false);
         setCustomerToDelete(null);
       } catch (error: any) {
-        toast.error(error.message || 'Failed to delete customer');
+        const errorMessage = getUserFacingError(error);
+        toast.error(errorMessage);
       }
     }
   };
@@ -77,7 +79,8 @@ export default function CustomersTable({ customers, isLoading, onEdit }: Custome
 
   return (
     <>
-      <Card>
+      {/* Desktop Table View */}
+      <Card className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -97,16 +100,18 @@ export default function CustomersTable({ customers, isLoading, onEdit }: Custome
                 <TableCell>{customer.contactInfo || '-'}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => onEdit(customer)}>
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(customer)} className="touch-target">
                       <Edit className="h-4 w-4" />
+                      <span className="ml-2">Edit</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteClick(customer)}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive touch-target"
                     >
                       <Trash2 className="h-4 w-4" />
+                      <span className="ml-2">Delete</span>
                     </Button>
                   </div>
                 </TableCell>
@@ -115,6 +120,52 @@ export default function CustomersTable({ customers, isLoading, onEdit }: Custome
           </TableBody>
         </Table>
       </Card>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {customers.map((customer) => (
+          <Card key={customer.id.toString()} className="p-4">
+            <div className="space-y-3">
+              <div>
+                <div className="font-semibold text-lg">{customer.name}</div>
+                <div className="text-sm text-muted-foreground">{customer.state}</div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <div className="text-muted-foreground">GSTIN</div>
+                  <div className="font-medium">{customer.gstin || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Contact</div>
+                  <div className="font-medium">{customer.contactInfo || '-'}</div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => onEdit(customer)} 
+                  className="flex-1 touch-target"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDeleteClick(customer)}
+                  className="flex-1 text-destructive hover:text-destructive touch-target"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

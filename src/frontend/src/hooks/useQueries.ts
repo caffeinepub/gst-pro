@@ -1,18 +1,66 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { BusinessProfile, Customer, Item, Invoice, LineItem, InvoiceStatus } from '../backend';
+import type {
+  BusinessProfile,
+  Customer,
+  Item,
+  Invoice,
+  LineItem,
+  InvoiceStatus,
+  UserProfile,
+  ReturnType_,
+  FilingFrequency,
+  GSTFilingStatus,
+} from '../backend';
 
-// Business Profile
+// User Profile Queries
+export function useGetCallerUserProfile() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  const query = useQuery<UserProfile | null>({
+    queryKey: ['currentUserProfile'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCallerUserProfile();
+    },
+    enabled: !!actor && !actorFetching,
+    retry: false,
+  });
+
+  // Return custom state that properly reflects actor dependency
+  return {
+    ...query,
+    isLoading: actorFetching || query.isLoading,
+    isFetched: !!actor && query.isFetched,
+  };
+}
+
+export function useSaveCallerUserProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (profile: UserProfile) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.saveCallerUserProfile(profile);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
+
+// Business Profile Queries
 export function useGetBusinessProfile() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<BusinessProfile | null>({
     queryKey: ['businessProfile'],
     queryFn: async () => {
-      if (!actor) return null;
+      if (!actor) throw new Error('Actor not available');
       return actor.getBusinessProfile();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !actorFetching,
   });
 }
 
@@ -31,30 +79,30 @@ export function useSaveBusinessProfile() {
   });
 }
 
-// Customers
+// Customer Queries
 export function useGetCustomers() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Customer[]>({
     queryKey: ['customers'],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error('Actor not available');
       return actor.getCustomers();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !actorFetching,
   });
 }
 
 export function useGetCustomer(id: bigint | null) {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Customer | null>({
     queryKey: ['customer', id?.toString()],
     queryFn: async () => {
-      if (!actor || !id) return null;
+      if (!actor || id === null) return null;
       return actor.getCustomer(id);
     },
-    enabled: !!actor && !isFetching && id !== null,
+    enabled: !!actor && !actorFetching && id !== null,
   });
 }
 
@@ -63,7 +111,7 @@ export function useAddCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async (params: {
       name: string;
       billingAddress: string;
       gstin: string | null;
@@ -72,11 +120,11 @@ export function useAddCustomer() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.addCustomer(
-        data.name,
-        data.billingAddress,
-        data.gstin,
-        data.state,
-        data.contactInfo
+        params.name,
+        params.billingAddress,
+        params.gstin,
+        params.state,
+        params.contactInfo
       );
     },
     onSuccess: () => {
@@ -90,7 +138,7 @@ export function useEditCustomer() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async (params: {
       id: bigint;
       name: string;
       billingAddress: string;
@@ -100,12 +148,12 @@ export function useEditCustomer() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.editCustomer(
-        data.id,
-        data.name,
-        data.billingAddress,
-        data.gstin,
-        data.state,
-        data.contactInfo
+        params.id,
+        params.name,
+        params.billingAddress,
+        params.gstin,
+        params.state,
+        params.contactInfo
       );
     },
     onSuccess: (_, variables) => {
@@ -130,30 +178,30 @@ export function useDeleteCustomer() {
   });
 }
 
-// Items
+// Item Queries
 export function useGetItems() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Item[]>({
     queryKey: ['items'],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error('Actor not available');
       return actor.getItems();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !actorFetching,
   });
 }
 
 export function useGetItem(id: bigint | null) {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Item | null>({
     queryKey: ['item', id?.toString()],
     queryFn: async () => {
-      if (!actor || !id) return null;
+      if (!actor || id === null) return null;
       return actor.getItem(id);
     },
-    enabled: !!actor && !isFetching && id !== null,
+    enabled: !!actor && !actorFetching && id !== null,
   });
 }
 
@@ -162,7 +210,7 @@ export function useAddItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async (params: {
       name: string;
       description: string | null;
       hsnSac: string | null;
@@ -171,11 +219,11 @@ export function useAddItem() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.addItem(
-        data.name,
-        data.description,
-        data.hsnSac,
-        data.unitPrice,
-        data.defaultGstRate
+        params.name,
+        params.description,
+        params.hsnSac,
+        params.unitPrice,
+        params.defaultGstRate
       );
     },
     onSuccess: () => {
@@ -189,7 +237,7 @@ export function useEditItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async (params: {
       id: bigint;
       name: string;
       description: string | null;
@@ -199,12 +247,12 @@ export function useEditItem() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.editItem(
-        data.id,
-        data.name,
-        data.description,
-        data.hsnSac,
-        data.unitPrice,
-        data.defaultGstRate
+        params.id,
+        params.name,
+        params.description,
+        params.hsnSac,
+        params.unitPrice,
+        params.defaultGstRate
       );
     },
     onSuccess: (_, variables) => {
@@ -229,30 +277,30 @@ export function useDeleteItem() {
   });
 }
 
-// Invoices
+// Invoice Queries
 export function useGetInvoices() {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Invoice[]>({
     queryKey: ['invoices'],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error('Actor not available');
       return actor.getInvoices();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !actorFetching,
   });
 }
 
 export function useGetInvoice(id: bigint | null) {
-  const { actor, isFetching } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Invoice | null>({
     queryKey: ['invoice', id?.toString()],
     queryFn: async () => {
-      if (!actor || !id) return null;
+      if (!actor || id === null) return null;
       return actor.getInvoice(id);
     },
-    enabled: !!actor && !isFetching && id !== null,
+    enabled: !!actor && !actorFetching && id !== null,
   });
 }
 
@@ -261,9 +309,13 @@ export function useCreateInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { customerId: bigint; lineItems: LineItem[] }) => {
+    mutationFn: async (params: {
+      customerId: bigint;
+      lineItems: LineItem[];
+      invoiceDate: string;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createInvoice(data.customerId, data.lineItems);
+      return actor.createInvoice(params.customerId, params.lineItems, params.invoiceDate);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
@@ -276,18 +328,40 @@ export function useEditInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: {
+    mutationFn: async (params: {
       id: bigint;
       customerId: bigint;
       lineItems: LineItem[];
       status: InvoiceStatus;
+      invoiceDate: string;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.editInvoice(data.id, data.customerId, data.lineItems, data.status);
+      return actor.editInvoice(
+        params.id,
+        params.customerId,
+        params.lineItems,
+        params.status,
+        params.invoiceDate
+      );
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       queryClient.invalidateQueries({ queryKey: ['invoice', variables.id.toString()] });
+    },
+  });
+}
+
+export function useDeleteInvoice() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteInvoice(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
     },
   });
 }
@@ -308,17 +382,23 @@ export function useFinalizeInvoice() {
   });
 }
 
-export function useDeleteInvoice() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
+// GST Filing Status Query
+export function useGetGstFilingStatus(
+  gstin: string,
+  period: string,
+  returnType: ReturnType_,
+  filingFrequency: FilingFrequency
+) {
+  const { actor, isFetching: actorFetching } = useActor();
 
-  return useMutation({
-    mutationFn: async (id: bigint) => {
+  return useQuery<GSTFilingStatus>({
+    queryKey: ['gstFilingStatus', gstin, period, returnType, filingFrequency],
+    queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.deleteInvoice(id);
+      return actor.fetchGstFilingStatus(gstin, period, returnType, filingFrequency);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    },
+    enabled: !!actor && !actorFetching && !!gstin && !!period,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
   });
 }

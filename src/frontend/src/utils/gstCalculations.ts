@@ -1,4 +1,4 @@
-import type { LineItem, Item, BusinessProfile, Customer } from '../backend';
+import type { LineItem, Item, BusinessProfile, Customer, Invoice } from '../backend';
 
 export interface InvoiceTotals {
   subtotal: number;
@@ -65,4 +65,22 @@ export function calculateInvoiceTotals(
     grandTotal,
     isInterState,
   };
+}
+
+export function calculateInvoiceTotalsFromInvoice(
+  invoice: Invoice,
+  items: Item[],
+  businessProfile?: BusinessProfile | null,
+  customer?: Customer
+): InvoiceTotals {
+  return calculateInvoiceTotals(invoice.lineItems, items, businessProfile, customer);
+}
+
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }

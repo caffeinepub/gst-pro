@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { useGetCustomers } from '../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, AlertCircle } from 'lucide-react';
 import CustomersTable from '../components/customers/CustomersTable';
 import CustomerFormDialog from '../components/customers/CustomerFormDialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Customer } from '../backend';
+import { getUserFacingError } from '../utils/userFacingError';
 
 export default function CustomersPage() {
-  const { data: customers = [], isLoading } = useGetCustomers();
+  const { data: customers = [], isLoading, isError, error } = useGetCustomers();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -39,6 +41,13 @@ export default function CustomersPage() {
           Add Customer
         </Button>
       </div>
+
+      {isError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{getUserFacingError(error)}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">

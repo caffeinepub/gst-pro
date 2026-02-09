@@ -1,111 +1,59 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T13:27:05.754Z",
-  "summary": "Diff adds a new Motoko backend actor with types and per-Principal maps plus a large new React frontend shell (routing via TanStack Router, AuthGate using Internet Identity, customers/items UI, invoice line-item editor, theme + print CSS, and generated asset references). However, several invoicing and persistence requirements are either missing or not evidenced in the shown diff, and some unrequested access-control/admin-token functionality appears added.",
+  "generatedAt": "2026-02-09T22:28:19.054Z",
+  "summary": "Diff adds a mobile navigation drawer with “Settings” and “GST Status” links, refactors GST Status page to use generated ReturnType_ enum (likely fixing “ReturnType is not defined”), and extends backend/FE types plus a new GST Profile UI section. However, the diff evidence is insufficient to confirm the backend actually fetches real filing status data from the GST portal endpoint or that all required loading/empty/error behaviors and English placeholders are implemented. Several unrelated PWA/service-worker and other UI enhancements also appear in the change summary but were not requested.",
   "missing_requirements": [
     {
-      "id": "REQ-6",
-      "requirement": "Invoice creation/editing must include invoice number, invoice date, due date (optional), automatic taxable/GST calculations, and intra-state (CGST+SGST) vs inter-state (IGST) switching based on business/customer state.",
-      "reason": "Backend Invoice type shown lacks invoice number/date/due date and any calculated totals/GST breakdown fields; diff evidence does not show calculation logic or state-based CGST/SGST vs IGST switching (only a line-items editor UI is shown).",
+      "id": "REQ-133",
+      "requirement": "Ensure GST Status “Show/Refresh Status” fetches real filing status data from the GST portal via backend integration (https://services.gst.gov.in/services/searchtp) and displays results with clear loading/empty/error states in English; backend must return a frontend-friendly error object (not a trap).",
+      "reason": "backend/main.mo diff excerpt only shows type additions; it does not show any HTTP outcall implementation or explicit use of the required GST portal endpoint, nor explicit non-trapping error handling. The frontend page shows a refetch handler, but the diff excerpt does not conclusively show the required loading/empty/error UX behavior.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/components/invoices/InvoiceLineItemsEditor.tsx"
+        "backend/main.mo (truncated; shows GSTFilingStatus/Profile types but not the fetch/outcall logic)",
+        "frontend/src/pages/GstFilingStatusPage.tsx (truncated; shows refetch wiring but not full UI state handling)"
       ]
     },
     {
-      "id": "REQ-7",
-      "requirement": "Invoice listing and invoice details view with status management and safe deletion rules.",
-      "reason": "While an InvoiceStatusBadge component exists, the diff evidence does not show an invoices list page, invoice detail page, deletion rules, or the backend methods to list/get/delete invoices with status constraints.",
+      "id": "REQ-134",
+      "requirement": "GST Status page must degrade gracefully and show sensible English placeholders (e.g., “Not available”) when GST profile fields are missing/unavailable.",
+      "reason": "GstProfileSection’s ProfileRow returns null when value is falsy (hides rows rather than displaying placeholders). The bottom “no profile data available” message logic is truncated and includes an apparent incomplete/invalid expression, so placeholder behavior cannot be confirmed.",
       "evidence": [
-        "frontend/src/components/invoices/InvoiceStatusBadge.tsx",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "Invoice printing/export via a print-friendly invoice layout with business/customer details, metadata, line items, GST breakdown, and totals; include a Print action.",
-      "reason": "Print-oriented CSS exists, but there is no evidenced invoice detail/print layout component nor a Print action in the shown diff.",
-      "evidence": [
-        "frontend/src/index.css"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "requirement": "Persist all GST Pro data in Motoko stable storage so it survives canister upgrades (using stable storage patterns), scoped by Principal.",
-      "reason": "backend/main.mo shows in-memory Maps labeled 'Stable Storage' but no Motoko stable variables and no preupgrade/postupgrade hooks are evidenced; as shown, this would not survive upgrades.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "requirement": "Generated logo + icon images must be stored under frontend/public/assets/generated and referenced directly by the frontend.",
-      "reason": "Frontend references the generated asset paths, but the actual image files under frontend/public/assets/generated are not evidenced in the provided diff summary (they may be in omitted files, but not shown).",
-      "evidence": [
-        "frontend/src/components/AppShell.tsx",
-        "frontend/src/components/AuthGate.tsx"
+        "frontend/src/components/gst/GstProfileSection.tsx (ProfileRow: `if (!value) return null;`; truncated bottom section)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Admin/role-based access control initialization via a secret URL parameter (caffeineAdminToken) and backend authorization mixins.",
-      "reason": "BuildRequest specifies Internet Identity only and no advanced org roles/permissions beyond per-Principal data separation; introducing admin secret-token initialization and authorization mixins is not requested.",
+      "description": "Added/expanded PWA support (iOS splash meta tags, manifest, service worker, SW registration, update checks, offline caching).",
+      "reason": "Not requested by BuildRequest; it focuses on mobile navigation visibility and GST Status runtime/data/profile fixes.",
       "evidence": [
-        "frontend/src/hooks/useActor.ts",
-        "backend/main.mo"
+        "frontend-file-summaries.txt (entries for frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js, frontend/src/pwa/registerServiceWorker.ts)"
       ]
     },
     {
-      "description": "User profile onboarding dialog and user profile storage (name).",
-      "reason": "BuildRequest does not ask for a separate user profile feature; only business profile settings are required.",
+      "description": "Multiple unrelated UI and form/dialog improvements across customers/items/invoices pages (responsive tables, new dialogs, invoice editor behaviors, etc.).",
+      "reason": "Non-goal says not to redesign unrelated pages beyond what’s necessary for mobile navigation access; these changes are not tied to the stated requirements.",
       "evidence": [
-        "frontend/src/components/ProfileSetupDialog.tsx",
-        "frontend/src/hooks/useCurrentUserProfile.ts",
-        "backend/main.mo"
+        "frontend-file-summaries.txt (CustomerFormDialog.tsx, ItemFormDialog.tsx, InvoiceLineItemsEditor.tsx, InvoiceEditorPage.tsx, CustomersTable.tsx, ItemsTable.tsx, InvoicesPage.tsx)"
+      ]
+    },
+    {
+      "description": "Added a global AppErrorBoundary to prevent white screens at boot.",
+      "reason": "Not requested; requirement set does not mention global error boundaries.",
+      "evidence": [
+        "frontend-file-summaries.txt (frontend/src/App.tsx: wrapped with AppErrorBoundary)"
       ]
     }
   ],
-  "confidence": 0.68,
+  "confidence": 0.63,
   "changed_files": [
-    "all_files_summary.json",
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/index.css",
-    "frontend/index.html",
-    "frontend/src/App.tsx",
     "frontend/src/components/AppShell.tsx",
-    "frontend/src/components/AuthGate.tsx",
-    "frontend/src/components/LoginButton.tsx",
-    "frontend/src/components/ProfileSetupDialog.tsx",
-    "frontend/src/components/customers/CustomerFormDialog.tsx",
-    "frontend/src/components/customers/CustomersTable.tsx",
-    "frontend/src/components/invoices/InvoiceLineItemsEditor.tsx",
-    "frontend/src/components/invoices/InvoiceStatusBadge.tsx",
-    "frontend/src/components/items/ItemFormDialog.tsx",
-    "frontend/src/components/items/ItemsTable.tsx",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useCurrentUserProfile.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/components/MobileNav.tsx",
+    "frontend/src/components/gst/GstProfileSection.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/CustomersPage.tsx",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/InvoiceDetailPage.tsx",
-    "frontend/src/pages/InvoiceEditorPage.tsx",
-    "frontend/src/pages/InvoicePrintPage.tsx",
-    "frontend/src/pages/InvoicesPage.tsx",
-    "frontend/src/pages/ItemsPage.tsx",
-    "frontend/src/pages/SettingsPage.tsx",
-    "frontend/src/routeTree.tsx",
-    "frontend/src/utils/formatters.ts",
-    "frontend/src/utils/gstCalculations.ts",
-    "frontend/src/utils/invoiceNumbering.ts",
-    "frontend/src/utils/invoiceRules.ts",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
+    "frontend/src/pages/GstFilingStatusPage.tsx",
     "project_state.json"
   ]
 }

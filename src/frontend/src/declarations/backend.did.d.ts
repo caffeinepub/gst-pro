@@ -12,11 +12,24 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export interface BusinessProfile {
   'startingNumber' : bigint,
+  'logo' : [] | [ExternalBlob],
   'businessName' : string,
   'state' : string,
   'invoicePrefix' : string,
   'gstin' : string,
   'address' : string,
+}
+export interface CreateUserRequest {
+  'password' : string,
+  'role' : SystemRole,
+  'mobileNumber' : string,
+  'email' : string,
+  'accessExpiry' : [] | [Time],
+}
+export interface CredentialResponse {
+  'role' : [] | [SystemRole],
+  'message' : string,
+  'success' : boolean,
 }
 export interface Customer {
   'id' : bigint,
@@ -26,11 +39,41 @@ export interface Customer {
   'state' : string,
   'gstin' : [] | [string],
 }
+export type ExternalBlob = Uint8Array;
+export type FilingFrequency = { 'quarterly' : null } |
+  { 'monthly' : null };
+export interface GSTError { 'code' : bigint, 'message' : string }
+export interface GSTFilingStatus {
+  'natureOfBusiness' : [] | [string],
+  'tradeName' : [] | [string],
+  'period' : string,
+  'cancellationDate' : [] | [string],
+  'principalPlaceOfBusiness' : [] | [string],
+  'isActive' : [] | [boolean],
+  'filingFrequencyDetails' : [] | [string],
+  'error' : [] | [GSTError],
+  'legalName' : [] | [string],
+  'statusEntries' : Array<StatusEntry>,
+  'state' : [] | [string],
+  'gstin' : string,
+  'taxpayerType' : [] | [string],
+  'address' : [] | [string],
+  'gstStatus' : [] | [string],
+  'filingFrequency' : FilingFrequency,
+  'registrationDate' : [] | [string],
+  'returnType' : ReturnType,
+}
 export interface Invoice {
   'id' : bigint,
   'status' : InvoiceStatus,
   'lineItems' : Array<LineItem>,
+  'invoiceDate' : string,
   'customerId' : bigint,
+}
+export interface InvoiceKPIs {
+  'draftInvoices' : bigint,
+  'finalizedInvoices' : bigint,
+  'totalInvoices' : bigint,
 }
 export type InvoiceStatus = { 'finalized' : null } |
   { 'draft' : null };
@@ -48,11 +91,123 @@ export interface LineItem {
   'quantity' : number,
   'unitPrice' : number,
 }
+export interface Permissions {
+  'canUseGstValidation' : boolean,
+  'canVerifyBank' : boolean,
+  'canManageUsers' : boolean,
+  'canViewReports' : boolean,
+  'canFileReturns' : boolean,
+  'canExportData' : boolean,
+  'canVerifyPan' : boolean,
+}
+export type ReturnType = { 'gstr1' : null } |
+  { 'gstr3b' : null };
+export interface SignUpRequest {
+  'password' : string,
+  'mobileNumber' : string,
+  'email' : string,
+  'accessExpiry' : [] | [Time],
+}
+export interface SignUpResponse {
+  'id' : string,
+  'permissions' : Permissions,
+  'createdAt' : bigint,
+  'role' : SystemRole,
+  'mobileNumber' : string,
+  'email' : string,
+  'updatedAt' : bigint,
+  'accessExpiry' : [] | [Time],
+  'lastUsed' : [] | [Time],
+}
+export interface StatusEntry {
+  'status' : string,
+  'periodLabel' : string,
+  'filingDate' : [] | [string],
+  'returnType' : ReturnType,
+}
+export type SystemRole = { 'auditor' : null } |
+  { 'superAdmin' : null } |
+  { 'standard' : null };
+export type Time = bigint;
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
+export interface UnifiedUserInfo {
+  'userType' : { 'credential' : null } |
+    { 'principalOnly' : null },
+  'deleted' : [] | [boolean],
+  'role' : [] | [SystemRole],
+  'email' : [] | [string],
+  'lastSignIn' : [] | [Time],
+  'accessExpiry' : [] | [Time],
+  'identifier' : string,
+  'lastUsed' : [] | [Time],
+}
+export interface UpdateUserRequest {
+  'permissions' : Permissions,
+  'role' : SystemRole,
+  'mobileNumber' : string,
+  'email' : string,
+  'accessExpiry' : [] | [Time],
+}
 export interface UserProfile { 'name' : string }
+export interface UserRecord {
+  'id' : string,
+  'permissions' : Permissions,
+  'principal' : [] | [Principal],
+  'deleted' : boolean,
+  'createdAt' : bigint,
+  'role' : SystemRole,
+  'mobileNumber' : string,
+  'email' : string,
+  'lastSignIn' : [] | [Time],
+  'updatedAt' : bigint,
+  'accessExpiry' : [] | [Time],
+  'passwordHash' : string,
+  'lastUsed' : [] | [Time],
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addCustomer' : ActorMethod<
     [string, string, [] | [string], string, [] | [string]],
@@ -62,24 +217,37 @@ export interface _SERVICE {
     [string, [] | [string], [] | [string], number, number],
     Item
   >,
+  'adminGetUserInvoiceKPIs' : ActorMethod<[string], InvoiceKPIs>,
+  'adminGetUserInvoices' : ActorMethod<[string], Array<Invoice>>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createInvoice' : ActorMethod<[bigint, Array<LineItem>], Invoice>,
+  'authenticateApplicationCredentials' : ActorMethod<
+    [string, string],
+    CredentialResponse
+  >,
+  'createInvoice' : ActorMethod<[bigint, Array<LineItem>, string], Invoice>,
+  'createUser' : ActorMethod<[CreateUserRequest], SignUpResponse>,
   'deleteCustomer' : ActorMethod<[bigint], undefined>,
   'deleteInvoice' : ActorMethod<[bigint], undefined>,
   'deleteItem' : ActorMethod<[bigint], undefined>,
+  'deleteUser' : ActorMethod<[string], undefined>,
   'editCustomer' : ActorMethod<
     [bigint, string, string, [] | [string], string, [] | [string]],
     undefined
   >,
   'editInvoice' : ActorMethod<
-    [bigint, bigint, Array<LineItem>, InvoiceStatus],
+    [bigint, bigint, Array<LineItem>, InvoiceStatus, string],
     undefined
   >,
   'editItem' : ActorMethod<
     [bigint, string, [] | [string], [] | [string], number, number],
     undefined
   >,
+  'fetchGstFilingStatus' : ActorMethod<
+    [string, string, ReturnType, FilingFrequency],
+    GSTFilingStatus
+  >,
   'finalizeInvoice' : ActorMethod<[bigint], undefined>,
+  'getAccessExpiry' : ActorMethod<[string], [] | [Time]>,
   'getBusinessProfile' : ActorMethod<[], [] | [BusinessProfile]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -89,10 +257,22 @@ export interface _SERVICE {
   'getInvoices' : ActorMethod<[], Array<Invoice>>,
   'getItem' : ActorMethod<[bigint], [] | [Item]>,
   'getItems' : ActorMethod<[], Array<Item>>,
+  'getLastSignIn' : ActorMethod<[string], [] | [Time]>,
+  'getLastUsed' : ActorMethod<[string], [] | [Time]>,
+  'getPotentialSystemRoles' : ActorMethod<[], Array<SystemRole>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'hasUserProfile' : ActorMethod<[], boolean>,
+  'isAdmin' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'listAllUsers' : ActorMethod<[], Array<UnifiedUserInfo>>,
+  'listUsers' : ActorMethod<[], Array<UserRecord>>,
+  'recordInternetIdentitySignIn' : ActorMethod<[], undefined>,
   'saveBusinessProfile' : ActorMethod<[BusinessProfile], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setAccessExpiry' : ActorMethod<[string, [] | [Time]], undefined>,
+  'signUp' : ActorMethod<[SignUpRequest], SignUpResponse>,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
+  'updateUser' : ActorMethod<[string, UpdateUserRequest], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

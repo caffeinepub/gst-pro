@@ -1,11 +1,32 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
+  "projectStateVersion": 67,
   "summary": "Build a GST billing application named \"GST Pro\".",
-  "architectural_notes": [],
-  "known_issues": [],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Minimal \"GST Pro\" wordmark logo, clean geometric style, dark text on light background (gst-pro-logo.dim_1200x300.png)\n- Simple app icon with \"GP\" monogram, flat design, high contrast (gst-pro-icon.dim_256x256.png)",
+  "architectural_notes": [
+    "GST filing status feature requires external integration with GST.gov.in (data fetch), which may be constrained by authentication, CORS, and availability of official APIs.",
+    "GST Filing Status UI/data model should support multiple return types (e.g., GSTR-1, GSTR-3B) and period granularities (monthly/quarterly), plus a financial-year selector.",
+    "GST Filing Status data fetch should target https://services.gst.gov.in/services/searchtp (may require handling auth, headers/CORS, rate limits, and response parsing).",
+    "Admin panel + UserID/Password access implies adding a separate authentication/authorization mechanism alongside (or replacing) Internet Identity for app access.",
+    "Google/Apple sign-in will require adding OAuth/OIDC integration (separate from Internet Identity), including redirect/callback handling and secure token/session management.",
+    "Do not expose a fixed admin User ID/Password in the UI; use a first-time bootstrap flow to create the initial admin credential (or allow secure reset), then require users to sign in via Internet Identity + app-access credentials.",
+    "Role-based access control (RBAC) will require defining roles/permissions and enforcing them consistently in both frontend routing/UI visibility and backend canister authorization checks.",
+    "If adding an Android/iOS install button in the UI, implement it as a PWA install prompt: use the browser's beforeinstallprompt event (Android/Chromium) and show iOS-specific 'Add to Home Screen' guidance since iOS Safari does not expose a standard install prompt.",
+    "User requested a fixed default admin credential (email/password) to be set by default; this conflicts with the existing security note to avoid exposing fixed admin credentials and should be handled via secure bootstrap instead.",
+    "Ensure iOS UI respects safe-area insets (e.g., env(safe-area-inset-top)) so header actions don’t overlap the notch/cutout."
+  ],
+  "known_issues": [
+    "Customer creation/adding is not working.",
+    "Item creation/adding is not working.",
+    "GST Filing Status is not working: filing status fetch from https://services.gst.gov.in/services/searchtp fails/does not return expected data.",
+    "Admin panel is not visible/accessible to the user after sign-in, and the user does not have (or cannot obtain) application access credentials (User ID/Password).",
+    "Unauthenticated landing page does not show clear, separate “Sign In” and “Sign Up” buttons (user cannot find login controls).",
+    "User reports the application is not working; needs investigation and fixing of all errors/regressions across the app.",
+    "App shows a white screen instead of rendering the login/sign-in page (critical rendering/auth gate issue).",
+    "Current build (v16) does not match desired behavior; user requests restoring Version 9.",
+    "Sign In button is not working (does not open Internet Identity login).",
+    "Admin Panel does not currently show which users have signed in/used the application (usage/last-used or sign-in list) and does not display the full expected user data list."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-create-the-application-branding-and-shell-for-a-gst-billing-app-named-gst-pro-including-app-title-navigation-and-core-pages-scaffold-dashboard-customers-items-invoices-settings",
@@ -86,6 +107,798 @@
         "REQ-11"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-in-the-new-invoice-edit-invoice-page-allow-the-user-to-create-a-new-customer-without-leaving-the-invoice-editor-and-then-immediately-use-that-newly-created-customer-for-the-invoice",
+      "title": "In the New Invoice / Edit Invoice page, allow the user to create a new Customer without leaving the invoice editor, and then immediately use that newly created customer for the invoice.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-new-invoice-edit-invoice-page-allow-the-user-to-create-a-new-item-service-directly-from-the-invoice-line-items-editor-without-leaving-the-invoice-editor-and-then-immediately-select-use-that-newly-created-item-in-the-invoice",
+      "title": "In the New Invoice / Edit Invoice page, allow the user to create a new Item/Service directly from the invoice line-items editor without leaving the invoice editor, and then immediately select/use that newly created item in the invoice.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-ios-pwa-installability-support-for-gst-pro-by-including-a-web-app-manifest-and-required-ios-meta-tags-so-the-app-can-be-added-to-the-ios-home-screen-and-launch-in-standalone-mode",
+      "title": "Add iOS/PWA installability support for GST Pro by including a Web App Manifest and required iOS meta tags so the app can be added to the iOS Home Screen and launch in standalone mode.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-include-ios-pwa-icon-assets-in-the-static-assets-folder-and-wire-them-up-via-the-manifest-and-ios-touch-icon-links",
+      "title": "Generate and include iOS/PWA icon assets in the static assets folder and wire them up via the manifest and iOS touch-icon links.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-basic-pwa-offline-caching-for-the-app-shell-static-assets-via-a-service-worker-and-register-it-from-a-non-immutable-frontend-entrypoint",
+      "title": "Implement basic PWA offline caching for the app shell (static assets) via a service worker, and register it from a non-immutable frontend entrypoint.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-mobile-iphone-ipad-usability-by-making-key-list-table-screens-responsive-customers-items-invoices-and-ensuring-touch-targets-spacing-and-safe-area-insets-work-well-on-ios",
+      "title": "Improve mobile iPhone/iPad usability by making key list/table screens responsive (Customers, Items, Invoices) and ensuring touch targets, spacing, and safe-area insets work well on iOS.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-gst-pro-installable-app-icon-support-so-that-when-users-add-the-app-to-the-ios-home-screen-and-when-installed-as-a-pwa-the-correct-icon-is-used-across-common-device-sizes-generate-the-missing-icon-asset-sizes-add-the-corresponding-link-rel-tags-in-frontend-index-html-and-expand-frontend-public-manifest-webmanifest-icons-to-include-the-additional-sizes-keeping-existing-icon-entries-intact",
+      "title": "Improve GST Pro installable app icon support so that when users add the app to the iOS Home Screen (and when installed as a PWA), the correct icon is used across common device sizes. Generate the missing icon asset sizes, add the corresponding <link rel> tags in frontend/index.html, and expand frontend/public/manifest.webmanifest icons to include the additional sizes (keeping existing icon entries intact).",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-ios-pwa-splash-launch-screen-images-that-visually-match-the-existing-gst-pro-app-icon-style-clean-centered-icon-mark-harmonious-background-and-place-them-as-static-assets-under-frontend-public-assets-generated",
+      "title": "Generate iOS/PWA splash (launch) screen images that visually match the existing GST Pro app icon style (clean, centered icon/mark, harmonious background), and place them as static assets under frontend/public/assets/generated.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-index-html-to-include-the-appropriate-link-rel-apple-touch-startup-image-tags-referencing-the-generated-splash-screen-images-using-ios-media-queries-so-the-correct-splash-is-selected-across-common-iphone-and-ipad-sizes-while-keeping-the-existing-manifest-touch-icons-and-favicons-intact",
+      "title": "Update frontend/index.html to include the appropriate <link rel='apple-touch-startup-image'> tags referencing the generated splash screen images, using iOS media queries so the correct splash is selected across common iPhone and iPad sizes, while keeping the existing manifest, touch icons, and favicons intact.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-pwa-service-worker-precache-list-frontend-public-sw-js-to-include-the-new-splash-screen-image-assets-so-they-are-available-offline-and-load-instantly-when-launching-from-the-ios-home-screen",
+      "title": "Update the PWA service worker precache list (frontend/public/sw.js) to include the new splash screen image assets so they are available offline and load instantly when launching from the iOS Home Screen.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-identify-and-fix-the-root-cause-s-preventing-signed-in-users-from-successfully-creating-customers-from-customers-page-and-from-the-invoice-editor-inline-add-customer-flow-ensuring-the-create-call-completes-without-authorization-traps-and-the-newly-created-customer-is-persisted-and-appears-in-the-customers-list-immediately-after-creation",
+      "title": "Identify and fix the root cause(s) preventing signed-in users from successfully creating Customers (from Customers page and from the Invoice Editor inline add-customer flow), ensuring the create call completes without authorization traps and the newly created customer is persisted and appears in the customers list immediately after creation.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-identify-and-fix-the-root-cause-s-preventing-signed-in-users-from-successfully-creating-items-from-items-page-and-from-the-invoice-editor-inline-add-item-flow-ensuring-the-create-call-completes-without-authorization-traps-and-the-newly-created-item-is-persisted-and-appears-in-the-items-list-immediately-after-creation",
+      "title": "Identify and fix the root cause(s) preventing signed-in users from successfully creating Items (from Items page and from the Invoice Editor inline add-item flow), ensuring the create call completes without authorization traps and the newly created item is persisted and appears in the items list immediately after creation.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-run-a-focused-smoke-test-of-key-gst-pro-flows-and-fix-any-additional-regressions-encountered-during-testing-that-prevent-basic-use-of-the-app-login-business-profile-save-create-edit-list-delete-customers-create-edit-list-delete-items",
+      "title": "Run a focused smoke test of key GST Pro flows and fix any additional regressions encountered during testing that prevent basic use of the app (login, business profile save, create/edit/list/delete customers, create/edit/list/delete items).",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-e-way-bill-button-in-the-authenticated-app-ui-that-opens-the-official-e-way-bill-portal-login-page-in-a-new-browser-tab-window",
+      "title": "Add an \"E-Way Bill\" button in the authenticated app UI that opens the official e-Way Bill portal login page in a new browser tab/window.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-gst-filing-status-page-with-a-month-by-month-view-that-shows-filing-status-results-for-a-selected-period-including-an-explicit-gstin-correction-control-that-lets-the-user-update-their-gst-number-gstin-and-refetch-the-filing-status",
+      "title": "Add a new \"GST Filing Status\" page with a month-by-month view that shows filing status results for a selected period, including an explicit \"GSTIN correction\" control that lets the user update their GST number (GSTIN) and refetch the filing status.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-wire-the-frontend-gst-filing-status-page-to-the-backend-filing-status-api-using-react-query-including-loading-empty-error-states-and-a-manual-refresh-action",
+      "title": "Wire the frontend \"GST Filing Status\" page to the backend filing-status API using React Query, including loading/empty/error states and a manual refresh action.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-e-way-bill-navigation-action-so-it-opens-the-official-e-way-bill-login-page-url-https-ewaybillgst-gov-in-login-aspx-in-a-new-tab-window-replacing-the-current-https-ewaybillgst-gov-in-target",
+      "title": "Update the E‑Way Bill navigation action so it opens the official e‑Way Bill login page URL https://ewaybillgst.gov.in/Login.aspx in a new tab/window (replacing the current https://ewaybillgst.gov.in/ target).",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-gst-filing-status-page-replace-the-free-text-financial-year-input-with-a-dropdown-selector-for-financial-year-and-ensure-the-selected-fy-is-used-for-fetching-and-displaying-results",
+      "title": "On the GST Filing Status page, replace the free-text Financial Year input with a dropdown selector for Financial Year, and ensure the selected FY is used for fetching and displaying results.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enhance-gst-filing-status-to-support-viewing-filing-status-for-multiple-return-types-including-gstr-3b-and-gstr-1-in-the-same-page-experience",
+      "title": "Enhance GST Filing Status to support viewing filing status for multiple return types, including GSTR-3B and GSTR-1, in the same page experience.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-gst-filing-status-period-view-adaptive-so-it-can-show-monthly-or-quarterly-filing-details-based-on-a-user-selection-monthly-vs-quarterly-and-render-results-accordingly",
+      "title": "Make the GST Filing Status period view adaptive so it can show monthly or quarterly filing details based on a user selection (Monthly vs Quarterly), and render results accordingly.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-gst-filing-status-query-date-period-user-editable-not-fixed-default-only-while-preserving-the-existing-gstin-correction-edit-flow",
+      "title": "Make the GST Filing Status query date/period user-editable (not fixed/default-only), while preserving the existing “GSTIN correction” edit flow.",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-invoice-date-editable-by-adding-an-invoice-date-field-that-can-be-set-changed-in-the-new-invoice-and-edit-invoice-flows-and-shown-wherever-invoice-metadata-is-displayed-printed",
+      "title": "Make invoice date editable by adding an invoice date field that can be set/changed in the New Invoice and Edit Invoice flows, and shown wherever invoice metadata is displayed/printed.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-gst-filing-status-feature-so-that-filing-status-data-is-fetched-from-https-services-gst-gov-in-services-searchtp-instead-of-the-current-dummy-placeholder-behavior-and-ensure-the-backend-returns-real-status-entries-or-a-clear-error-object-when-the-upstream-request-fails",
+      "title": "Fix the GST Filing Status feature so that filing status data is fetched from https://services.gst.gov.in/services/searchtp (instead of the current dummy/placeholder behavior), and ensure the backend returns real status entries or a clear error object when the upstream request fails.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-new-admin-panel-ui-that-allows-an-admin-to-manage-application-user-id-password-credentials-and-add-an-application-access-login-step-for-regular-users-after-internet-identity-sign-in-that-gates-access-to-the-rest-of-the-app-until-valid-credentials-are-provided",
+      "title": "Create a new Admin Panel UI that allows an admin to manage application User ID/Password credentials, and add an application access login step for regular users (after Internet Identity sign-in) that gates access to the rest of the app until valid credentials are provided.",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-wire-the-frontend-navigation-and-admin-route-to-real-backend-admin-status-instead-of-hardcoded-placeholders-so-admins-can-see-and-open-the-admin-panel-while-non-admins-cannot",
+      "title": "Wire the frontend navigation and /admin route to real backend admin status instead of hardcoded placeholders, so admins can see and open the Admin Panel, while non-admins cannot.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-complete-the-admin-panel-ui-by-connecting-it-to-the-backend-credential-apis-so-an-admin-can-create-the-first-credential-and-manage-credentials-from-the-app",
+      "title": "Complete the Admin Panel UI by connecting it to the backend credential APIs so an admin can create the first credential and manage credentials from the app.",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-stubbed-application-access-login-flow-with-real-backend-validation-appaccessloginform-must-verify-user-id-password-against-the-backend-and-on-success-grant-app-access-for-the-signed-in-principal-persisting-the-granted-state-using-the-existing-localstorage-helper",
+      "title": "Replace the stubbed application access login flow with real backend validation: AppAccessLoginForm must verify User ID + Password against the backend and, on success, grant app access for the signed-in principal (persisting the granted state using the existing localStorage helper).",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-overall-access-flow-is-not-a-dead-end-for-first-time-setup-if-no-application-access-credentials-exist-yet-the-system-must-provide-a-clear-path-for-an-admin-to-create-the-first-credentials-and-then-allow-regular-users-to-log-in-with-them",
+      "title": "Ensure the overall access flow is not a dead-end for first-time setup: if no application-access credentials exist yet, the system must provide a clear path for an admin to create the first credentials and then allow regular users to log in with them.",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-unauthenticated-landing-experience-frontend-src-components-authgate-tsx-to-show-separate-clearly-labeled-actions-for-sign-in-and-sign-up-both-using-the-existing-internet-identity-login-flow-and-include-user-facing-helper-text-that-explains-that-application-access-may-require-an-administrator-created-user-id-password",
+      "title": "Update the unauthenticated landing experience (frontend/src/components/AuthGate.tsx) to show separate, clearly labeled actions for “Sign In” and “Sign Up”, both using the existing Internet Identity login flow, and include user-facing helper text that explains that application access may require an administrator-created User ID/Password.",
+      "reqIds": [
+        "REQ-46"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-first-time-setup-bootstrapping-path-for-creating-the-initial-admin-panel-credential-when-no-admin-credentials-exist-yet-1-expose-a-backend-query-api-to-detect-whether-any-admin-credentials-exist-and-2-in-the-frontend-app-access-screen-frontend-src-components-appaccessloginform-tsx-show-a-create-admin-account-first-time-setup-action-only-when-no-admin-credentials-exist-allowing-the-signed-in-internet-identity-user-to-create-the-first-admin-credential",
+      "title": "Add a first-time setup/bootstrapping path for creating the initial Admin Panel credential when no admin credentials exist yet: (1) expose a backend query API to detect whether any admin credentials exist, and (2) in the frontend App Access screen (frontend/src/components/AppAccessLoginForm.tsx), show a “Create Admin Account” / “First-time setup” action only when no admin credentials exist, allowing the signed-in Internet Identity user to create the first admin credential.",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-admin-panel-entry-point-a-distinct-clearly-visible-button-in-the-authenticated-app-header-frontend-src-components-appshell-tsx-for-admins-in-addition-to-any-existing-sidebar-top-nav-entry-and-ensure-it-is-hidden-for-non-admin-users",
+      "title": "Make the “Admin Panel” entry point a distinct, clearly visible button in the authenticated app header (frontend/src/components/AppShell.tsx) for admins (in addition to any existing sidebar/top-nav entry), and ensure it is hidden for non-admin users.",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-new-dashboard-kpi-card-showing-the-total-gst-value-sum-of-gst-across-invoices-formatted-in-inr",
+      "title": "Add a new Dashboard KPI card showing the total GST value (sum of GST across invoices) formatted in INR.",
+      "reqIds": [
+        "REQ-50"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-free-text-state-inputs-with-a-dropdown-selector-listing-indian-state-ut-names-in-the-business-profile-settings-form-and-the-customer-add-edit-form",
+      "title": "Replace free-text State inputs with a dropdown selector listing Indian state/UT names in the Business Profile settings form and the Customer add/edit form.",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-run-an-end-to-end-smoke-test-of-the-full-gst-pro-application-and-fix-any-issues-found-that-block-core-usage-flows",
+      "title": "Run an end-to-end smoke test of the full GST Pro application and fix any issues found that block core usage flows.",
+      "reqIds": [
+        "REQ-52"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-unauthenticated-landing-screen-internet-identity-gate-to-display-two-separate-clearly-labeled-primary-actions-sign-in-and-sign-up-both-using-the-existing-internet-identity-login-flow-so-users-can-easily-find-the-login-controls",
+      "title": "Update the unauthenticated landing screen (Internet Identity gate) to display two separate, clearly labeled primary actions: “Sign In” and “Sign Up”, both using the existing Internet Identity login flow, so users can easily find the login controls.",
+      "reqIds": [
+        "REQ-53"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-separate-clearly-visible-admin-panel-button-in-the-authenticated-app-header-not-only-inside-the-navigation-list-the-button-must-only-render-for-admins-and-must-navigate-to-admin",
+      "title": "Add a separate, clearly visible “Admin Panel” button in the authenticated app header (not only inside the navigation list). The button must only render for admins and must navigate to /admin.",
+      "reqIds": [
+        "REQ-54"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-provide-an-in-app-first-time-admin-credential-setup-path-and-clear-credential-visibility-guidance-so-the-user-can-obtain-an-admin-panel-user-id-and-password-without-exposing-stored-passwords-1-add-a-backend-query-api-that-indicates-whether-any-admin-credentials-exist-2-in-the-frontend-application-access-screen-when-no-admin-credentials-exist-show-a-first-time-setup-create-admin-account-action-that-lets-the-currently-signed-in-internet-identity-user-create-the-first-admin-credential-3-after-successful-creation-display-the-created-user-id-and-the-password-the-user-just-set-as-a-one-time-confirmation-with-copy-controls-and-a-warning-that-the-password-cannot-be-retrieved-later",
+      "title": "Provide an in-app first-time admin credential setup path and clear credential visibility guidance so the user can obtain an Admin Panel User ID and password without exposing stored passwords: (1) add a backend query API that indicates whether any admin credentials exist; (2) in the frontend application access screen, when no admin credentials exist, show a “First-time setup: Create Admin Account” action that lets the currently signed-in Internet Identity user create the first admin credential; (3) after successful creation, display the created User ID and the password the user just set as a one-time confirmation with “Copy” controls and a warning that the password cannot be retrieved later.",
+      "reqIds": [
+        "REQ-55"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-admin-panel-accessible-via-a-distinct-standalone-route-that-can-be-opened-directly-by-url-admin-and-is-visually-separated-from-the-main-application-shell-no-main-app-navigation-sidebar-header-from-appshell-on-admin-pages-the-admin-panel-route-must-still-require-internet-identity-authentication-and-must-continue-to-enforce-admin-only-access-using-the-existing-isadmin-check",
+      "title": "Make the Admin Panel accessible via a distinct, standalone route that can be opened directly by URL (/admin) and is visually separated from the main application shell (no main app navigation/sidebar/header from AppShell on admin pages). The Admin Panel route must still require Internet Identity authentication and must continue to enforce admin-only access using the existing isAdmin() check.",
+      "reqIds": [
+        "REQ-56"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-simplify-the-login-experience-by-adding-a-clear-direct-path-to-the-admin-panel-url-and-reducing-confusion-between-internet-identity-sign-in-and-application-access-steps-update-the-post-internet-identity-gating-screens-authgate-and-or-appaccessloginform-to-include-an-explicit-admin-portal-action-that-navigates-to-admin-and-ensure-user-facing-helper-text-clearly-explains-which-step-is-being-requested-internet-identity-vs-application-access",
+      "title": "Simplify the login experience by adding a clear, direct path to the Admin Panel URL and reducing confusion between 'Internet Identity sign-in' and 'Application Access' steps: update the post-Internet-Identity gating screens (AuthGate and/or AppAccessLoginForm) to include an explicit 'Admin Portal' action that navigates to /admin, and ensure user-facing helper text clearly explains which step is being requested (Internet Identity vs Application Access).",
+      "reqIds": [
+        "REQ-57"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-application-access-flow-so-that-successful-user-id-password-validation-results-in-the-signed-in-internet-identity-principal-being-bound-to-that-credential-in-the-backend-so-subsequent-authenticated-canister-calls-pass-requirevalidcredentials-and-crud-features-work",
+      "title": "Fix the application access flow so that successful User ID/Password validation results in the signed-in Internet Identity Principal being bound to that credential in the backend (so subsequent authenticated canister calls pass `requireValidCredentials` and CRUD features work).",
+      "reqIds": [
+        "REQ-59"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-expose-and-use-role-information-in-the-frontend-to-provide-role-aware-ux-1-admins-can-assign-update-roles-for-credentials-in-the-admin-panel-and-2-non-admin-users-see-a-clear-access-denied-or-insufficient-permissions-message-when-attempting-restricted-actions-without-the-app-breaking",
+      "title": "Expose and use role information in the frontend to provide role-aware UX: (1) admins can assign/update roles for credentials in the Admin Panel, and (2) non-admin users see a clear 'Access denied' or 'Insufficient permissions' message when attempting restricted actions, without the app breaking.",
+      "reqIds": [
+        "REQ-60"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-stabilize-the-application-by-running-an-end-to-end-regression-pass-across-core-flows-and-fixing-all-runtime-errors-regressions-encountered-especially-around-authentication-app-access-gating-and-crud-screens",
+      "title": "Stabilize the application by running an end-to-end regression pass across core flows and fixing all runtime errors/regressions encountered (especially around authentication, app-access gating, and CRUD screens).",
+      "reqIds": [
+        "REQ-61"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-identify-and-fix-the-root-cause-of-the-app-rendering-a-blank-white-screen-so-that-in-all-failure-cases-the-user-sees-a-usable-screen-at-minimum-the-sign-in-screen-instead-of-a-blank-page",
+      "title": "Identify and fix the root cause of the app rendering a blank/white screen so that, in all failure cases, the user sees a usable screen (at minimum the Sign In screen) instead of a blank page.",
+      "reqIds": [
+        "REQ-62"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-top-level-ui-error-boundary-and-router-level-error-handling-so-route-component-render-errors-display-a-friendly-error-page-with-recovery-actions-rather-than-crashing-the-whole-app-to-a-white-screen",
+      "title": "Add a top-level UI error boundary and router-level error handling so route/component render errors display a friendly error page (with recovery actions) rather than crashing the whole app to a white screen.",
+      "reqIds": [
+        "REQ-63"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-simplify-the-unauthenticated-sign-in-sign-up-screen-shown-by-the-internet-identity-gate-so-it-is-minimal-and-easy-to-understand-and-ensure-it-always-renders-when-the-user-is-not-authenticated",
+      "title": "Simplify the unauthenticated Sign In / Sign Up screen shown by the Internet Identity gate so it is minimal and easy to understand, and ensure it always renders when the user is not authenticated.",
+      "reqIds": [
+        "REQ-64"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-simplify-the-post-internet-identity-application-access-login-form-ui-so-it-is-straightforward-and-not-visually-busy-while-keeping-existing-functionality-user-id-password-validation-error-display-admin-portal-link-and-first-time-admin-setup-entry-point-when-applicable",
+      "title": "Simplify the post-Internet-Identity “Application Access” login form UI so it is straightforward and not visually busy, while keeping existing functionality (User ID + Password validation, error display, Admin Portal link, and first-time admin setup entry point when applicable).",
+      "reqIds": [
+        "REQ-65"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-the-application-s-authentication-and-gating-flow-to-match-version-9-after-successful-internet-identity-sign-in-users-must-be-able-to-access-the-core-app-immediately-dashboard-customers-items-invoices-settings-without-any-additional-application-access-user-id-password-step",
+      "title": "Restore the application’s authentication and gating flow to match Version 9: after successful Internet Identity sign-in, users must be able to access the core app immediately (Dashboard/Customers/Items/Invoices/Settings) without any additional “Application Access” (User ID/Password) step.",
+      "reqIds": [
+        "REQ-66"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-or-disable-version-16-only-ui-surfaces-so-the-app-shell-matches-version-9-navigation-and-layout-the-main-navigation-must-include-only-dashboard-customers-items-invoices-and-settings-any-admin-panel-entry-points-and-gst-filing-navigation-entries-must-not-appear-in-the-main-app-shell",
+      "title": "Remove (or disable) Version 16-only UI surfaces so the app shell matches Version 9 navigation and layout: the main navigation must include only Dashboard, Customers, Items, Invoices, and Settings; any Admin Panel entry points and GST Filing navigation entries must not appear in the main app shell.",
+      "reqIds": [
+        "REQ-67"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-the-routing-structure-to-match-version-9-by-removing-or-disabling-the-version-16-only-routes-from-the-primary-app-experience-including-the-standalone-admin-route-and-the-gst-filing-route",
+      "title": "Restore the routing structure to match Version 9 by removing (or disabling) the Version 16-only routes from the primary app experience, including the standalone /admin route and the /gst-filing route.",
+      "reqIds": [
+        "REQ-68"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-run-a-focused-regression-pass-on-version-9-core-flows-and-fix-any-issues-introduced-in-version-16-that-prevent-version-9-behavior-from-working-especially-app-renders-a-blank-white-screen-customer-creation-item-creation-and-invoice-creation",
+      "title": "Run a focused regression pass on Version 9 core flows and fix any issues introduced in Version 16 that prevent Version 9 behavior from working (especially: app renders a blank/white screen, customer creation, item creation, and invoice creation).",
+      "reqIds": [
+        "REQ-70"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-clearly-visible-install-section-at-the-bottom-of-the-web-app-in-the-authenticated-app-shell-footer-that-offers-android-and-ios-installation-options-for-installing-gst-pro-as-a-pwa",
+      "title": "Add a clearly visible install section at the bottom of the web app (in the authenticated app shell footer) that offers Android and iOS installation options for installing GST Pro as a PWA.",
+      "reqIds": [
+        "REQ-71"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-android-desktop-pwa-installation-behavior-when-the-browser-supports-pwa-installation-and-the-app-is-installable-clicking-the-android-install-option-must-trigger-the-native-install-prompt-using-the-captured-beforeinstallprompt-event-otherwise-the-ui-must-show-a-short-message-like-installation-is-not-available-in-this-browser",
+      "title": "Implement Android/desktop PWA installation behavior: when the browser supports PWA installation and the app is installable, clicking the Android install option must trigger the native install prompt using the captured `beforeinstallprompt` event; otherwise the UI must show a short message like 'Installation is not available in this browser'.",
+      "reqIds": [
+        "REQ-72"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-ios-installation-guidance-behavior-clicking-the-ios-install-option-must-open-a-small-dialog-sheet-explaining-how-to-install-on-iphone-ipad-safari-add-to-home-screen-with-concise-step-by-step-instructions-in-english",
+      "title": "Implement iOS installation guidance behavior: clicking the iOS install option must open a small dialog/sheet explaining how to install on iPhone/iPad Safari (Add to Home Screen) with concise step-by-step instructions in English.",
+      "reqIds": [
+        "REQ-73"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-footer-install-ui-uses-generated-android-and-ios-install-badge-style-images-from-frontend-public-assets-generated-and-references-them-as-static-assets-no-backend-involvement",
+      "title": "Ensure the footer install UI uses generated Android and iOS install badge-style images from `frontend/public/assets/generated` and references them as static assets (no backend involvement).",
+      "reqIds": [
+        "REQ-74"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-sign-in-button-so-it-reliably-opens-the-internet-identity-login-flow-from-all-relevant-ui-surfaces-unauthenticated-authgate-screen-and-the-header-loginbutton-and-ensure-a-user-never-gets-stuck-with-a-non-responsive-button-when-not-authenticated",
+      "title": "Fix the Sign In button so it reliably opens the Internet Identity login flow from all relevant UI surfaces (unauthenticated AuthGate screen and the header LoginButton), and ensure a user never gets stuck with a non-responsive button when not authenticated.",
+      "reqIds": [
+        "REQ-75"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-sign-up-form-ui-that-collects-email-password-and-mobile-number-accessible-from-the-unauthenticated-authgate-screen-via-the-existing-sign-up-button-and-submit-the-form-to-the-backend-to-register-the-user-for-application-access",
+      "title": "Add a Sign Up form UI that collects Email, Password, and Mobile Number, accessible from the unauthenticated AuthGate screen via the existing “Sign Up” button, and submit the form to the backend to register the user for application access.",
+      "reqIds": [
+        "REQ-76"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-state-dropdown-so-the-options-list-scrolls-reliably-including-on-ios-wherever-the-indian-state-ut-select-is-used-business-profile-settings-and-customer-add-edit-dialog",
+      "title": "Fix the State dropdown so the options list scrolls reliably (including on iOS) wherever the Indian State/UT Select is used (Business Profile settings and Customer add/edit dialog).",
+      "reqIds": [
+        "REQ-78"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-dashboard-kpi-cards-clickable-so-they-navigate-to-the-relevant-data-views-total-invoices-invoices-list-draft-invoices-invoices-list-filtered-to-draft-finalized-invoices-list-filtered-to-finalized-total-gst-invoices-list-or-another-existing-invoice-view-that-best-represents-the-underlying-data-source-for-gst-totals",
+      "title": "Make the Dashboard KPI cards clickable so they navigate to the relevant data views: Total Invoices -> Invoices list; Draft Invoices -> Invoices list filtered to Draft; Finalized -> Invoices list filtered to Finalized; Total GST -> Invoices list (or another existing invoice view that best represents the underlying data source for GST totals).",
+      "reqIds": [
+        "REQ-79"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-ios-safe-area-layout-in-the-authenticated-header-so-the-logo-e-way-bill-and-sign-out-buttons-do-not-overlap-the-iphone-notch-cutout-safe-area-inset",
+      "title": "Fix iOS safe-area layout in the authenticated header so the logo, “E‑Way Bill”, and Sign Out buttons do not overlap the iPhone notch/cutout (safe-area inset).",
+      "reqIds": [
+        "REQ-80"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-option-to-include-a-business-company-logo-on-invoices-allow-the-user-to-upload-set-an-invoice-logo-in-settings-persist-it-with-the-business-profile-and-render-it-on-the-invoice-print-export-layout-when-present",
+      "title": "Add an option to include a business/company logo on invoices: allow the user to upload/set an invoice logo in Settings, persist it with the Business Profile, and render it on the Invoice Print/Export layout when present.",
+      "reqIds": [
+        "REQ-81"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-invoice-printing-experience-so-printing-reliably-produces-a-clean-invoice-only-page-without-the-main-appshell-header-footer-nav-and-does-not-misfire-e-g-printing-too-early-printing-repeatedly-or-printing-a-blank-page",
+      "title": "Fix the invoice printing experience so printing reliably produces a clean invoice-only page (without the main AppShell header/footer/nav) and does not misfire (e.g., printing too early, printing repeatedly, or printing a blank page).",
+      "reqIds": [
+        "REQ-82"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-routing-so-the-invoice-print-page-is-rendered-in-a-print-friendly-layout-that-is-not-wrapped-by-appshell-while-still-requiring-internet-identity-authentication-via-the-existing-authgate-flow",
+      "title": "Update routing so the invoice print page is rendered in a print-friendly layout that is not wrapped by AppShell, while still requiring Internet Identity authentication via the existing AuthGate flow.",
+      "reqIds": [
+        "REQ-83"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-invoice-print-page-uses-the-existing-global-print-css-hooks-e-g-the-print-page-styles-in-frontend-src-index-css-so-the-printed-output-uses-correct-colors-backgrounds-and-consistent-a4-margins",
+      "title": "Ensure the invoice print page uses the existing global print CSS hooks (e.g., the .print-page styles in frontend/src/index.css) so the printed output uses correct colors/backgrounds and consistent A4 margins.",
+      "reqIds": [
+        "REQ-84"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-appshell-header-branding-so-the-text-gst-pro-always-stays-on-a-single-line-next-to-the-app-icon-no-wrapping-into-multiple-lines-on-small-screens",
+      "title": "Fix the AppShell header branding so the text “GST Pro” always stays on a single line next to the app icon (no wrapping into multiple lines on small screens).",
+      "reqIds": [
+        "REQ-85"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-unauthenticated-sign-in-screen-frontend-src-components-authgate-tsx-to-offer-two-clearly-separated-sign-in-options-1-internet-identity-and-2-user-id-password-keep-all-user-facing-text-in-english",
+      "title": "Update the unauthenticated sign-in screen (frontend/src/components/AuthGate.tsx) to offer two clearly separated sign-in options: (1) “Internet Identity” and (2) “User ID & Password”. Keep all user-facing text in English.",
+      "reqIds": [
+        "REQ-86"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-user-id-password-sign-in-flow-in-the-frontend-using-the-backend-credential-authentication-api-backend-main-actor-function-authenticateapplicationcredentials-email-password-if-the-user-is-not-already-authenticated-with-internet-identity-the-app-must-first-initiate-the-internet-identity-login-flow-so-the-credential-login-is-bound-to-a-non-anonymous-principal",
+      "title": "Implement the “User ID & Password” sign-in flow in the frontend using the backend credential authentication API (backend main actor function: authenticateApplicationCredentials(email, password)). If the user is not already authenticated with Internet Identity, the app must first initiate the Internet Identity login flow so the credential login is bound to a non-anonymous Principal.",
+      "reqIds": [
+        "REQ-87"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-sign-up-dialog-ux-copy-frontend-src-components-auth-signupdialog-tsx-so-it-accurately-reflects-the-new-sign-in-options-users-who-create-an-account-via-sign-up-should-be-able-to-return-to-the-sign-in-screen-and-log-in-using-user-id-password-while-still-using-internet-identity-under-the-hood",
+      "title": "Update the Sign Up dialog UX copy (frontend/src/components/auth/SignUpDialog.tsx) so it accurately reflects the new sign-in options: users who create an account via Sign Up should be able to return to the sign-in screen and log in using “User ID & Password” (while still using Internet Identity under the hood).",
+      "reqIds": [
+        "REQ-88"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-perceived-double-sign-in-requirement-by-ensuring-that-a-successful-user-id-password-sign-in-results-in-immediate-access-to-the-main-app-dashboard-customers-items-invoices-settings-without-the-user-needing-to-separately-perform-an-additional-manual-sign-in-with-internet-identity-step-afterward-keep-all-user-facing-text-in-english-and-clarify-in-the-credential-sign-in-helper-text-that-internet-identity-may-be-used-automatically-under-the-hood-when-needed",
+      "title": "Remove the perceived “double sign-in” requirement by ensuring that a successful “User ID & Password” sign-in results in immediate access to the main app (Dashboard/Customers/Items/Invoices/Settings) without the user needing to separately perform an additional, manual “Sign In with Internet Identity” step afterward. Keep all user-facing text in English and clarify in the credential sign-in helper text that Internet Identity may be used automatically under the hood when needed.",
+      "reqIds": [
+        "REQ-90"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-invoice-list-filtering-in-the-invoices-page-to-allow-users-to-filter-invoices-by-a-a-specific-invoice-date-and-or-b-invoice-month-and-year-filters-must-work-together-with-the-existing-status-filter-all-draft-finalized-and-must-update-the-displayed-invoices-list-accordingly",
+      "title": "Add invoice list filtering in the Invoices page to allow users to filter invoices by (a) a specific invoice date and/or (b) invoice month and year. Filters must work together with the existing status filter (All/Draft/Finalized) and must update the displayed invoices list accordingly.",
+      "reqIds": [
+        "REQ-91"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-monthly-invoice-totals-summary-in-the-invoices-section-that-aggregates-totals-for-the-selected-month-year-or-if-no-month-year-is-selected-shows-a-month-by-month-breakdown-for-the-currently-status-filtered-invoices-the-summary-must-include-at-least-total-number-of-invoices-total-taxable-value-total-gst-combined-and-grand-total-value-use-inr-formatting-for-currency-values-and-keep-all-labels-in-english",
+      "title": "Add a monthly invoice totals summary in the Invoices section that aggregates totals for the selected month/year (or, if no month/year is selected, shows a month-by-month breakdown for the currently status-filtered invoices). The summary must include at least: total number of invoices, total taxable value, total GST (combined), and grand total value. Use INR formatting for currency values and keep all labels in English.",
+      "reqIds": [
+        "REQ-92"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-panel-button-directly-below-the-existing-sign-in-with-internet-identity-button-on-the-unauthenticated-sign-in-screen-frontend-src-components-authgate-tsx-clicking-admin-panel-must-initiate-the-internet-identity-login-flow-if-not-already-authenticated-and-then-navigate-to-the-admin-route-admin-all-user-facing-text-must-be-in-english",
+      "title": "Add an \"Admin Panel\" button directly below the existing \"Sign In with Internet Identity\" button on the unauthenticated sign-in screen (frontend/src/components/AuthGate.tsx). Clicking \"Admin Panel\" must initiate the Internet Identity login flow (if not already authenticated) and then navigate to the admin route (/admin). All user-facing text must be in English.",
+      "reqIds": [
+        "REQ-93"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-enable-an-admin-panel-route-at-admin-in-the-router-frontend-src-routetree-tsx-and-implement-a-minimal-adminpanelpage-frontend-src-pages-adminpanelpage-tsx-that-renders-a-usable-admin-screen-shell-title-description-and-placeholder-sections-for-user-list-and-role-management-the-admin-route-must-require-internet-identity-authentication-via-the-existing-authgate-flow-and-must-not-be-wrapped-by-the-main-appshell-navigation-chrome-standalone-layout",
+      "title": "Restore/enable an admin panel route at /admin in the router (frontend/src/routeTree.tsx) and implement a minimal AdminPanelPage (frontend/src/pages/AdminPanelPage.tsx) that renders a usable admin screen shell (title, description, and placeholder sections for user list and role management). The /admin route must require Internet Identity authentication via the existing AuthGate flow and must not be wrapped by the main AppShell navigation chrome (standalone layout).",
+      "reqIds": [
+        "REQ-94"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enforce-that-only-the-single-admin-can-access-admin-if-a-non-admin-authenticated-user-attempts-to-open-admin-show-an-access-denied-screen-message-with-a-navigation-option-back-to-the-dashboard-admin-detection-must-use-the-existing-backend-admin-check-isadmin-via-the-existing-actor-authenticated-call-patterns-do-not-rely-on-hardcoded-frontend-flags",
+      "title": "Enforce that only the single admin can access /admin: if a non-admin authenticated user attempts to open /admin, show an \"Access denied\" screen/message with a navigation option back to the Dashboard. Admin detection must use the existing backend admin check (isAdmin()) via the existing actor/authenticated call patterns; do not rely on hardcoded frontend flags.",
+      "reqIds": [
+        "REQ-95"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-admin-panel-entry-flow-so-that-clicking-the-unauthenticated-admin-panel-button-completing-internet-identity-login-and-then-opening-admin-reliably-results-in-a-usable-next-step-credential-sign-in-prompt-or-admin-content-rather-than-a-dead-end-access-denied-screen",
+      "title": "Fix the Admin Panel entry flow so that clicking the unauthenticated “Admin Panel” button, completing Internet Identity login, and then opening /admin reliably results in a usable next step (credential sign-in prompt or admin content) rather than a dead-end “Access Denied” screen.",
+      "reqIds": [
+        "REQ-96"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-experience-adminpanelpage-to-support-admin-credential-sign-in-when-the-caller-is-authenticated-with-internet-identity-but-is-not-yet-an-admin-render-a-credential-sign-in-form-on-the-page-and-after-successful-credential-authentication-automatically-re-check-admin-status-and-show-the-admin-panel-content-without-requiring-a-manual-refresh",
+      "title": "Update the /admin experience (AdminPanelPage) to support admin credential sign-in when the caller is authenticated with Internet Identity but is not yet an admin: render a credential sign-in form on the page, and after successful credential authentication, automatically re-check admin status and show the admin panel content without requiring a manual refresh.",
+      "reqIds": [
+        "REQ-97"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-focused-regression-check-for-the-admin-flow-to-confirm-the-full-path-works-unauthenticated-click-admin-panel-complete-internet-identity-admin-shows-credential-sign-in-valid-credentials-admin-content-visible-and-invalid-credentials-remain-blocked-with-an-error",
+      "title": "Add a focused regression check for the admin flow to confirm the full path works: unauthenticated -> click Admin Panel -> complete Internet Identity -> /admin shows credential sign-in -> valid credentials -> admin content visible; and invalid credentials remain blocked with an error.",
+      "reqIds": [
+        "REQ-99"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-route-so-the-admin-panel-can-be-reached-and-used-without-showing-or-requiring-the-internet-identity-sign-in-ui-as-a-prerequisite-step-the-admin-panel-must-present-a-user-id-email-password-login-as-the-only-interactive-login-method-on-that-route",
+      "title": "Update the /admin route so the Admin Panel can be reached and used without showing or requiring the Internet Identity sign-in UI as a prerequisite step; the Admin Panel must present a User ID (email) + Password login as the only interactive login method on that route.",
+      "reqIds": [
+        "REQ-100"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-current-pre-login-verifying-admin-access-gating-behavior-in-adminpanelpage-that-blocks-the-page-behind-an-isadmin-check-instead-render-the-credential-sign-in-form-immediately-and-only-transition-to-admin-content-after-successful-credential-authentication",
+      "title": "Remove the current pre-login 'Verifying admin access...' gating behavior in AdminPanelPage that blocks the page behind an isAdmin() check; instead, render the credential sign-in form immediately, and only transition to admin content after successful credential authentication.",
+      "reqIds": [
+        "REQ-101"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-router-layout-for-admin-so-it-is-not-wrapped-by-authgate-so-internet-identity-is-not-enforced-by-the-route-layout-instead-admin-must-rely-on-the-credential-sign-in-submission-flow-to-establish-any-needed-authenticated-session-under-the-hood",
+      "title": "Update the router layout for /admin so it is not wrapped by AuthGate (so Internet Identity is not enforced by the route layout); instead, /admin must rely on the credential sign-in submission flow to establish any needed authenticated session under the hood.",
+      "reqIds": [
+        "REQ-102"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-adjust-the-unauthenticated-admin-panel-entry-action-on-the-sign-in-screen-authgate-so-it-navigates-directly-to-admin-without-first-initiating-an-explicit-internet-identity-login-step-from-that-button",
+      "title": "Adjust the unauthenticated 'Admin Panel' entry action on the sign-in screen (AuthGate) so it navigates directly to /admin without first initiating an explicit Internet Identity login step from that button.",
+      "reqIds": [
+        "REQ-103"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-route-experience-so-it-does-not-trigger-or-display-any-internet-identity-ii-login-verification-ui-at-any-point-the-only-interactive-login-method-on-admin-must-be-a-user-id-password-form",
+      "title": "Update the /admin route experience so it does not trigger or display any Internet Identity (II) login/verification UI at any point; the only interactive login method on /admin must be a User ID + Password form.",
+      "reqIds": [
+        "REQ-104"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-an-admin-credential-authentication-flow-specifically-for-admin-that-works-without-internet-identity-by-calling-a-backend-api-that-validates-the-provided-user-id-password-and-returns-an-allow-deny-result-suitable-for-gating-the-admin-panel-ui",
+      "title": "Implement an admin-credential authentication flow specifically for /admin that works without Internet Identity by calling a backend API that validates the provided User ID + Password and returns an allow/deny result suitable for gating the Admin Panel UI.",
+      "reqIds": [
+        "REQ-105"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-admin-page-gating-logic-so-it-does-not-depend-on-the-existing-internet-identity-based-admin-check-isadmin-before-showing-the-credential-login-form-the-login-form-must-render-immediately-and-admin-status-checks-must-not-block-the-page-behind-spinners-like-verifying-admin-access",
+      "title": "Fix /admin page gating logic so it does not depend on the existing Internet-Identity-based admin check (isAdmin()) before showing the credential login form; the login form must render immediately and admin status checks must not block the page behind spinners like \"Verifying admin access...\".",
+      "reqIds": [
+        "REQ-107"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-admin-panel-users-section-ui-so-an-admin-can-view-a-list-of-users-add-a-new-user-remove-an-existing-user-and-set-update-access-until-expiry-date-for-a-user",
+      "title": "Implement the Admin Panel “Users” section UI so an admin can: view a list of users, add a new user, remove an existing user, and set/update “Access until” (expiry date) for a user.",
+      "reqIds": [
+        "REQ-111"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-panel-usage-view-can-be-part-of-the-users-table-or-a-separate-section-that-shows-who-used-the-application-and-when-using-the-backend-usage-tracking-at-minimum-last-used-timestamp",
+      "title": "Add an Admin Panel “Usage” view (can be part of the Users table or a separate section) that shows who used the application and when, using the backend usage tracking (at minimum last-used timestamp).",
+      "reqIds": [
+        "REQ-112"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-panel-users-usage-table-ui-to-display-the-new-sign-in-information-and-ensure-it-clearly-shows-which-users-have-used-the-application-add-a-dedicated-column-for-last-sign-in-credential-sign-in-time-next-to-the-existing-last-used-column-and-ensure-empty-values-show-a-user-friendly-english-placeholder-e-g-never",
+      "title": "Update the Admin Panel Users & Usage table UI to display the new sign-in information and ensure it clearly shows which users have used the application. Add a dedicated column for “Last Sign In” (credential sign-in time) next to the existing “Last Used” column, and ensure empty values show a user-friendly English placeholder (e.g., “Never”).",
+      "reqIds": [
+        "REQ-114"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-an-admin-only-view-user-dashboard-flow-from-the-admin-panel-users-list-add-an-action-on-each-user-row-e-g-view-dashboard-that-opens-an-admin-only-dashboard-view-for-that-selected-user-using-backend-admin-apis-to-fetch-that-user-s-data-not-the-admin-s-own-data",
+      "title": "Implement an admin-only ‘View User Dashboard’ flow from the Admin Panel users list. Add an action on each user row (e.g., “View Dashboard”) that opens an admin-only dashboard view for that selected user, using backend admin APIs to fetch that user’s data (not the admin’s own data).",
+      "reqIds": [
+        "REQ-115"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-admin-user-dashboard-page-ui-under-admin-that-renders-a-minimal-dashboard-experience-for-the-selected-user-using-the-new-backend-admin-apis-the-page-should-provide-read-only-navigation-shortcuts-to-view-that-user-s-invoices-customers-items-lists-within-the-admin-context-do-not-mix-with-the-regular-app-s-navigation-chrome",
+      "title": "Create an admin user dashboard page UI (under `/admin`) that renders a minimal dashboard experience for the selected user using the new backend admin APIs. The page should provide read-only navigation shortcuts to view that user’s invoices/customers/items lists within the admin context (do not mix with the regular app’s navigation chrome).",
+      "reqIds": [
+        "REQ-117"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-to-record-internet-identity-sign-in-events-by-calling-the-backend-sign-in-tracking-method-after-a-successful-internet-identity-login-from-the-unauthenticated-screen-and-from-the-header-sign-in-button-without-modifying-immutable-internet-identity-hook-files",
+      "title": "Update the frontend to record Internet Identity sign-in events by calling the backend sign-in tracking method after a successful Internet Identity login from the unauthenticated screen and from the header Sign In button (without modifying immutable Internet Identity hook files).",
+      "reqIds": [
+        "REQ-121"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-panel-users-usage-table-to-display-internet-identity-sign-in-date-time-for-users-and-ensure-the-table-can-show-activity-for-internet-identity-only-users-as-well-as-credential-users",
+      "title": "Update the Admin Panel 'Users & Usage' table to display Internet Identity sign-in date/time for users, and ensure the table can show activity for Internet Identity-only users as well as credential users.",
+      "reqIds": [
+        "REQ-122"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-gst-filing-status-page-ui-at-frontend-src-pages-gstfilingstatuspage-tsx-currently-empty-so-an-authenticated-user-can-select-gst-return-type-gstr-3b-and-gstr-1-select-period-inputs-supported-by-the-existing-backend-period-monthly-quarterly-selection-fetch-results-via-react-query-using-the-existing-hook-pattern-usegetgstfilingstatus-and-view-a-clear-table-list-showing-period-label-filing-status-and-filing-date-when-available-the-page-must-also-show-the-user-s-gst-profile-status-active-inactive-with-a-last-refreshed-timestamp-and-a-manual-refresh-action-all-user-facing-text-must-be-in-english",
+      "title": "Implement the GST Filing Status page UI at frontend/src/pages/GstFilingStatusPage.tsx (currently empty) so an authenticated user can: select GST Return type (GSTR-3B and GSTR-1), select period inputs supported by the existing backend (period + monthly/quarterly selection), fetch results via React Query using the existing hook pattern (useGetGstFilingStatus), and view a clear table/list showing period label, filing status, and filing date (when available). The page must also show the user’s GST profile status (active/inactive) with a last-refreshed timestamp and a manual Refresh action. All user-facing text must be in English.",
+      "reqIds": [
+        "REQ-125"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-navigation-entry-point-to-the-gst-filing-status-page-in-the-authenticated-app-shell-frontend-src-components-appshell-tsx-and-add-the-corresponding-route-in-frontend-src-routetree-tsx-the-new-navigation-label-must-be-gst-filing-status-and-all-user-facing-text-must-be-in-english",
+      "title": "Add a navigation entry point to the GST Filing Status page in the authenticated app shell (frontend/src/components/AppShell.tsx) and add the corresponding route in frontend/src/routeTree.tsx. The new navigation label must be \"GST Filing Status\" and all user-facing text must be in English.",
+      "reqIds": [
+        "REQ-126"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-settings-entry-section-that-clearly-links-to-or-surfaces-gst-filing-status-functionality-so-users-can-find-the-filing-feature-from-settings-as-well-this-must-not-remove-or-break-existing-business-profile-and-invoice-settings-functionality-on-frontend-src-pages-settingspage-tsx-all-user-facing-text-must-be-in-english",
+      "title": "Add a Settings entry/section that clearly links to (or surfaces) GST Filing Status functionality so users can find the filing feature from Settings as well. This must not remove or break existing Business Profile and Invoice Settings functionality on frontend/src/pages/SettingsPage.tsx. All user-facing text must be in English.",
+      "reqIds": [
+        "REQ-127"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-rename-all-user-facing-labels-copy-from-gst-filing-gst-filing-status-to-gst-status-in-the-authenticated-app-navigation-and-the-gst-status-page-ui-while-keeping-all-user-facing-text-in-english",
+      "title": "Rename all user-facing labels/copy from “GST Filing” / “GST Filing Status” to “GST Status” in the authenticated app navigation and the GST status page UI, while keeping all user-facing text in English.",
+      "reqIds": [
+        "REQ-128"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-gst-status-page-to-present-return-filing-status-in-a-way-that-clearly-answers-filed-or-not-filed-for-the-selected-return-type-using-the-real-backend-data-returned-by-fetchgstfilingstatus-and-keep-robust-loading-empty-error-states",
+      "title": "Update the GST Status page to present return filing status in a way that clearly answers “Filed or not filed” for the selected return type, using the real backend data returned by fetchGstFilingStatus, and keep robust loading/empty/error states.",
+      "reqIds": [
+        "REQ-130"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-authenticated-app-navigation-so-that-on-mobile-screen-sizes-users-can-reliably-access-both-settings-settings-and-gst-status-gst-filing-status-including-when-the-header-nav-is-hidden-currently-hidden-on-md",
+      "title": "Fix the authenticated app navigation so that on mobile screen sizes users can reliably access both “Settings” (/settings) and “GST Status” (/gst-filing-status), including when the header nav is hidden (currently hidden on < md).",
+      "reqIds": [
+        "REQ-131"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-gst-status-page-crash-where-the-ui-shows-returntype-is-not-defined-ensuring-the-page-can-render-and-the-return-type-selector-works-without-runtime-errors",
+      "title": "Fix the GST Status page crash where the UI shows “ReturnType is not defined”, ensuring the page can render and the return-type selector works without runtime errors.",
+      "reqIds": [
+        "REQ-132"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-gst-status-show-refresh-status-functionality-fetches-real-filing-status-data-from-the-gst-portal-via-the-existing-backend-integration-https-services-gst-gov-in-services-searchtp-and-displays-the-results-in-the-gst-status-table-filed-not-filed-plus-filing-date-when-available-with-clear-loading-empty-error-states-in-english",
+      "title": "Ensure GST Status “Show/Refresh Status” functionality fetches real filing status data from the GST portal via the existing backend integration (https://services.gst.gov.in/services/searchtp) and displays the results in the GST Status table (Filed/Not filed plus filing date when available), with clear loading/empty/error states in English.",
+      "reqIds": [
+        "REQ-133"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-extend-gst-status-to-display-a-more-complete-gst-profile-section-as-available-from-the-gst-portal-response-so-the-user-can-verify-the-gstin-is-correct-and-render-these-profile-fields-in-the-gst-status-page-in-english",
+      "title": "Extend GST Status to display a more complete GST profile section (as available from the GST portal response) so the user can verify the GSTIN is correct, and render these profile fields in the GST Status page in English.",
+      "reqIds": [
+        "REQ-134"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -100,6 +913,438 @@
       "summary": "Persist all GST Pro data (business profile, customers, items, invoices) in the Motoko canister with stable storage so it survives canister upgrades.",
       "reqIds": [
         "REQ-9"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Allow creating/adding a new Customer and a new Item directly from the New Invoice generation/creation flow",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Make GST Pro iOS-ready (deployable/usable on iPhone/iPad via PWA or iOS wrapper, with appropriate mobile UI/UX and installability)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Add a splash screen / launch screen that matches the app icon for a more native iOS/PWA feel",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Fix access-control initialization so that regular authenticated users can use core CRUD features (customers/items/invoices/business profile) without requiring any secret/admin token, while still preserving any admin-only capabilities behind the secret token where applicable.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Add an 'E-Way Bill' button that redirects users to the official e-Way Bill website login page",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Add monthly GST filing status view that fetches filing status data from GST.gov.in, including GST number correction support",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Implement a backend canister API to fetch GST filing status data from GST.gov.in for a given GSTIN and period, and return a normalized, frontend-friendly result structure (including per-month status entries and an error shape suitable for user-facing messages).",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Make invoice/date fields editable (allow user to change the date rather than fixed/default)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Enhance GST Filing Status to show status for multiple return types (e.g., GSTR-3B and GSTR-1)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Make GST Filing Status period view adaptive to show Monthly or Quarterly filing details (based on selection/applicable scheme)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Add Financial Year dropdown selector in GST Filing Status (and/or reports) to view filing details by FY",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Update the backend GST filing status API to accept enough parameters to support: (1) return type (GSTR-3B, GSTR-1) and (2) filing frequency (Monthly/Quarterly), and return a normalized result structure that the frontend can render for either monthly or quarterly entries.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Add an admin panel with application access control via User ID and Password login (admin-managed credentials)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Add backend support for an admin-managed application access layer using User ID and Password credentials, while keeping Internet Identity as the underlying authentication mechanism for canister calls.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Implement backend admin detection and a safe admin bootstrap so at least one signed-in user can access the Admin Panel after Internet Identity sign-in (including a query API the frontend can call to determine whether the caller is an admin).",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-36",
+      "summary": "Implement backend APIs for admin-managed application access credentials and validation, replacing the current frontend placeholders: create/register credentials, list credentials, reset credential password, revoke credential, and validate user-provided User ID + Password for application access.",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-37",
+      "summary": "Add explicit Sign In and Sign Up buttons and an account creation flow for GST Pro (in addition to existing Internet Identity sign-in)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-38",
+      "summary": "Add social sign-in options: Sign in with Google and Sign in with Apple",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-39",
+      "summary": "Add a separate, clearly visible Admin Panel button/link in the UI (distinct from other navigation)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-40",
+      "summary": "Provide an admin credential bootstrap for the Admin Panel (issue/provide initial User ID + Password for admin access, or a guided first-time setup to create them)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-44",
+      "summary": "Align backend admin detection with how credentials are actually created/used in the UI so that an admin created via the Admin Panel (username + password + admin flag) is correctly recognized as an admin when calling isAdmin(), and the Admin Panel link/button appears for that admin after signing in with Internet Identity.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-45",
+      "summary": "Add total GST value summary on the Dashboard",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-46",
+      "summary": "Use dropdown selectors for State fields (show Indian state names) instead of free-text inputs (e.g., Business Profile and Customer forms)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-47",
+      "summary": "Test the full GST Pro application end-to-end and fix any issues found across core flows",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-48",
+      "summary": "Simplify the login flow for regular users and provide a separate Admin Panel entry with its own distinct URL/route",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-49",
+      "summary": "Add role-based access control (RBAC) to GST Pro (roles/permissions beyond admin vs non-admin)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-50",
+      "summary": "Implement role-based access control (RBAC) in the backend, expanding authorization beyond the current admin vs non-admin behavior, using the existing credential `role` field to enforce permissions for core GST Pro actions (business profile, customers, items, invoices, GST filing status) and admin-only actions (credential management, role assignment).",
+      "reqIds": [
+        "REQ-58"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-51",
+      "summary": "Revert/restore the application to behave/look like Version 9 (rollback from current Version 16 build)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-55",
+      "summary": "Restore backend access control behavior to match Version 9 by removing (or disabling) any mandatory credential-based authorization checks for core CRUD operations (business profile, customers, items, invoices). Core CRUD must be authorized by Internet Identity principal only (scoped per principal), as in Version 9.",
+      "reqIds": [
+        "REQ-69"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-56",
+      "summary": "Add Android/iOS install option (logo/button) at the bottom of the web app to prompt/install GST Pro as a PWA",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-57",
+      "summary": "Fix Sign In button so it reliably opens the Internet Identity login flow",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-58",
+      "summary": "Add an in-app Sign Up form/flow collecting email, password, and mobile number so users can register for application access",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-59",
+      "summary": "Make a default admin credential (requested: singh.mayank783@gmail.com / Mayank@123) available for Admin Panel access",
+      "reqIds": [],
+      "status": "blocked"
+    },
+    {
+      "id": "AR-62",
+      "summary": "Implement backend support for application-access credentials and bootstrap a default admin credential with User ID (email) `singh.mayank783@gmail.com` and Password `Mayank@123` as an admin user, so the Admin Panel can be accessed using these credentials by default.",
+      "reqIds": [
+        "REQ-77"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-63",
+      "summary": "Make Dashboard KPI cards/buttons clickable and redirect to their corresponding data pages (e.g., Total Invoices -> Invoices list)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-64",
+      "summary": "Fix iOS safe-area layout so header actions (logo, E‑Way Bill, Sign Out) do not overlap the iPhone notch/cutout",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-65",
+      "summary": "Add an option to include a company logo on invoices (upload/select logo and render on invoice print/export)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-66",
+      "summary": "Update Sign In screen to offer both Internet Identity and User ID/Password login options (so users created via Sign Up can log in with credentials, while Internet Identity remains available)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-70",
+      "summary": "Ensure the backend application-credential authentication remains available and supports the requested default Parental Portal credential: User ID (email) = \"singh.mayank783@gmail.com\" and Password = \"Mayank@123\" via authenticateApplicationCredentials(email, password). Ensure successful authentication assigns/maintains admin access for the caller Principal as implemented in backend/main.mo.",
+      "reqIds": [
+        "REQ-89"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-71",
+      "summary": "Remove double sign-in: after User ID/Password login, user should not need to also sign in with Internet Identity",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-72",
+      "summary": "Add invoice list filters by invoice date, month, and year so users can filter and view invoices",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-73",
+      "summary": "Add monthly invoice totals/summary in the Invoices section (e.g., taxable value total, total value, and other key totals)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-74",
+      "summary": "Add an Admin Panel button/link below the Sign In button (on the sign-in screen) so the single admin can access user and role management",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-77",
+      "summary": "Ensure backend credential authentication correctly grants admin recognition for the signed-in Internet Identity Principal so that a successful call to authenticateApplicationCredentials(email, password) causes subsequent isAdmin() calls to return true for admin credentials (and false otherwise).",
+      "reqIds": [
+        "REQ-98"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-78",
+      "summary": "Allow Admin Panel access using only User ID & Password (remove Internet Identity requirement/verification for admin login)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-79",
+      "summary": "Provide/enable a default Admin Panel credential (User ID: kashi280622, Password: Kashi@123) for admin-only login via User ID & Password (no Internet Identity on /admin).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-82",
+      "summary": "Bootstrap/enable the default Admin Panel credential exactly as provided by the user so it can be used to sign in to /admin: User ID = \"kashi280622\" and Password = \"Kashi@123\". Ensure this credential is treated as admin for the /admin validation API.",
+      "reqIds": [
+        "REQ-106"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-83",
+      "summary": "Enhance Admin Panel with user management: add/remove users, grant access until a specified date (access expiry), and display user usage/audit info (user name and when they used the app)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-84",
+      "summary": "Extend the backend user/credential model to support (a) per-user application access expiry (grant access until a specific date/time) and (b) usage tracking (at minimum: last time the user used the app), so this information can be displayed in the Admin Panel.",
+      "reqIds": [
+        "REQ-108"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-85",
+      "summary": "Enforce access expiry in the backend so that users whose access has expired cannot use protected application APIs, and the backend returns a clear English error (not a confusing trap) indicating that access has expired.",
+      "reqIds": [
+        "REQ-109"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-86",
+      "summary": "Add backend admin APIs to allow an admin to manage users: create/add a user, remove/delete a user, and update a user’s access expiry date (grant access until a selected date).",
+      "reqIds": [
+        "REQ-110"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-87",
+      "summary": "Allow admin to view/access other users’ dashboards/data from the Admin Panel (admin impersonation or per-user data view)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-88",
+      "summary": "Extend backend admin user records and APIs so the Admin Panel can display complete user data including sign-in/usage timestamps. Add a new optional field to the backend user record for the last successful credential sign-in time (e.g., `lastSignIn : ?Time.Time`), ensure it is updated whenever `authenticateApplicationCredentials(userId, password)` succeeds, and ensure `listUsers()` returns this field along with existing fields (email/mobile/role/accessExpiry/lastUsed/principal/etc.).",
+      "reqIds": [
+        "REQ-113"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-91",
+      "summary": "Add backend admin-only APIs to support viewing another user’s data in a read-only way for admin dashboard viewing. The APIs must accept a target user identifier (userId) and return that user’s dashboard-relevant data (at minimum: invoice list or invoice KPI aggregates needed by the dashboard), using the target user’s bound principal internally to read from the existing per-principal maps.",
+      "reqIds": [
+        "REQ-116"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-92",
+      "summary": "Track users who log in via Internet Identity and show all users in the Admin Panel with their login time/date (plus associated user data).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-93",
+      "summary": "Add backend support to track application usage for users who sign in via Internet Identity (Principal-based users), including storing (at minimum) the last successful Internet Identity sign-in timestamp and the last-used timestamp.",
+      "reqIds": [
+        "REQ-118"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-94",
+      "summary": "Expose an admin-only backend API that returns a unified list of users (credential-based users and Internet Identity-only Principals) including their associated identifiers and activity timestamps so the Admin Panel can show 'all users' with login time/date.",
+      "reqIds": [
+        "REQ-119"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-95",
+      "summary": "Update the backend so that after a successful Internet Identity sign-in, the app can record that event by calling a backend method to store the Internet Identity 'last sign-in' timestamp for the caller Principal.",
+      "reqIds": [
+        "REQ-120"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-96",
+      "summary": "In GST Filing Status, also display GST profile status (e.g., active/inactive) and other GST-related profile data returned from https://services.gst.gov.in/services/searchtp, alongside GSTR-3B/GSTR-1 filing date/status.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-97",
+      "summary": "Update the backend GST filing-status API so it fetches real data from https://services.gst.gov.in/services/searchtp and returns a normalized response that includes, at minimum, the filing status and filing date (when available) for both GSTR-3B and GSTR-1 for the requested period, along with an explicit GST profile status indicator (e.g., active/inactive) derived from the upstream response. The backend must return either (a) populated status entries and profile status data or (b) a clear, frontend-friendly error object; it must not return a dummy placeholder result.",
+      "reqIds": [
+        "REQ-123"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-98",
+      "summary": "Extend the backend GST filing-status types to support displaying filing date and GST profile summary fields required for the UI (including profile active/inactive). Update the Candid/TypeScript bindings accordingly so the frontend can render these fields without type hacks.",
+      "reqIds": [
+        "REQ-124"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-99",
+      "summary": "Rename “GST Filing Status” to “GST Status” across the UI/navigation/routes where it appears",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-100",
+      "summary": "Fix GST Status so it fetches real return filing status from the GST portal and clearly shows whether each return is filed or not filed",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-102",
+      "summary": "Fix the backend GST return status fetch so it reliably retrieves real return filing status data from the GST portal endpoint https://services.gst.gov.in/services/searchtp (no dummy/placeholder behavior), and returns a frontend-friendly result that clearly indicates whether each return is filed or not filed (including filing date when available).",
+      "reqIds": [
+        "REQ-129"
       ],
       "status": "pending"
     }

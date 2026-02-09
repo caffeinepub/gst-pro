@@ -1,356 +1,86 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "GST Pro — Frontend implementation plan",
+  "title": "Fix mobile nav access + stabilize and complete GST Status UI rendering",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Create GST Pro app shell with branding, navigation, and scaffolded core pages (Dashboard, Customers, Items, Invoices, Settings).",
+      "id": "REQ-131",
+      "summary": "Add a mobile-friendly authenticated navigation UI so Settings and GST Status are always accessible on small screens.",
       "acceptanceCriteria": [
-        "The app name \"GST Pro\" is visible in the header/sidebar and browser title.",
-        "Navigation routes exist for Dashboard, Customers, Items, Invoices, and Settings.",
-        "Each page renders a clear heading and empty-state content when no data exists."
+        "On iPhone-sized viewports, there is a visible and usable navigation UI that includes entries for “Settings” and “GST Status”.",
+        "Tapping “Settings” navigates to /settings and renders SettingsPage.",
+        "Tapping “GST Status” navigates to /gst-filing-status and renders GstFilingStatusPage.",
+        "Navigation items remain accessible without horizontal overflow or being clipped on small screens."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/components/MobileNav.tsx",
           "operation": "create",
-          "description": "Create the app root component that wires routing, global layout shell, and core page routes (Dashboard, Customers, Items, Invoices, Settings)."
-        },
-        {
-          "path": "frontend/src/router.tsx",
-          "operation": "create",
-          "description": "Add lightweight routing (hash-based or browser-based) to support the required navigation routes without relying on immutable entry files."
-        },
-        {
-          "path": "frontend/src/components/AppShell.tsx",
-          "operation": "create",
-          "description": "Implement the GST Pro application shell (header/sidebar), showing app title and navigation links to the core pages."
-        },
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "create",
-          "description": "Add Dashboard scaffold page with heading and empty-state content."
-        },
-        {
-          "path": "frontend/src/pages/CustomersPage.tsx",
-          "operation": "create",
-          "description": "Add Customers scaffold page with heading and empty-state content (later extended for customer management)."
-        },
-        {
-          "path": "frontend/src/pages/ItemsPage.tsx",
-          "operation": "create",
-          "description": "Add Items scaffold page with heading and empty-state content (later extended for item management)."
-        },
-        {
-          "path": "frontend/src/pages/InvoicesPage.tsx",
-          "operation": "create",
-          "description": "Add Invoices scaffold page with heading and empty-state content (later extended for invoice listing/creation)."
-        },
-        {
-          "path": "frontend/src/pages/SettingsPage.tsx",
-          "operation": "create",
-          "description": "Add Settings scaffold page with heading and empty-state content (later extended for business profile settings)."
-        },
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Ensure the browser title is \"GST Pro\" and keep it consistent with the app branding."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Implement Internet Identity sign-in/out, enforce authenticated access to app data, and set up per-user profile capture (name) using the authorization component guidance.",
-      "acceptanceCriteria": [
-        "Unauthenticated users are prompted to sign in before accessing app data.",
-        "After sign-in, created customers/items/invoices are only visible to the same signed-in Principal.",
-        "Sign out returns the app to an unauthenticated state with no private data shown."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/LoginButton.tsx",
-          "operation": "create",
-          "description": "Create a login/logout button using the authorization component’s frontend guidance (Internet Identity via existing hook) and clear cached app data on logout. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/AuthGate.tsx",
-          "operation": "create",
-          "description": "Add an authenticated-only guard wrapper that blocks access to app pages when unauthenticated, showing a sign-in prompt instead. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/ProfileSetupDialog.tsx",
-          "operation": "create",
-          "description": "Implement first-login name capture using backend user profile capabilities described by the authorization component (getCallerUserProfile/saveCallerUserProfile), avoiding principal display in the UI. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useCurrentUserProfile.ts",
-          "operation": "create",
-          "description": "Add React Query hooks to load/save the current user profile via the backend actor, following the authorization component’s recommended loading-state pattern to prevent modal flash. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire AuthGate, LoginButton, and ProfileSetupDialog into the app so unauthenticated users can’t access private data and the name prompt appears only when needed. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Add Settings business profile form and persist/reload business invoicing defaults (including invoice prefix/starting number) for use during invoice creation.",
-      "acceptanceCriteria": [
-        "A Settings page allows viewing/editing business profile fields.",
-        "Business profile is persisted and reloaded on refresh.",
-        "Invoice creation uses the saved defaults (prefix/starting number) when generating the next invoice number."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useBusinessProfile.ts",
-          "operation": "create",
-          "description": "Create React Query hooks to fetch and save the business profile via the backend actor (getBusinessProfile/saveBusinessProfile)."
-        },
-        {
-          "path": "frontend/src/pages/SettingsPage.tsx",
-          "operation": "modify",
-          "description": "Implement the business profile settings UI (business name, address, GSTIN, state, invoice prefix, starting number), including load/save states and validation where appropriate."
-        },
-        {
-          "path": "frontend/src/utils/invoiceNumbering.ts",
-          "operation": "create",
-          "description": "Add frontend helper utilities to compute the displayed next invoice number from saved business defaults (prefix/starting number) and local invoice context."
-        },
-        {
-          "path": "frontend/src/pages/InvoiceEditorPage.tsx",
-          "operation": "create",
-          "description": "Create an invoice editor page that consumes the saved business defaults to display/generate the next invoice number for new invoices (display/UX), and supports edit mode for existing invoices."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register the InvoiceEditorPage route(s) and ensure navigation paths allow reaching invoice creation/editing from Invoices."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Implement customer management UI: create, edit, list, delete, and basic search/filter by name.",
-      "acceptanceCriteria": [
-        "Customers can be created, edited, and deleted from the UI.",
-        "Customer list shows key fields and supports basic search/filter by name.",
-        "Customer data persists across refresh for the signed-in user."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useCustomers.ts",
-          "operation": "create",
-          "description": "Add React Query hooks for customer list/detail and mutations (getCustomers/getCustomer/addCustomer/editCustomer/deleteCustomer) using the backend actor."
-        },
-        {
-          "path": "frontend/src/components/customers/CustomerFormDialog.tsx",
-          "operation": "create",
-          "description": "Create a reusable customer create/edit form dialog (name, billing address, GSTIN optional, state, contact info optional) using existing UI primitives; ensure consistent form styling."
-        },
-        {
-          "path": "frontend/src/components/customers/CustomersTable.tsx",
-          "operation": "create",
-          "description": "Create a customers table/list component showing key fields and supporting client-side search/filter by name."
-        },
-        {
-          "path": "frontend/src/pages/CustomersPage.tsx",
-          "operation": "modify",
-          "description": "Wire CustomersTable and CustomerFormDialog into the Customers page, including create/edit/delete actions and empty-state behavior."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Implement item/service catalog management UI: create, edit, list, delete, and basic search/filter by name.",
-      "acceptanceCriteria": [
-        "Items can be created, edited, and deleted from the UI.",
-        "Items list shows name, price, and GST rate and supports basic search/filter by name.",
-        "Item data persists across refresh for the signed-in user."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useItems.ts",
-          "operation": "create",
-          "description": "Add React Query hooks for item list/detail and mutations (getItems/getItem/addItem/editItem/deleteItem) using the backend actor."
-        },
-        {
-          "path": "frontend/src/components/items/ItemFormDialog.tsx",
-          "operation": "create",
-          "description": "Create a reusable item create/edit form dialog (name, description optional, HSN/SAC optional, unit price, default GST rate) using existing UI primitives; ensure consistent form styling."
-        },
-        {
-          "path": "frontend/src/components/items/ItemsTable.tsx",
-          "operation": "create",
-          "description": "Create an items table/list component showing name, price, GST rate and supporting client-side search/filter by name."
-        },
-        {
-          "path": "frontend/src/pages/ItemsPage.tsx",
-          "operation": "modify",
-          "description": "Wire ItemsTable and ItemFormDialog into the Items page, including create/edit/delete actions and empty-state behavior."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Implement invoice create/edit UI with line items, auto-calculations (taxable/GST totals), and intra-state vs inter-state tax logic based on business/customer state.",
-      "acceptanceCriteria": [
-        "User can select a customer and add/remove multiple line items.",
-        "Totals update automatically: subtotal/taxable amount, CGST/SGST or IGST, and grand total.",
-        "Tax type switches correctly based on state comparison (same state => CGST+SGST; different state => IGST).",
-        "Invoices have an invoice number, invoice date, and due date (optional)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/gstCalculations.ts",
-          "operation": "create",
-          "description": "Add pure calculation utilities to compute taxable value, discounts, GST split (CGST/SGST vs IGST), and grand totals from invoice draft inputs and state comparison."
-        },
-        {
-          "path": "frontend/src/hooks/useInvoices.ts",
-          "operation": "create",
-          "description": "Add React Query hooks for invoices list/detail and mutations (getInvoices/getInvoice/createInvoice/editInvoice/finalizeInvoice/deleteInvoice) using the backend actor."
-        },
-        {
-          "path": "frontend/src/components/invoices/InvoiceLineItemsEditor.tsx",
-          "operation": "create",
-          "description": "Create a line items editor component allowing add/remove of multiple line items, selecting an item/service, entering quantity/unit price, and optional discount, with live totals."
-        },
-        {
-          "path": "frontend/src/components/invoices/InvoiceMetaEditor.tsx",
-          "operation": "create",
-          "description": "Add invoice metadata inputs in the editor UI (invoice number display, invoice date, optional due date) and state-driven tax mode indicator."
-        },
-        {
-          "path": "frontend/src/pages/InvoiceEditorPage.tsx",
-          "operation": "modify",
-          "description": "Implement invoice creation/editing flow: customer selection, line items editor, auto-calculation summaries, and save/finalize actions; determine tax type via business vs customer state."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Add invoice listing and invoice detail view with status (Draft/Finalized) management and safe deletion UX rules.",
-      "acceptanceCriteria": [
-        "Invoices page lists invoices with number, customer, date, total, and status.",
-        "Invoice detail page shows full breakdown including GST components and line items.",
-        "Users can delete invoices; if status rules are implemented, the UI prevents disallowed actions and shows an explanatory message."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/InvoicesPage.tsx",
-          "operation": "modify",
-          "description": "Implement invoices list UI with status display and navigation into invoice detail/editor; show empty-state when no invoices exist."
-        },
-        {
-          "path": "frontend/src/pages/InvoiceDetailPage.tsx",
-          "operation": "create",
-          "description": "Create invoice detail view showing customer, business, line items, and GST breakdown (CGST/SGST or IGST) with totals; include actions (edit, finalize, delete subject to rules)."
-        },
-        {
-          "path": "frontend/src/components/invoices/InvoiceStatusBadge.tsx",
-          "operation": "create",
-          "description": "Add a small reusable status badge for Draft/Finalized to keep status styling consistent across list and detail."
-        },
-        {
-          "path": "frontend/src/utils/invoiceRules.ts",
-          "operation": "create",
-          "description": "Define frontend-safe invoice action rules (e.g., disallow deletion when finalized) and provide user-facing explanatory messages when actions are blocked."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register routes for InvoiceDetailPage (and ensure navigation from the invoices list to details is wired)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "summary": "Provide a print-friendly invoice layout reachable from invoice detail (browser print) including required invoice fields and readable paper layout.",
-      "acceptanceCriteria": [
-        "Invoice detail includes a Print action that opens a print-friendly layout.",
-        "Printed output includes GSTIN fields (where available), states, invoice number/date, and a clear tax breakdown (CGST/SGST or IGST).",
-        "Layout remains readable on A4/Letter paper sizes."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/InvoicePrintPage.tsx",
-          "operation": "create",
-          "description": "Create a dedicated print-friendly invoice page that renders the full invoice with business/customer details, metadata, line items, GST breakdown, and totals, and triggers browser printing."
-        },
-        {
-          "path": "frontend/src/pages/InvoiceDetailPage.tsx",
-          "operation": "modify",
-          "description": "Add a Print action that navigates to the print-friendly invoice layout for the current invoice."
-        },
-        {
-          "path": "frontend/src/index.css",
-          "operation": "create",
-          "description": "Add global styles including print media rules to hide navigation chrome on print pages and ensure typography/layout is readable on A4/Letter."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register a route for InvoicePrintPage and ensure it can be reached from the Invoice detail view."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Apply a professional, coherent GST Pro theme across the app (avoid blue/purple primary), ensuring consistent styling for forms, tables, and CTAs.",
-      "acceptanceCriteria": [
-        "All core pages share consistent typography, spacing, and component styles.",
-        "Primary UI palette is not blue/purple (except where unavoidable in existing components).",
-        "Forms, tables, and call-to-action buttons look consistent across pages."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Define/adjust design tokens (CSS variables) for a professional non-blue/purple primary palette (e.g., green/amber/neutral) and set consistent base typography and spacing."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Align Tailwind theme extension (if needed) with the app’s chosen non-blue/purple primary palette via existing CSS variable-driven color system."
+          "description": "Create a small-screen navigation component that exposes all primary app routes (at minimum “GST Status” and “Settings”) using shadcn-ui primitives (e.g., Sheet/DropdownMenu) for a reliable mobile menu. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/components/AppShell.tsx",
           "operation": "modify",
-          "description": "Ensure navigation, header, and layout spacing use the shared theme tokens and consistent component styling (buttons, links, active states)."
+          "description": "Wire the new MobileNav into the authenticated header for < md breakpoints (where the current header nav is hidden) so users can always reach /settings and /gst-filing-status without overflow/clipping. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-11",
-      "summary": "Include generated GST Pro brand assets (logo and app icon) as static assets and render them in the UI (shell and favicon).",
+      "id": "REQ-132",
+      "summary": "Eliminate the “ReturnType is not defined” runtime crash on GST Status and ensure return-type selection works reliably.",
       "acceptanceCriteria": [
-        "Generated images are stored under frontend/public/assets/generated and are referenced directly by the frontend.",
-        "Logo is displayed in the app shell (e.g., sidebar/header).",
-        "App icon is visible where appropriate (e.g., favicon/app header)."
+        "Opening /gst-filing-status and interacting with the return type controls does not throw “ReturnType is not defined” (or any other uncaught error).",
+        "The return-type selection (GSTR-3B / GSTR-1) updates the displayed filing-status rows accordingly.",
+        "The fix does not require modifying any files under frontend/src/hooks/useInternetIdentity.ts(x) or frontend/src/hooks/useActor.ts (immutable paths)."
       ],
       "file_operations": [
         {
-          "path": "frontend/public/assets/generated/gst-pro-logo.dim_1200x300.png",
-          "operation": "create",
-          "description": "Add the generated GST Pro wordmark logo asset at the required path for direct frontend reference."
-        },
-        {
-          "path": "frontend/public/assets/generated/gst-pro-icon.dim_256x256.png",
-          "operation": "create",
-          "description": "Add the generated GST Pro app icon asset at the required path for direct frontend reference."
-        },
-        {
-          "path": "frontend/index.html",
+          "path": "frontend/src/pages/GstFilingStatusPage.tsx",
           "operation": "modify",
-          "description": "Wire the app icon as the favicon using frontend/public/assets/generated/gst-pro-icon.dim_256x256.png."
+          "description": "Audit and fix any runtime references to a non-existent ReturnType symbol by ensuring only the generated runtime enum ReturnType_ is used as a value (and any TypeScript-only types are not referenced at runtime). Keep the return-type controls bound to selectedReturnType and ensure filtering uses entry.returnType === selectedReturnType."
+        }
+      ]
+    },
+    {
+      "id": "REQ-133",
+      "summary": "Ensure GST Status refresh fetches and displays real filing-status data with clear English loading/empty/error states.",
+      "acceptanceCriteria": [
+        "Clicking the GST Status refresh action triggers a backend call that attempts to fetch real data from https://services.gst.gov.in/services/searchtp (not placeholder/dummy results).",
+        "When data is returned, the UI shows rows with Period, Status (clearly indicating Filed/Not filed), and Filing Date (or an English placeholder like “Not available”).",
+        "When the upstream request fails or returns an error condition, the backend returns a frontend-friendly error object (not a trap), and the UI displays a clear English error message without a blank screen.",
+        "Loading state is shown while fetching; empty state is shown when the call succeeds but no entries are available for the selected filters."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Adjust the GST filing status query behavior to better match the “Show/Refresh Status” interaction model (e.g., prevent automatic fetch on first render when desired, ensure refetch always runs on button click, and ensure query keys reflect all selected filters)."
         },
         {
-          "path": "frontend/src/components/AppShell.tsx",
+          "path": "frontend/src/pages/GstFilingStatusPage.tsx",
           "operation": "modify",
-          "description": "Render the logo image from frontend/public/assets/generated/gst-pro-logo.dim_1200x300.png in the header/sidebar and use it in unauthenticated/loading contexts where appropriate."
+          "description": "Update the refresh action UX and table rendering: show an explicit loading state while fetching; render a clear English empty state when statusEntries for the selected return type are empty; render a clear English error state using getUserFacingError for thrown errors and a safe message for filingStatus.error without crashing; ensure table rows always show Period, Filed/Not filed status, and Filing Date (or “Not available”)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-134",
+      "summary": "Render a more complete GST Profile section on GST Status using available fields and graceful English fallbacks.",
+      "acceptanceCriteria": [
+        "Backend GST filing-status response includes additional GST profile fields (beyond the current isActive/legalName/tradeName) when available from the GST portal response, and the frontend types/bindings compile without type hacks.",
+        "GST Status page renders a “GST Profile” (or equivalent) section that displays the available profile fields and clearly indicates Active/Inactive/Unknown status.",
+        "If profile fields are missing/unavailable, the UI degrades gracefully (does not crash) and shows sensible English placeholders (e.g., “Not available”)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/gst/GstProfileSection.tsx",
+          "operation": "create",
+          "description": "Create a GST Profile section component that accepts the GSTFilingStatus object and renders available profile fields (e.g., gstin, gstStatus, legalName, tradeName, taxpayerType, state, address/principalPlaceOfBusiness, natureOfBusiness, registration/cancellation dates, filing frequency details) with English “Not available” fallbacks and Active/Inactive/Unknown badge handling using existing UI components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/GstFilingStatusPage.tsx",
+          "operation": "modify",
+          "description": "Replace/extend the existing limited ‘GST Profile Status’ card by wiring in GstProfileSection and ensuring the page continues to render safely when any profile fields are missing/unavailable."
         }
       ]
     }

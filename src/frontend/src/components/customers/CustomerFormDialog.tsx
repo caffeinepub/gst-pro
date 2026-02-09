@@ -11,17 +11,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollableSelectContent } from '../forms/ScrollableSelectContent';
 import { Loader2 } from 'lucide-react';
 import type { Customer } from '../../backend';
 import { toast } from 'sonner';
+import { getUserFacingError } from '../../utils/userFacingError';
+import { INDIAN_STATES } from '../../utils/indianStates';
 
 interface CustomerFormDialogProps {
   open: boolean;
   onClose: () => void;
   customer: Customer | null;
+  onSuccess?: (customer: Customer) => void;
 }
 
-export default function CustomerFormDialog({ open, onClose, customer }: CustomerFormDialogProps) {
+export default function CustomerFormDialog({ open, onClose, customer, onSuccess }: CustomerFormDialogProps) {
   const addCustomer = useAddCustomer();
   const editCustomer = useEditCustomer();
   const isEditing = customer !== null;
@@ -73,8 +78,9 @@ export default function CustomerFormDialog({ open, onClose, customer }: Customer
           contactInfo: formData.contactInfo || null,
         });
         toast.success('Customer updated successfully');
+        onClose();
       } else {
-        await addCustomer.mutateAsync({
+        const newCustomer = await addCustomer.mutateAsync({
           name: formData.name,
           billingAddress: formData.billingAddress,
           gstin: formData.gstin || null,
@@ -82,10 +88,14 @@ export default function CustomerFormDialog({ open, onClose, customer }: Customer
           contactInfo: formData.contactInfo || null,
         });
         toast.success('Customer added successfully');
+        onClose();
+        if (onSuccess) {
+          onSuccess(newCustomer);
+        }
       }
-      onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save customer');
+      const errorMessage = getUserFacingError(error);
+      toast.error(errorMessage);
     }
   };
 
@@ -126,17 +136,26 @@ export default function CustomerFormDialog({ open, onClose, customer }: Customer
 
           <div className="space-y-2">
             <Label htmlFor="state">State *</Label>
-            <Input
-              id="state"
+            <Select
               value={formData.state}
-              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-              placeholder="e.g., Karnataka"
+              onValueChange={(value) => setFormData({ ...formData, state: value })}
               required
-            />
+            >
+              <SelectTrigger id="state">
+                <SelectValue placeholder="Select state" />
+              </SelectTrigger>
+              <ScrollableSelectContent>
+                {INDIAN_STATES.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </ScrollableSelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="gstin">GSTIN (Optional)</Label>
+            <Label htmlFor="gstin">GSTIN</Label>
             <Input
               id="gstin"
               value={formData.gstin}
@@ -146,7 +165,7 @@ export default function CustomerFormDialog({ open, onClose, customer }: Customer
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contactInfo">Contact Info (Optional)</Label>
+            <Label htmlFor="contactInfo">Contact Info</Label>
             <Input
               id="contactInfo"
               value={formData.contactInfo}

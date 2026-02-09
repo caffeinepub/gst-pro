@@ -11,13 +11,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Plus } from 'lucide-react';
 import InvoiceLineItemsEditor from '../components/invoices/InvoiceLineItemsEditor';
+import CustomerFormDialog from '../components/customers/CustomerFormDialog';
+import ItemFormDialog from '../components/items/ItemFormDialog';
 import { calculateInvoiceTotals } from '../utils/gstCalculations';
 import { formatCurrency } from '../utils/formatters';
-import type { LineItem } from '../backend';
+import { getTodayISODate } from '../utils/dateFormat';
+import type { LineItem, Customer, Item } from '../backend';
 import { toast } from 'sonner';
+import { getUserFacingError } from '../utils/userFacingError';
 
 export default function InvoiceEditorPage() {
   const navigate = useNavigate();
@@ -34,11 +39,16 @@ export default function InvoiceEditorPage() {
 
   const [customerId, setCustomerId] = useState<string>('');
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
+  const [invoiceDate, setInvoiceDate] = useState<string>(getTodayISODate());
+  const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
+  const [itemDialogOpen, setItemDialogOpen] = useState(false);
 
   useEffect(() => {
     if (invoice) {
       setCustomerId(invoice.customerId.toString());
       setLineItems(invoice.lineItems);
+      // Use the invoice date string directly, or fallback to today
+      setInvoiceDate(invoice.invoiceDate || getTodayISODate());
     }
   }, [invoice]);
 
@@ -56,6 +66,11 @@ export default function InvoiceEditorPage() {
       return;
     }
 
+    if (!invoiceDate) {
+      toast.error('Please select an invoice date');
+      return;
+    }
+
     try {
       if (isEditing && invoice) {
         await editInvoice.mutateAsync({
@@ -63,145 +78,203 @@ export default function InvoiceEditorPage() {
           customerId: BigInt(customerId),
           lineItems,
           status: invoice.status,
+          invoiceDate,
         });
         toast.success('Invoice updated successfully');
       } else {
         const newInvoice = await createInvoice.mutateAsync({
           customerId: BigInt(customerId),
           lineItems,
+          invoiceDate,
         });
         toast.success('Invoice created successfully');
         navigate({ to: '/invoices/$invoiceId', params: { invoiceId: newInvoice.id.toString() } });
       }
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save invoice');
+      const errorMessage = getUserFacingError(error);
+      toast.error(errorMessage);
     }
+  };
+
+  const handleCustomerAdded = (newCustomer: Customer) => {
+    setCustomerId(newCustomer.id.toString());
+  };
+
+  const handleItemAdded = (newItem: Item) => {
+    // Add a new line item with the newly created item
+    setLineItems([
+      ...lineItems,
+      {
+        itemId: newItem.id,
+        quantity: 1,
+        unitPrice: newItem.unitPrice,
+        discount: 0,
+      },
+    ]);
   };
 
   const isSaving = createInvoice.isPending || editInvoice.isPending;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/invoices' })}>
-            <ArrowLeft className="h-4 w-4" />
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/invoices' })}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {isEditing ? 'Edit Invoice' : 'New Invoice'}
+              </h1>
+              <p className="text-muted-foreground">
+                {isEditing ? 'Update invoice details' : 'Create a new invoice'}
+              </p>
+            </div>
+          </div>
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+            {isSaving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Invoice
+              </>
+            )}
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {isEditing ? 'Edit Invoice' : 'New Invoice'}
-            </h1>
-            <p className="text-muted-foreground">
-              {isEditing ? 'Update invoice details' : 'Create a new invoice'}
-            </p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Invoice Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="customer">Select Customer</Label>
+                  <div className="flex gap-2">
+                    <Select value={customerId} onValueChange={setCustomerId}>
+                      <SelectTrigger id="customer" className="flex-1">
+                        <SelectValue placeholder="Choose a customer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id.toString()} value={customer.id.toString()}>
+                            {customer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCustomerDialogOpen(true)}
+                      title="Add Customer"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoiceDate">Invoice Date</Label>
+                  <Input
+                    id="invoiceDate"
+                    type="date"
+                    value={invoiceDate}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Line Items</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <InvoiceLineItemsEditor
+                  lineItems={lineItems}
+                  onChange={setLineItems}
+                  availableItems={items}
+                  onAddItem={() => setItemDialogOpen(true)}
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Discount</span>
+                  <span className="font-medium">{formatCurrency(totals.totalDiscount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Taxable Amount</span>
+                  <span className="font-medium">{formatCurrency(totals.taxableAmount)}</span>
+                </div>
+                <div className="border-t pt-3 space-y-2">
+                  {totals.isInterState ? (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">IGST</span>
+                      <span className="font-medium">{formatCurrency(totals.igst)}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">CGST</span>
+                        <span className="font-medium">{formatCurrency(totals.cgst)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">SGST</span>
+                        <span className="font-medium">{formatCurrency(totals.sgst)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div className="border-t pt-3">
+                  <div className="flex justify-between">
+                    <span className="font-semibold">Total</span>
+                    <span className="text-lg font-bold">{formatCurrency(totals.grandTotal)}</span>
+                  </div>
+                </div>
+                {selectedCustomer && businessProfile && (
+                  <div className="text-xs text-muted-foreground pt-2">
+                    {totals.isInterState ? 'Inter-state' : 'Intra-state'} transaction
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
-        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-          {isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              Save Invoice
-            </>
-          )}
-        </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="customer">Select Customer</Label>
-                <Select value={customerId} onValueChange={setCustomerId}>
-                  <SelectTrigger id="customer">
-                    <SelectValue placeholder="Choose a customer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id.toString()} value={customer.id.toString()}>
-                        {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+      <CustomerFormDialog
+        open={customerDialogOpen}
+        onClose={() => setCustomerDialogOpen(false)}
+        customer={null}
+        onSuccess={handleCustomerAdded}
+      />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Line Items</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <InvoiceLineItemsEditor
-                lineItems={lineItems}
-                onChange={setLineItems}
-                availableItems={items}
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span className="font-medium">{formatCurrency(totals.subtotal)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Discount</span>
-                <span className="font-medium">{formatCurrency(totals.totalDiscount)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Taxable Amount</span>
-                <span className="font-medium">{formatCurrency(totals.taxableAmount)}</span>
-              </div>
-              <div className="border-t pt-3 space-y-2">
-                {totals.isInterState ? (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">IGST</span>
-                    <span className="font-medium">{formatCurrency(totals.igst)}</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">CGST</span>
-                      <span className="font-medium">{formatCurrency(totals.cgst)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">SGST</span>
-                      <span className="font-medium">{formatCurrency(totals.sgst)}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="border-t pt-3">
-                <div className="flex justify-between">
-                  <span className="font-semibold">Total</span>
-                  <span className="text-lg font-bold">{formatCurrency(totals.grandTotal)}</span>
-                </div>
-              </div>
-              {selectedCustomer && businessProfile && (
-                <div className="text-xs text-muted-foreground pt-2">
-                  {totals.isInterState ? 'Inter-state' : 'Intra-state'} transaction
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+      <ItemFormDialog
+        open={itemDialogOpen}
+        onClose={() => setItemDialogOpen(false)}
+        item={null}
+        onSuccess={handleItemAdded}
+      />
+    </>
   );
 }

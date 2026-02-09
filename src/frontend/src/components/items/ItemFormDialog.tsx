@@ -14,14 +14,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import type { Item } from '../../backend';
 import { toast } from 'sonner';
+import { getUserFacingError } from '../../utils/userFacingError';
 
 interface ItemFormDialogProps {
   open: boolean;
   onClose: () => void;
   item: Item | null;
+  onSuccess?: (item: Item) => void;
 }
 
-export default function ItemFormDialog({ open, onClose, item }: ItemFormDialogProps) {
+export default function ItemFormDialog({ open, onClose, item, onSuccess }: ItemFormDialogProps) {
   const addItem = useAddItem();
   const editItem = useEditItem();
   const isEditing = item !== null;
@@ -63,14 +65,14 @@ export default function ItemFormDialog({ open, onClose, item }: ItemFormDialogPr
     }
 
     const unitPrice = parseFloat(formData.unitPrice);
-    const gstRate = parseFloat(formData.defaultGstRate);
+    const defaultGstRate = parseFloat(formData.defaultGstRate);
 
     if (isNaN(unitPrice) || unitPrice < 0) {
       toast.error('Please enter a valid unit price');
       return;
     }
 
-    if (isNaN(gstRate) || gstRate < 0 || gstRate > 100) {
+    if (isNaN(defaultGstRate) || defaultGstRate < 0 || defaultGstRate > 100) {
       toast.error('Please enter a valid GST rate (0-100)');
       return;
     }
@@ -83,22 +85,27 @@ export default function ItemFormDialog({ open, onClose, item }: ItemFormDialogPr
           description: formData.description || null,
           hsnSac: formData.hsnSac || null,
           unitPrice,
-          defaultGstRate: gstRate,
+          defaultGstRate,
         });
         toast.success('Item updated successfully');
+        onClose();
       } else {
-        await addItem.mutateAsync({
+        const newItem = await addItem.mutateAsync({
           name: formData.name,
           description: formData.description || null,
           hsnSac: formData.hsnSac || null,
           unitPrice,
-          defaultGstRate: gstRate,
+          defaultGstRate,
         });
         toast.success('Item added successfully');
+        onClose();
+        if (onSuccess) {
+          onSuccess(newItem);
+        }
       }
-      onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to save item');
+      const errorMessage = getUserFacingError(error);
+      toast.error(errorMessage);
     }
   };
 
@@ -120,7 +127,7 @@ export default function ItemFormDialog({ open, onClose, item }: ItemFormDialogPr
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Item or service name"
+              placeholder="Item name"
               required
             />
           </div>
@@ -131,7 +138,7 @@ export default function ItemFormDialog({ open, onClose, item }: ItemFormDialogPr
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Brief description"
+              placeholder="Item description"
               rows={2}
             />
           </div>

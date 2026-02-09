@@ -8,6 +8,17 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  'method' : IDL.Text,
+  'blob_hash' : IDL.Text,
+});
+export const _CaffeineStorageRefillInformation = IDL.Record({
+  'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const _CaffeineStorageRefillResult = IDL.Record({
+  'success' : IDL.Opt(IDL.Bool),
+  'topped_up_amount' : IDL.Opt(IDL.Nat),
+});
 export const Customer = IDL.Record({
   'id' : IDL.Nat,
   'contactInfo' : IDL.Opt(IDL.Text),
@@ -24,10 +35,14 @@ export const Item = IDL.Record({
   'unitPrice' : IDL.Float64,
   'defaultGstRate' : IDL.Float64,
 });
-export const UserRole = IDL.Variant({
-  'admin' : IDL.Null,
-  'user' : IDL.Null,
-  'guest' : IDL.Null,
+export const InvoiceKPIs = IDL.Record({
+  'draftInvoices' : IDL.Nat,
+  'finalizedInvoices' : IDL.Nat,
+  'totalInvoices' : IDL.Nat,
+});
+export const InvoiceStatus = IDL.Variant({
+  'finalized' : IDL.Null,
+  'draft' : IDL.Null,
 });
 export const LineItem = IDL.Record({
   'itemId' : IDL.Nat,
@@ -35,18 +50,95 @@ export const LineItem = IDL.Record({
   'quantity' : IDL.Float64,
   'unitPrice' : IDL.Float64,
 });
-export const InvoiceStatus = IDL.Variant({
-  'finalized' : IDL.Null,
-  'draft' : IDL.Null,
-});
 export const Invoice = IDL.Record({
   'id' : IDL.Nat,
   'status' : InvoiceStatus,
   'lineItems' : IDL.Vec(LineItem),
+  'invoiceDate' : IDL.Text,
   'customerId' : IDL.Nat,
 });
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const SystemRole = IDL.Variant({
+  'auditor' : IDL.Null,
+  'superAdmin' : IDL.Null,
+  'standard' : IDL.Null,
+});
+export const CredentialResponse = IDL.Record({
+  'role' : IDL.Opt(SystemRole),
+  'message' : IDL.Text,
+  'success' : IDL.Bool,
+});
+export const Time = IDL.Int;
+export const CreateUserRequest = IDL.Record({
+  'password' : IDL.Text,
+  'role' : SystemRole,
+  'mobileNumber' : IDL.Text,
+  'email' : IDL.Text,
+  'accessExpiry' : IDL.Opt(Time),
+});
+export const Permissions = IDL.Record({
+  'canUseGstValidation' : IDL.Bool,
+  'canVerifyBank' : IDL.Bool,
+  'canManageUsers' : IDL.Bool,
+  'canViewReports' : IDL.Bool,
+  'canFileReturns' : IDL.Bool,
+  'canExportData' : IDL.Bool,
+  'canVerifyPan' : IDL.Bool,
+});
+export const SignUpResponse = IDL.Record({
+  'id' : IDL.Text,
+  'permissions' : Permissions,
+  'createdAt' : IDL.Nat,
+  'role' : SystemRole,
+  'mobileNumber' : IDL.Text,
+  'email' : IDL.Text,
+  'updatedAt' : IDL.Nat,
+  'accessExpiry' : IDL.Opt(Time),
+  'lastUsed' : IDL.Opt(Time),
+});
+export const ReturnType = IDL.Variant({
+  'gstr1' : IDL.Null,
+  'gstr3b' : IDL.Null,
+});
+export const FilingFrequency = IDL.Variant({
+  'quarterly' : IDL.Null,
+  'monthly' : IDL.Null,
+});
+export const GSTError = IDL.Record({ 'code' : IDL.Nat, 'message' : IDL.Text });
+export const StatusEntry = IDL.Record({
+  'status' : IDL.Text,
+  'periodLabel' : IDL.Text,
+  'filingDate' : IDL.Opt(IDL.Text),
+  'returnType' : ReturnType,
+});
+export const GSTFilingStatus = IDL.Record({
+  'natureOfBusiness' : IDL.Opt(IDL.Text),
+  'tradeName' : IDL.Opt(IDL.Text),
+  'period' : IDL.Text,
+  'cancellationDate' : IDL.Opt(IDL.Text),
+  'principalPlaceOfBusiness' : IDL.Opt(IDL.Text),
+  'isActive' : IDL.Opt(IDL.Bool),
+  'filingFrequencyDetails' : IDL.Opt(IDL.Text),
+  'error' : IDL.Opt(GSTError),
+  'legalName' : IDL.Opt(IDL.Text),
+  'statusEntries' : IDL.Vec(StatusEntry),
+  'state' : IDL.Opt(IDL.Text),
+  'gstin' : IDL.Text,
+  'taxpayerType' : IDL.Opt(IDL.Text),
+  'address' : IDL.Opt(IDL.Text),
+  'gstStatus' : IDL.Opt(IDL.Text),
+  'filingFrequency' : FilingFrequency,
+  'registrationDate' : IDL.Opt(IDL.Text),
+  'returnType' : ReturnType,
+});
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const BusinessProfile = IDL.Record({
   'startingNumber' : IDL.Nat,
+  'logo' : IDL.Opt(ExternalBlob),
   'businessName' : IDL.Text,
   'state' : IDL.Text,
   'invoicePrefix' : IDL.Text,
@@ -54,8 +146,93 @@ export const BusinessProfile = IDL.Record({
   'address' : IDL.Text,
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const UnifiedUserInfo = IDL.Record({
+  'userType' : IDL.Variant({
+    'credential' : IDL.Null,
+    'principalOnly' : IDL.Null,
+  }),
+  'deleted' : IDL.Opt(IDL.Bool),
+  'role' : IDL.Opt(SystemRole),
+  'email' : IDL.Opt(IDL.Text),
+  'lastSignIn' : IDL.Opt(Time),
+  'accessExpiry' : IDL.Opt(Time),
+  'identifier' : IDL.Text,
+  'lastUsed' : IDL.Opt(Time),
+});
+export const UserRecord = IDL.Record({
+  'id' : IDL.Text,
+  'permissions' : Permissions,
+  'principal' : IDL.Opt(IDL.Principal),
+  'deleted' : IDL.Bool,
+  'createdAt' : IDL.Nat,
+  'role' : SystemRole,
+  'mobileNumber' : IDL.Text,
+  'email' : IDL.Text,
+  'lastSignIn' : IDL.Opt(Time),
+  'updatedAt' : IDL.Nat,
+  'accessExpiry' : IDL.Opt(Time),
+  'passwordHash' : IDL.Text,
+  'lastUsed' : IDL.Opt(Time),
+});
+export const SignUpRequest = IDL.Record({
+  'password' : IDL.Text,
+  'mobileNumber' : IDL.Text,
+  'email' : IDL.Text,
+  'accessExpiry' : IDL.Opt(Time),
+});
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const UpdateUserRequest = IDL.Record({
+  'permissions' : Permissions,
+  'role' : SystemRole,
+  'mobileNumber' : IDL.Text,
+  'email' : IDL.Text,
+  'accessExpiry' : IDL.Opt(Time),
+});
 
 export const idlService = IDL.Service({
+  '_caffeineStorageBlobIsLive' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Bool],
+      ['query'],
+    ),
+  '_caffeineStorageBlobsToDelete' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      ['query'],
+    ),
+  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [],
+      [],
+    ),
+  '_caffeineStorageCreateCertificate' : IDL.Func(
+      [IDL.Text],
+      [_CaffeineStorageCreateCertificateResult],
+      [],
+    ),
+  '_caffeineStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_CaffeineStorageRefillInformation)],
+      [_CaffeineStorageRefillResult],
+      [],
+    ),
+  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addCustomer' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
@@ -73,11 +250,24 @@ export const idlService = IDL.Service({
       [Item],
       [],
     ),
+  'adminGetUserInvoiceKPIs' : IDL.Func([IDL.Text], [InvoiceKPIs], ['query']),
+  'adminGetUserInvoices' : IDL.Func([IDL.Text], [IDL.Vec(Invoice)], ['query']),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createInvoice' : IDL.Func([IDL.Nat, IDL.Vec(LineItem)], [Invoice], []),
+  'authenticateApplicationCredentials' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [CredentialResponse],
+      [],
+    ),
+  'createInvoice' : IDL.Func(
+      [IDL.Nat, IDL.Vec(LineItem), IDL.Text],
+      [Invoice],
+      [],
+    ),
+  'createUser' : IDL.Func([CreateUserRequest], [SignUpResponse], []),
   'deleteCustomer' : IDL.Func([IDL.Nat], [], []),
   'deleteInvoice' : IDL.Func([IDL.Nat], [], []),
   'deleteItem' : IDL.Func([IDL.Nat], [], []),
+  'deleteUser' : IDL.Func([IDL.Text], [], []),
   'editCustomer' : IDL.Func(
       [
         IDL.Nat,
@@ -91,7 +281,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'editInvoice' : IDL.Func(
-      [IDL.Nat, IDL.Nat, IDL.Vec(LineItem), InvoiceStatus],
+      [IDL.Nat, IDL.Nat, IDL.Vec(LineItem), InvoiceStatus, IDL.Text],
       [],
       [],
     ),
@@ -107,7 +297,13 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'fetchGstFilingStatus' : IDL.Func(
+      [IDL.Text, IDL.Text, ReturnType, FilingFrequency],
+      [GSTFilingStatus],
+      [],
+    ),
   'finalizeInvoice' : IDL.Func([IDL.Nat], [], []),
+  'getAccessExpiry' : IDL.Func([IDL.Text], [IDL.Opt(Time)], ['query']),
   'getBusinessProfile' : IDL.Func([], [IDL.Opt(BusinessProfile)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -117,19 +313,46 @@ export const idlService = IDL.Service({
   'getInvoices' : IDL.Func([], [IDL.Vec(Invoice)], ['query']),
   'getItem' : IDL.Func([IDL.Nat], [IDL.Opt(Item)], ['query']),
   'getItems' : IDL.Func([], [IDL.Vec(Item)], ['query']),
+  'getLastSignIn' : IDL.Func([IDL.Text], [IDL.Opt(Time)], ['query']),
+  'getLastUsed' : IDL.Func([IDL.Text], [IDL.Opt(Time)], ['query']),
+  'getPotentialSystemRoles' : IDL.Func([], [IDL.Vec(SystemRole)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'hasUserProfile' : IDL.Func([], [IDL.Bool], ['query']),
+  'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'listAllUsers' : IDL.Func([], [IDL.Vec(UnifiedUserInfo)], ['query']),
+  'listUsers' : IDL.Func([], [IDL.Vec(UserRecord)], ['query']),
+  'recordInternetIdentitySignIn' : IDL.Func([], [], []),
   'saveBusinessProfile' : IDL.Func([BusinessProfile], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setAccessExpiry' : IDL.Func([IDL.Text, IDL.Opt(Time)], [], []),
+  'signUp' : IDL.Func([SignUpRequest], [SignUpResponse], []),
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
+    ),
+  'updateUser' : IDL.Func([IDL.Text, UpdateUserRequest], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+    'method' : IDL.Text,
+    'blob_hash' : IDL.Text,
+  });
+  const _CaffeineStorageRefillInformation = IDL.Record({
+    'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const _CaffeineStorageRefillResult = IDL.Record({
+    'success' : IDL.Opt(IDL.Bool),
+    'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
   const Customer = IDL.Record({
     'id' : IDL.Nat,
     'contactInfo' : IDL.Opt(IDL.Text),
@@ -146,10 +369,14 @@ export const idlFactory = ({ IDL }) => {
     'unitPrice' : IDL.Float64,
     'defaultGstRate' : IDL.Float64,
   });
-  const UserRole = IDL.Variant({
-    'admin' : IDL.Null,
-    'user' : IDL.Null,
-    'guest' : IDL.Null,
+  const InvoiceKPIs = IDL.Record({
+    'draftInvoices' : IDL.Nat,
+    'finalizedInvoices' : IDL.Nat,
+    'totalInvoices' : IDL.Nat,
+  });
+  const InvoiceStatus = IDL.Variant({
+    'finalized' : IDL.Null,
+    'draft' : IDL.Null,
   });
   const LineItem = IDL.Record({
     'itemId' : IDL.Nat,
@@ -157,18 +384,92 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Float64,
     'unitPrice' : IDL.Float64,
   });
-  const InvoiceStatus = IDL.Variant({
-    'finalized' : IDL.Null,
-    'draft' : IDL.Null,
-  });
   const Invoice = IDL.Record({
     'id' : IDL.Nat,
     'status' : InvoiceStatus,
     'lineItems' : IDL.Vec(LineItem),
+    'invoiceDate' : IDL.Text,
     'customerId' : IDL.Nat,
   });
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const SystemRole = IDL.Variant({
+    'auditor' : IDL.Null,
+    'superAdmin' : IDL.Null,
+    'standard' : IDL.Null,
+  });
+  const CredentialResponse = IDL.Record({
+    'role' : IDL.Opt(SystemRole),
+    'message' : IDL.Text,
+    'success' : IDL.Bool,
+  });
+  const Time = IDL.Int;
+  const CreateUserRequest = IDL.Record({
+    'password' : IDL.Text,
+    'role' : SystemRole,
+    'mobileNumber' : IDL.Text,
+    'email' : IDL.Text,
+    'accessExpiry' : IDL.Opt(Time),
+  });
+  const Permissions = IDL.Record({
+    'canUseGstValidation' : IDL.Bool,
+    'canVerifyBank' : IDL.Bool,
+    'canManageUsers' : IDL.Bool,
+    'canViewReports' : IDL.Bool,
+    'canFileReturns' : IDL.Bool,
+    'canExportData' : IDL.Bool,
+    'canVerifyPan' : IDL.Bool,
+  });
+  const SignUpResponse = IDL.Record({
+    'id' : IDL.Text,
+    'permissions' : Permissions,
+    'createdAt' : IDL.Nat,
+    'role' : SystemRole,
+    'mobileNumber' : IDL.Text,
+    'email' : IDL.Text,
+    'updatedAt' : IDL.Nat,
+    'accessExpiry' : IDL.Opt(Time),
+    'lastUsed' : IDL.Opt(Time),
+  });
+  const ReturnType = IDL.Variant({ 'gstr1' : IDL.Null, 'gstr3b' : IDL.Null });
+  const FilingFrequency = IDL.Variant({
+    'quarterly' : IDL.Null,
+    'monthly' : IDL.Null,
+  });
+  const GSTError = IDL.Record({ 'code' : IDL.Nat, 'message' : IDL.Text });
+  const StatusEntry = IDL.Record({
+    'status' : IDL.Text,
+    'periodLabel' : IDL.Text,
+    'filingDate' : IDL.Opt(IDL.Text),
+    'returnType' : ReturnType,
+  });
+  const GSTFilingStatus = IDL.Record({
+    'natureOfBusiness' : IDL.Opt(IDL.Text),
+    'tradeName' : IDL.Opt(IDL.Text),
+    'period' : IDL.Text,
+    'cancellationDate' : IDL.Opt(IDL.Text),
+    'principalPlaceOfBusiness' : IDL.Opt(IDL.Text),
+    'isActive' : IDL.Opt(IDL.Bool),
+    'filingFrequencyDetails' : IDL.Opt(IDL.Text),
+    'error' : IDL.Opt(GSTError),
+    'legalName' : IDL.Opt(IDL.Text),
+    'statusEntries' : IDL.Vec(StatusEntry),
+    'state' : IDL.Opt(IDL.Text),
+    'gstin' : IDL.Text,
+    'taxpayerType' : IDL.Opt(IDL.Text),
+    'address' : IDL.Opt(IDL.Text),
+    'gstStatus' : IDL.Opt(IDL.Text),
+    'filingFrequency' : FilingFrequency,
+    'registrationDate' : IDL.Opt(IDL.Text),
+    'returnType' : ReturnType,
+  });
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
   const BusinessProfile = IDL.Record({
     'startingNumber' : IDL.Nat,
+    'logo' : IDL.Opt(ExternalBlob),
     'businessName' : IDL.Text,
     'state' : IDL.Text,
     'invoicePrefix' : IDL.Text,
@@ -176,8 +477,90 @@ export const idlFactory = ({ IDL }) => {
     'address' : IDL.Text,
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const UnifiedUserInfo = IDL.Record({
+    'userType' : IDL.Variant({
+      'credential' : IDL.Null,
+      'principalOnly' : IDL.Null,
+    }),
+    'deleted' : IDL.Opt(IDL.Bool),
+    'role' : IDL.Opt(SystemRole),
+    'email' : IDL.Opt(IDL.Text),
+    'lastSignIn' : IDL.Opt(Time),
+    'accessExpiry' : IDL.Opt(Time),
+    'identifier' : IDL.Text,
+    'lastUsed' : IDL.Opt(Time),
+  });
+  const UserRecord = IDL.Record({
+    'id' : IDL.Text,
+    'permissions' : Permissions,
+    'principal' : IDL.Opt(IDL.Principal),
+    'deleted' : IDL.Bool,
+    'createdAt' : IDL.Nat,
+    'role' : SystemRole,
+    'mobileNumber' : IDL.Text,
+    'email' : IDL.Text,
+    'lastSignIn' : IDL.Opt(Time),
+    'updatedAt' : IDL.Nat,
+    'accessExpiry' : IDL.Opt(Time),
+    'passwordHash' : IDL.Text,
+    'lastUsed' : IDL.Opt(Time),
+  });
+  const SignUpRequest = IDL.Record({
+    'password' : IDL.Text,
+    'mobileNumber' : IDL.Text,
+    'email' : IDL.Text,
+    'accessExpiry' : IDL.Opt(Time),
+  });
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const UpdateUserRequest = IDL.Record({
+    'permissions' : Permissions,
+    'role' : SystemRole,
+    'mobileNumber' : IDL.Text,
+    'email' : IDL.Text,
+    'accessExpiry' : IDL.Opt(Time),
+  });
   
   return IDL.Service({
+    '_caffeineStorageBlobIsLive' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Bool],
+        ['query'],
+      ),
+    '_caffeineStorageBlobsToDelete' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
+    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [],
+        [],
+      ),
+    '_caffeineStorageCreateCertificate' : IDL.Func(
+        [IDL.Text],
+        [_CaffeineStorageCreateCertificateResult],
+        [],
+      ),
+    '_caffeineStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_CaffeineStorageRefillInformation)],
+        [_CaffeineStorageRefillResult],
+        [],
+      ),
+    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addCustomer' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text, IDL.Opt(IDL.Text)],
@@ -195,11 +578,28 @@ export const idlFactory = ({ IDL }) => {
         [Item],
         [],
       ),
+    'adminGetUserInvoiceKPIs' : IDL.Func([IDL.Text], [InvoiceKPIs], ['query']),
+    'adminGetUserInvoices' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(Invoice)],
+        ['query'],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createInvoice' : IDL.Func([IDL.Nat, IDL.Vec(LineItem)], [Invoice], []),
+    'authenticateApplicationCredentials' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [CredentialResponse],
+        [],
+      ),
+    'createInvoice' : IDL.Func(
+        [IDL.Nat, IDL.Vec(LineItem), IDL.Text],
+        [Invoice],
+        [],
+      ),
+    'createUser' : IDL.Func([CreateUserRequest], [SignUpResponse], []),
     'deleteCustomer' : IDL.Func([IDL.Nat], [], []),
     'deleteInvoice' : IDL.Func([IDL.Nat], [], []),
     'deleteItem' : IDL.Func([IDL.Nat], [], []),
+    'deleteUser' : IDL.Func([IDL.Text], [], []),
     'editCustomer' : IDL.Func(
         [
           IDL.Nat,
@@ -213,7 +613,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'editInvoice' : IDL.Func(
-        [IDL.Nat, IDL.Nat, IDL.Vec(LineItem), InvoiceStatus],
+        [IDL.Nat, IDL.Nat, IDL.Vec(LineItem), InvoiceStatus, IDL.Text],
         [],
         [],
       ),
@@ -229,7 +629,13 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'fetchGstFilingStatus' : IDL.Func(
+        [IDL.Text, IDL.Text, ReturnType, FilingFrequency],
+        [GSTFilingStatus],
+        [],
+      ),
     'finalizeInvoice' : IDL.Func([IDL.Nat], [], []),
+    'getAccessExpiry' : IDL.Func([IDL.Text], [IDL.Opt(Time)], ['query']),
     'getBusinessProfile' : IDL.Func([], [IDL.Opt(BusinessProfile)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
@@ -239,14 +645,30 @@ export const idlFactory = ({ IDL }) => {
     'getInvoices' : IDL.Func([], [IDL.Vec(Invoice)], ['query']),
     'getItem' : IDL.Func([IDL.Nat], [IDL.Opt(Item)], ['query']),
     'getItems' : IDL.Func([], [IDL.Vec(Item)], ['query']),
+    'getLastSignIn' : IDL.Func([IDL.Text], [IDL.Opt(Time)], ['query']),
+    'getLastUsed' : IDL.Func([IDL.Text], [IDL.Opt(Time)], ['query']),
+    'getPotentialSystemRoles' : IDL.Func([], [IDL.Vec(SystemRole)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'hasUserProfile' : IDL.Func([], [IDL.Bool], ['query']),
+    'isAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'listAllUsers' : IDL.Func([], [IDL.Vec(UnifiedUserInfo)], ['query']),
+    'listUsers' : IDL.Func([], [IDL.Vec(UserRecord)], ['query']),
+    'recordInternetIdentitySignIn' : IDL.Func([], [], []),
     'saveBusinessProfile' : IDL.Func([BusinessProfile], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setAccessExpiry' : IDL.Func([IDL.Text, IDL.Opt(Time)], [], []),
+    'signUp' : IDL.Func([SignUpRequest], [SignUpResponse], []),
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
+      ),
+    'updateUser' : IDL.Func([IDL.Text, UpdateUserRequest], [], []),
   });
 };
 
