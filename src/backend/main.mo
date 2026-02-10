@@ -14,9 +14,7 @@ import List "mo:core/List";
 import Time "mo:core/Time";
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   type UserRole = AccessControl.UserRole;
   include MixinStorage();
@@ -121,6 +119,7 @@ actor {
   var nextItemId = 1;
   var nextInvoiceId = 1;
 
+  // GST Filing Status related types remain as before.
   public type GSTFilingStatus = {
     gstin : Text;
     period : Text;

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 73,
+  "projectStateVersion": 79,
   "summary": "Build a GST billing application named \"GST Pro\".",
   "architectural_notes": [
     "GST filing status feature requires external integration with GST.gov.in (data fetch), which may be constrained by authentication, CORS, and availability of official APIs.",
@@ -26,7 +26,7 @@
     "Sign In button is not working (does not open Internet Identity login).",
     "Admin Panel does not currently show which users have signed in/used the application (usage/last-used or sign-in list) and does not display the full expected user data list."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-create-the-application-branding-and-shell-for-a-gst-billing-app-named-gst-pro-including-app-title-navigation-and-core-pages-scaffold-dashboard-customers-items-invoices-settings",
@@ -995,6 +995,94 @@
         "REQ-149"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-fix-the-mobile-invoice-line-items-editing-ui-so-that-quantity-rate-and-discount-inputs-are-always-visible-and-usable-on-small-screens-mobile-without-being-clipped-hidden-by-the-current-table-layout",
+      "title": "Fix the mobile Invoice line-items editing UI so that Quantity, Rate, and Discount inputs are always visible and usable on small screens (mobile), without being clipped/hidden by the current table layout.",
+      "reqIds": [
+        "REQ-150"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-gst-rate-section-field-to-the-invoice-line-items-editor-ui-so-users-can-see-the-gst-rate-applied-per-selected-item-including-on-mobile",
+      "title": "Add a GST Rate section/field to the invoice line items editor UI so users can see the GST rate applied per selected item, including on mobile.",
+      "reqIds": [
+        "REQ-151"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-mobile-invoice-line-items-editor-has-a-robust-responsive-layout-e-g-stacked-per-line-item-layout-or-horizontally-scrollable-table-with-clear-column-headers-that-preserves-usability-for-editing-multiple-fields-on-small-screens",
+      "title": "Ensure the mobile invoice line-items editor has a robust responsive layout (e.g., stacked per-line-item layout or horizontally scrollable table with clear column headers) that preserves usability for editing multiple fields on small screens.",
+      "reqIds": [
+        "REQ-152"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-invoice-print-export-layout-frontend-src-pages-invoiceprintpage-tsx-to-visually-match-the-uploaded-reference-image-instant-e-invoice-in-tallyprime-jpg-a-centered-title-a-compact-top-section-a-boxed-multi-column-party-details-grid-a-tally-style-line-items-table-and-a-gst-summary-tax-breakdown-section-while-keeping-all-user-facing-labels-in-english",
+      "title": "Update the invoice print/export layout (frontend/src/pages/InvoicePrintPage.tsx) to visually match the uploaded reference image (Instant-e-invoice-in-TallyPrime.jpg): a centered title, a compact top section, a boxed multi-column party/details grid, a Tally-style line-items table, and a GST summary/tax breakdown section, while keeping all user-facing labels in English.",
+      "reqIds": [
+        "REQ-153"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-inr-amount-in-words-display-section-to-the-invoice-print-layout-matching-the-reference-layout-style-e-g-amount-chargeable-in-words-and-tax-amount-in-words-using-indian-numbering-words-thousand-lakh-crore-and-english-text",
+      "title": "Add an INR amount-in-words display section to the invoice print layout matching the reference layout style (e.g., \"Amount Chargeable (in words)\" and \"Tax Amount (in words)\") using Indian numbering words (Thousand/Lakh/Crore) and English text.",
+      "reqIds": [
+        "REQ-154"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-updated-invoice-print-layout-remains-robust-across-common-invoice-sizes-1-line-items-and-prints-cleanly-on-a4-without-content-overflow-clipped-borders-or-misaligned-columns",
+      "title": "Ensure the updated invoice print layout remains robust across common invoice sizes (1+ line items) and prints cleanly on A4 without content overflow, clipped borders, or misaligned columns.",
+      "reqIds": [
+        "REQ-155"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-issue-where-saving-a-customer-from-customers-page-and-invoice-related-customer-save-flows-fails-with-a-user-visible-error-like-connection-of-backend-is-not-ready-ensuring-the-save-completes-successfully-when-the-user-is-signed-in-and-the-new-updated-customer-persists-and-appears-immediately-in-the-customers-list",
+      "title": "Fix the issue where saving a Customer (from Customers page and invoice-related customer save flows) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the new/updated customer persists and appears immediately in the customers list.",
+      "reqIds": [
+        "REQ-156"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-issue-where-saving-settings-business-profile-fails-with-a-user-visible-error-like-connection-of-backend-is-not-ready-ensuring-the-save-completes-successfully-when-the-user-is-signed-in-and-the-updated-business-profile-persists",
+      "title": "Fix the issue where saving Settings (Business Profile) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the updated business profile persists.",
+      "reqIds": [
+        "REQ-157"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-invoice-print-export-layout-to-remove-the-qr-option-qr-section-entirely-no-qr-label-placeholder-image-or-empty-space-reserved-for-it",
+      "title": "Update the invoice print/export layout to remove the QR option/QR section entirely (no QR label, placeholder, image, or empty space reserved for it).",
+      "reqIds": [
+        "REQ-158"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-invoice-print-export-and-any-invoice-detail-metadata-layouts-to-remove-the-delivery-note-field-and-remove-all-of-the-following-fields-labels-completely-mode-terms-of-payment-other-references-dispatch-doc-no-delivery-note-date-dispatched-through-destination-and-terms-of-delivery",
+      "title": "Update invoice print/export and any invoice detail/metadata layouts to remove the “Delivery Note” field and remove all of the following fields/labels completely: “Mode/Terms of Payment”, “Other References”, “Dispatch Doc No.”, “Delivery Note Date”, “Dispatched through”, “Destination”, and “Terms of Delivery”.",
+      "reqIds": [
+        "REQ-159"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-invoices-include-a-clearly-formatted-banking-details-section-sourced-from-the-saved-business-profile-banking-details-and-render-it-only-when-banking-details-are-configured-hide-the-entire-section-when-not-configured",
+      "title": "Ensure invoices include a clearly formatted “Banking Details” section sourced from the saved Business Profile banking details, and render it only when banking details are configured (hide the entire section when not configured).",
+      "reqIds": [
+        "REQ-160"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1514,6 +1602,24 @@
       "reqIds": [
         "REQ-147"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-117",
+      "summary": "Fix mobile invoice editor UI so Quantity, Rate, Discount, and GST Rate fields are visible/accessible on small screens",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-118",
+      "summary": "Update the invoice print/export layout to match the invoice format shown in the user-uploaded reference image",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-119",
+      "summary": "Update invoice view/print layout to remove the QR option and remove Delivery Note and related fields (Mode/Terms of Payment, Other References, Dispatch Doc No., Delivery Note Date, Dispatched through, Destination, Terms of Delivery).",
+      "reqIds": [],
       "status": "pending"
     }
   ],

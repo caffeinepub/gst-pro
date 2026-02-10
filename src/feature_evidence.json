@@ -2,9 +2,33 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-settings-page-frontend-src-pages-settingspage-tsx-to-allow-the-user-to-add-edit-banking-details-account-name-account-number-ifsc-code-bank-name-branch-these-fields-must-be-saved-as-part-of-the-business-profile-using-the-existing-business-profile-save-flow",
-      "featureTitle": "Update the Settings page (frontend/src/pages/SettingsPage.tsx) to allow the user to add/edit banking details (Account Name, Account Number, IFSC Code, Bank Name, Branch). These fields must be saved as part of the Business Profile using the existing business profile save flow.",
+      "featureId": "feature-fix-the-issue-where-saving-a-customer-from-customers-page-and-invoice-related-customer-save-flows-fails-with-a-user-visible-error-like-connection-of-backend-is-not-ready-ensuring-the-save-completes-successfully-when-the-user-is-signed-in-and-the-new-updated-customer-persists-and-appears-immediately-in-the-customers-list",
+      "featureTitle": "Fix the issue where saving a Customer (from Customers page and invoice-related customer save flows) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the new/updated customer persists and appears immediately in the customers list.",
       "files": [
+        "frontend/src/components/customers/CustomerFormDialog.tsx",
+        "frontend/src/hooks/useBackendReady.ts",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-156"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-the-issue-where-saving-settings-business-profile-fails-with-a-user-visible-error-like-connection-of-backend-is-not-ready-ensuring-the-save-completes-successfully-when-the-user-is-signed-in-and-the-updated-business-profile-persists",
+      "featureTitle": "Fix the issue where saving Settings (Business Profile) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the updated business profile persists.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/SettingsPage.tsx"
       ],
       "components": [
@@ -18,13 +42,34 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-148"
+        "REQ-157"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-render-the-saved-banking-details-on-invoice-experiences-so-that-all-invoices-include-these-details-when-present-1-invoice-print-layout-frontend-src-pages-invoiceprintpage-tsx-and-2-invoice-detail-view-frontend-src-pages-invoicedetailpage-tsx-if-banking-details-are-not-configured-the-banking-section-must-be-hidden-no-empty-labels",
-      "featureTitle": "Render the saved banking details on invoice experiences so that all invoices include these details when present: (1) Invoice print layout (frontend/src/pages/InvoicePrintPage.tsx) and (2) Invoice detail view (frontend/src/pages/InvoiceDetailPage.tsx). If banking details are not configured, the banking section must be hidden (no empty labels).",
+      "featureId": "feature-update-the-invoice-print-export-layout-to-remove-the-qr-option-qr-section-entirely-no-qr-label-placeholder-image-or-empty-space-reserved-for-it",
+      "featureTitle": "Update the invoice print/export layout to remove the QR option/QR section entirely (no QR label, placeholder, image, or empty space reserved for it).",
+      "files": [
+        "frontend/src/pages/InvoicePrintPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-158"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-invoice-print-export-and-any-invoice-detail-metadata-layouts-to-remove-the-delivery-note-field-and-remove-all-of-the-following-fields-labels-completely-mode-terms-of-payment-other-references-dispatch-doc-no-delivery-note-date-dispatched-through-destination-and-terms-of-delivery",
+      "featureTitle": "Update invoice print/export and any invoice detail/metadata layouts to remove the “Delivery Note” field and remove all of the following fields/labels completely: “Mode/Terms of Payment”, “Other References”, “Dispatch Doc No.”, “Delivery Note Date”, “Dispatched through”, “Destination”, and “Terms of Delivery”.",
       "files": [
         "frontend/src/pages/InvoiceDetailPage.tsx",
         "frontend/src/pages/InvoicePrintPage.tsx"
@@ -40,7 +85,29 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-149"
+        "REQ-159"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-invoices-include-a-clearly-formatted-banking-details-section-sourced-from-the-saved-business-profile-banking-details-and-render-it-only-when-banking-details-are-configured-hide-the-entire-section-when-not-configured",
+      "featureTitle": "Ensure invoices include a clearly formatted “Banking Details” section sourced from the saved Business Profile banking details, and render it only when banking details are configured (hide the entire section when not configured).",
+      "files": [
+        "frontend/src/pages/InvoiceDetailPage.tsx",
+        "frontend/src/pages/InvoicePrintPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-160"
       ],
       "confidence": "high"
     }

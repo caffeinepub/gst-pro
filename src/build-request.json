@@ -1,90 +1,110 @@
 {
   "kind": "build_request",
-  "title": "Add Banking Details in Settings and Include Them on All Invoices",
-  "priority": "normal",
+  "title": "Fix backend connection readiness errors on Customer/Settings saves and update invoice layout (bank details, remove QR + delivery fields)",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-146",
-      "text": "Extend the backend BusinessProfile model to store optional banking details that can be configured once in Settings and then reused on all invoices. Banking details must include at minimum: Account Name, Account Number, IFSC Code, Bank Name, and Branch (optional).",
-      "target": "backend",
+      "id": "REQ-156",
+      "text": "Fix the issue where saving a Customer (from Customers page and invoice-related customer save flows) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the new/updated customer persists and appears immediately in the customers list.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-user-1"
+          "recent-messages-6"
         ],
         "quotes": [
-          "invoice add banking details like account number ifsc code name and etc it can user add through settings and all invoice have this details."
+          "in application when we save  coustomer details of bills ... show connection of backend is not ready fix this"
         ]
       },
       "acceptanceCriteria": [
-        "Backend BusinessProfile type includes new optional fields for banking details (Account Name, Account Number, IFSC Code, Bank Name, and optional Branch).",
-        "Existing BusinessProfile data for existing users remains readable after upgrade (missing banking fields default to null/empty option).",
-        "Business profile get/save APIs correctly persist and return the banking details for the signed-in Principal."
+        "After successful sign-in, creating a new customer from Customers page succeeds without showing any “backend not ready”/connection error toast.",
+        "After saving, the customer list updates immediately to include the new customer (no manual refresh).",
+        "Editing an existing customer saves successfully and the updated values are visible immediately.",
+        "If the backend actor/connection is not ready yet, the UI prevents submission and shows a clear English message (e.g., “Connecting to backend, please wait...”) instead of failing the mutation."
       ]
     },
     {
-      "id": "REQ-147",
-      "text": "If the backend uses stable storage for BusinessProfile across upgrades, add conditional migration logic (backend/migration.mo) to safely migrate existing BusinessProfile records to include the new optional banking fields without data loss.",
-      "target": "backend",
+      "id": "REQ-157",
+      "text": "Fix the issue where saving Settings (Business Profile) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the updated business profile persists.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-user-1"
+          "recent-messages-6"
         ],
         "quotes": [
-          "it can user add through settings and all invoice have this details."
+          "and in setting save details show connection of backend is not ready fix this"
         ]
       },
       "acceptanceCriteria": [
-        "On canister upgrade, existing BusinessProfile records are migrated so that new banking fields are initialized to null/empty option values.",
-        "No traps occur during upgrade/migration when older BusinessProfile records (without banking fields) are present."
+        "After successful sign-in, saving Settings (Business Profile) succeeds without showing any “backend not ready”/connection error toast.",
+        "Reloading the app shows the saved Business Profile values (persistence verified).",
+        "If the backend actor/connection is not ready yet, the Save action is disabled and the user sees a clear English helper message explaining they must wait for the connection."
       ]
     },
     {
-      "id": "REQ-148",
-      "text": "Update the Settings page (frontend/src/pages/SettingsPage.tsx) to allow the user to add/edit banking details (Account Name, Account Number, IFSC Code, Bank Name, Branch). These fields must be saved as part of the Business Profile using the existing business profile save flow.",
+      "id": "REQ-158",
+      "text": "Update the invoice print/export layout to remove the QR option/QR section entirely (no QR label, placeholder, image, or empty space reserved for it).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-user-1"
+          "recent-messages-6"
         ],
         "quotes": [
-          "it can user add through settings"
+          "remove QR option in invoice"
         ]
       },
       "acceptanceCriteria": [
-        "Settings page displays a clearly labeled section (e.g., \"Banking Details\") with inputs for Account Name, Account Number, IFSC Code, Bank Name, and Branch.",
-        "Saving Settings persists banking details via the existing useSaveBusinessProfile() mutation and they are reloaded correctly via useGetBusinessProfile().",
-        "All user-facing labels and validation messages for these fields are in English."
+        "Invoice print page renders without any QR code section or QR-related text.",
+        "The layout remains visually aligned (no awkward blank area where QR used to be).",
+        "Printing the invoice produces a clean A4 output without the removed QR area."
       ]
     },
     {
-      "id": "REQ-149",
-      "text": "Render the saved banking details on invoice experiences so that all invoices include these details when present: (1) Invoice print layout (frontend/src/pages/InvoicePrintPage.tsx) and (2) Invoice detail view (frontend/src/pages/InvoiceDetailPage.tsx). If banking details are not configured, the banking section must be hidden (no empty labels).",
+      "id": "REQ-159",
+      "text": "Update invoice print/export and any invoice detail/metadata layouts to remove the “Delivery Note” field and remove all of the following fields/labels completely: “Mode/Terms of Payment”, “Other References”, “Dispatch Doc No.”, “Delivery Note Date”, “Dispatched through”, “Destination”, and “Terms of Delivery”.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-user-1"
+          "recent-messages-6"
         ],
         "quotes": [
-          "and all invoice have this details."
+          "remove Delivery Note\n\n—\n\nMode/Terms of Payment\n\n—\n\nOther References Dispatch Doc No.\n\n—\n\nDelivery Note Date\n\n—\n\nDispatched through\n\n—\n\nDestination\n\n—\n\nTerms of Delivery"
         ]
       },
       "acceptanceCriteria": [
-        "InvoicePrintPage shows a \"Banking Details\" section containing configured banking fields (Account Name, Account Number, IFSC Code, Bank Name, and Branch if set).",
-        "InvoiceDetailPage shows the same banking details section (using BusinessProfile data) when configured.",
-        "If none of the banking fields are set, the banking section does not render (no blank rows/labels).",
-        "All user-facing text is in English."
+        "Invoice print page does not display: Delivery Note, Mode/Terms of Payment, Other References, Dispatch Doc No., Delivery Note Date, Dispatched through, Destination, Terms of Delivery.",
+        "No empty rows/boxes/separators remain for these removed fields.",
+        "Invoice detail view does not show these removed fields anywhere (if previously shown)."
+      ]
+    },
+    {
+      "id": "REQ-160",
+      "text": "Ensure invoices include a clearly formatted “Banking Details” section sourced from the saved Business Profile banking details, and render it only when banking details are configured (hide the entire section when not configured).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-6"
+        ],
+        "quotes": [
+          "and in invoice add back details section"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When Banking Details are configured in Settings, the invoice print layout shows a “Banking Details” section with the configured fields.",
+        "When Banking Details are not configured, invoice print layout shows no Banking Details section (no empty labels).",
+        "Invoice detail view continues to show banking details when configured (and hides it when not configured)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single-actor Motoko architecture with all logic in backend/main.mo; only add backend/migration.mo changes if required for stable upgrade compatibility.",
-    "Do not modify any frontend files under frontend/src/components/ui or other immutable paths listed in SYSTEM_CONTEXT.",
-    "Banking details must be stored and retrieved as part of the user-scoped BusinessProfile (scoped to the signed-in Principal), not as per-invoice duplicated data unless required for backward compatibility."
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not edit immutable frontend paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Do not implement payment collection, payment links, UPI QR generation, or payment status tracking.",
-    "Do not integrate with external banking verification APIs.",
-    "Do not change invoice tax/GST calculations as part of this work."
+    "Adding new invoice metadata fields beyond the requested removals (no new Delivery/Transport fields).",
+    "Changing authentication method or introducing third-party auth providers.",
+    "Adding QR generation or any alternate QR replacement.",
+    "Changing invoice tax calculation logic."
   ],
   "imageRequirements": {
     "required": [],
@@ -93,7 +113,9 @@
   "userProfileUpdate": {
     "goalsToAdd": [],
     "goalsToRemove": [],
-    "preferencesToAdd": [],
+    "preferencesToAdd": [
+      "Use English for user-facing text."
+    ],
     "preferencesToRemove": [],
     "miscToAdd": [],
     "miscToRemove": [],

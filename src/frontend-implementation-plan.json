@@ -1,43 +1,116 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Banking details in Settings and invoices",
+  "title": "Frontend fixes for backend-readiness save errors and invoice layout updates (remove QR & delivery fields, add banking details)",
   "requirements": [
     {
-      "id": "REQ-148",
-      "summary": "Add Banking Details section to Settings and persist it via the existing BusinessProfile save/get flow.",
+      "id": "REQ-156",
+      "summary": "Prevent Customer save attempts before backend actor is ready; ensure customer create/edit immediately updates the customers list and invoice customer flows without user-visible readiness errors.",
       "acceptanceCriteria": [
-        "Settings page displays a clearly labeled section (e.g., \"Banking Details\") with inputs for Account Name, Account Number, IFSC Code, Bank Name, and Branch.",
-        "Saving Settings persists banking details via the existing useSaveBusinessProfile() mutation and they are reloaded correctly via useGetBusinessProfile().",
-        "All user-facing labels and validation messages for these fields are in English."
+        "After successful sign-in, creating a new customer from Customers page succeeds without showing any “backend not ready”/connection error toast.",
+        "After saving, the customer list updates immediately to include the new customer (no manual refresh).",
+        "Editing an existing customer saves successfully and the updated values are visible immediately.",
+        "If the backend actor/connection is not ready yet, the UI prevents submission and shows a clear English message (e.g., “Connecting to backend, please wait...”) instead of failing the mutation."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useBackendReady.ts",
+          "operation": "create",
+          "description": "Create a small hook that derives an explicit backend readiness state (e.g., ready vs connecting) from the existing actor hook, so UI flows can block mutations until the actor is usable."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Adjust customer mutations to avoid stale UI and support immediate list refresh by updating the React Query cache for the customers list on successful add/edit (in addition to invalidation), ensuring newly created/edited customers appear instantly."
+        },
+        {
+          "path": "frontend/src/components/customers/CustomerFormDialog.tsx",
+          "operation": "modify",
+          "description": "Use the backend readiness hook to disable the submit button and prevent form submission while connecting; show a clear English helper message (e.g., “Connecting to backend, please wait...”) instead of triggering a failing mutation and toast."
+        },
+        {
+          "path": "frontend/src/pages/InvoiceEditorPage.tsx",
+          "operation": "modify",
+          "description": "Ensure invoice-related customer save flows benefit from the readiness guard by passing any needed props/state to the existing CustomerFormDialog usage (and confirm the selected customer updates immediately after a successful add)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-157",
+      "summary": "Prevent Settings (Business Profile) save attempts before backend actor is ready; ensure profile saves persist and reload correctly without readiness errors.",
+      "acceptanceCriteria": [
+        "After successful sign-in, saving Settings (Business Profile) succeeds without showing any “backend not ready”/connection error toast.",
+        "Reloading the app shows the saved Business Profile values (persistence verified).",
+        "If the backend actor/connection is not ready yet, the Save action is disabled and the user sees a clear English helper message explaining they must wait for the connection."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/SettingsPage.tsx",
           "operation": "modify",
-          "description": "Implement a new \"Banking Details\" form section using existing shadcn-ui form components (Card/Label/Input) to capture Account Name, Account Number, IFSC Code, Bank Name, and optional Branch; populate initial values from businessProfile.bankingDetails; on save, include bankingDetails in the existing saveBusinessProfile payload, omitting the object entirely when all fields are blank; add client-side validation so that when any banking field is entered, required fields (Account Name, Account Number, IFSC Code, Bank Name) must be present with English error messages. Verify the component's usage instructions before implementing."
+          "description": "Use the backend readiness hook to disable the Save action while connecting and show a clear English helper message; keep existing validation and error handling, but prevent submissions when the actor is not ready."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure business profile save behavior remains consistent with immediate UI updates by keeping query invalidation after save and (if needed) setting the cached business profile data on success so reload and subsequent screens reflect persisted values promptly."
         }
       ]
     },
     {
-      "id": "REQ-149",
-      "summary": "Render configured BusinessProfile banking details on invoice print and invoice detail views, hiding the section when not configured.",
+      "id": "REQ-158",
+      "summary": "Remove the QR option/QR section entirely from the invoice print/export layout without leaving blank space.",
       "acceptanceCriteria": [
-        "InvoicePrintPage shows a \"Banking Details\" section containing configured banking fields (Account Name, Account Number, IFSC Code, Bank Name, and Branch if set).",
-        "InvoiceDetailPage shows the same banking details section (using BusinessProfile data) when configured.",
-        "If none of the banking fields are set, the banking section does not render (no blank rows/labels).",
-        "All user-facing text is in English."
+        "Invoice print page renders without any QR code section or QR-related text.",
+        "The layout remains visually aligned (no awkward blank area where QR used to be).",
+        "Printing the invoice produces a clean A4 output without the removed QR area."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/InvoicePrintPage.tsx",
           "operation": "modify",
-          "description": "Add a conditional \"Banking Details\" section driven by businessProfile.bankingDetails; render only non-empty fields (Account Name, Account Number, IFSC Code, Bank Name, and Branch when set) and hide the entire section when all are missing/blank; ensure all labels are in English and match Settings terminology."
+          "description": "Remove the entire QR-related UI block (label/placeholder/image/space) from the print layout and rebalance the header/title alignment so the A4 print layout remains clean and visually aligned."
+        }
+      ]
+    },
+    {
+      "id": "REQ-159",
+      "summary": "Remove Delivery/transport metadata fields from invoice print/export and invoice detail layouts, without leaving empty rows or separators.",
+      "acceptanceCriteria": [
+        "Invoice print page does not display: Delivery Note, Mode/Terms of Payment, Other References, Dispatch Doc No., Delivery Note Date, Dispatched through, Destination, Terms of Delivery.",
+        "No empty rows/boxes/separators remain for these removed fields.",
+        "Invoice detail view does not show these removed fields anywhere (if previously shown)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/InvoicePrintPage.tsx",
+          "operation": "modify",
+          "description": "Remove the Delivery Note block and all listed delivery/dispatch/payment-reference labels from the print layout, and adjust surrounding grid/borders so no empty placeholders or separators remain."
         },
         {
           "path": "frontend/src/pages/InvoiceDetailPage.tsx",
           "operation": "modify",
-          "description": "Add a conditional \"Banking Details\" card/section in the invoice detail view using businessProfile.bankingDetails; render only non-empty fields and hide the entire section when all are missing/blank; ensure all labels are in English and match InvoicePrintPage."
+          "description": "Audit and remove any rendering of the listed delivery/dispatch/payment-reference fields in the invoice detail/metadata sections (if present), ensuring no empty rows or headings remain."
+        }
+      ]
+    },
+    {
+      "id": "REQ-160",
+      "summary": "Add a conditional “Banking Details” section to invoice print/export and ensure invoice detail view shows/hides it based on configured Business Profile banking details.",
+      "acceptanceCriteria": [
+        "When Banking Details are configured in Settings, the invoice print layout shows a “Banking Details” section with the configured fields.",
+        "When Banking Details are not configured, invoice print layout shows no Banking Details section (no empty labels).",
+        "Invoice detail view continues to show banking details when configured (and hides it when not configured)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/InvoicePrintPage.tsx",
+          "operation": "modify",
+          "description": "Add a clearly formatted “Banking Details” section sourced from the loaded Business Profile, and render it only when banking details are configured (hide the entire section otherwise)."
+        },
+        {
+          "path": "frontend/src/pages/InvoiceDetailPage.tsx",
+          "operation": "modify",
+          "description": "Ensure invoice detail view displays a “Banking Details” section using Business Profile banking details when configured and hides it entirely when not configured."
         }
       ]
     }

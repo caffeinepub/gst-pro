@@ -1,43 +1,71 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T17:20:08.987Z",
+  "generatedAt": "2026-02-10T18:17:26.032Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 2,
+    "total": 5,
+    "implemented": 5,
     "items": [
       {
-        "id": "REQ-146",
-        "summary": "Extend the backend BusinessProfile model to store optional banking details that can be configured once in Settings and then reused on all invoices. Banking details must include at minimum: Account Name, Account Number, IFSC Code, Bank Name, and Branch (optional).",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-147",
-        "summary": "If the backend uses stable storage for BusinessProfile across upgrades, add conditional migration logic (backend/migration.mo) to safely migrate existing BusinessProfile records to include the new optional banking fields without data loss.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-148",
-        "summary": "Update the Settings page (frontend/src/pages/SettingsPage.tsx) to allow the user to add/edit banking details (Account Name, Account Number, IFSC Code, Bank Name, Branch). These fields must be saved as part of the Business Profile using the existing business profile save flow.",
+        "id": "REQ-156",
+        "summary": "Fix the issue where saving a Customer (from Customers page and invoice-related customer save flows) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the new/updated customer persists and appears immediately in the customers list.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/SettingsPage.tsx"
+          "frontend/src/hooks/useBackendReady.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/customers/CustomerFormDialog.tsx",
+          "frontend/src/pages/InvoiceEditorPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/SettingsPage.tsx"
+          "frontend/src/hooks/useBackendReady.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/customers/CustomerFormDialog.tsx"
         ]
       },
       {
-        "id": "REQ-149",
-        "summary": "Render the saved banking details on invoice experiences so that all invoices include these details when present: (1) Invoice print layout (frontend/src/pages/InvoicePrintPage.tsx) and (2) Invoice detail view (frontend/src/pages/InvoiceDetailPage.tsx). If banking details are not configured, the banking section must be hidden (no empty labels).",
+        "id": "REQ-157",
+        "summary": "Fix the issue where saving Settings (Business Profile) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the updated business profile persists.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-158",
+        "summary": "Update the invoice print/export layout to remove the QR option/QR section entirely (no QR label, placeholder, image, or empty space reserved for it).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/InvoicePrintPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/InvoicePrintPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-159",
+        "summary": "Update invoice print/export and any invoice detail/metadata layouts to remove the “Delivery Note” field and remove all of the following fields/labels completely: “Mode/Terms of Payment”, “Other References”, “Dispatch Doc No.”, “Delivery Note Date”, “Dispatched through”, “Destination”, and “Terms of Delivery”.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/InvoicePrintPage.tsx",
+          "frontend/src/pages/InvoiceDetailPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/InvoicePrintPage.tsx",
+          "frontend/src/pages/InvoiceDetailPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-160",
+        "summary": "Ensure invoices include a clearly formatted “Banking Details” section sourced from the saved Business Profile banking details, and render it only when banking details are configured (hide the entire section when not configured).",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/InvoicePrintPage.tsx",
@@ -52,15 +80,13 @@
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/components/customers/CustomerFormDialog.tsx",
+    "frontend/src/hooks/useBackendReady.ts",
+    "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/InvoiceDetailPage.tsx",
     "frontend/src/pages/InvoicePrintPage.tsx",
     "frontend/src/pages/SettingsPage.tsx",

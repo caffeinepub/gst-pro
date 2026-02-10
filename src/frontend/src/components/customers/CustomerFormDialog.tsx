@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAddCustomer, useEditCustomer } from '../../hooks/useQueries';
+import { useBackendReady } from '../../hooks/useBackendReady';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ interface CustomerFormDialogProps {
 export default function CustomerFormDialog({ open, onClose, customer, onSuccess }: CustomerFormDialogProps) {
   const addCustomer = useAddCustomer();
   const editCustomer = useEditCustomer();
+  const { isReady, isConnecting, message } = useBackendReady();
   const isEditing = customer !== null;
 
   const [formData, setFormData] = useState({
@@ -67,6 +69,11 @@ export default function CustomerFormDialog({ open, onClose, customer, onSuccess 
       return;
     }
 
+    if (!isReady) {
+      toast.error(message || 'Backend connection not ready');
+      return;
+    }
+
     try {
       if (isEditing) {
         await editCustomer.mutateAsync({
@@ -94,52 +101,60 @@ export default function CustomerFormDialog({ open, onClose, customer, onSuccess 
         }
       }
     } catch (error: any) {
-      const errorMessage = getUserFacingError(error);
-      toast.error(errorMessage);
+      const userError = getUserFacingError(error);
+      toast.error(userError);
     }
   };
 
-  const isSaving = addCustomer.isPending || editCustomer.isPending;
+  const isPending = addCustomer.isPending || editCustomer.isPending;
+  const isSubmitDisabled = !isReady || isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Customer' : 'Add Customer'}</DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Update customer information' : 'Add a new customer to your database'}
+            {isEditing ? 'Update customer information' : 'Add a new customer to your records'}
           </DialogDescription>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name *</Label>
+          <div>
+            <Label htmlFor="name">
+              Name <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Customer name"
-              required
+              disabled={isPending}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="billingAddress">Billing Address *</Label>
+          <div>
+            <Label htmlFor="billingAddress">
+              Billing Address <span className="text-destructive">*</span>
+            </Label>
             <Textarea
               id="billingAddress"
               value={formData.billingAddress}
               onChange={(e) => setFormData({ ...formData, billingAddress: e.target.value })}
               placeholder="Enter billing address"
               rows={3}
-              required
+              disabled={isPending}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="state">State *</Label>
+          <div>
+            <Label htmlFor="state">
+              State <span className="text-destructive">*</span>
+            </Label>
             <Select
               value={formData.state}
               onValueChange={(value) => setFormData({ ...formData, state: value })}
-              required
+              disabled={isPending}
             >
               <SelectTrigger id="state">
                 <SelectValue placeholder="Select state" />
@@ -154,41 +169,42 @@ export default function CustomerFormDialog({ open, onClose, customer, onSuccess 
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="gstin">GSTIN</Label>
+          <div>
+            <Label htmlFor="gstin">GSTIN (Optional)</Label>
             <Input
               id="gstin"
               value={formData.gstin}
               onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-              placeholder="e.g., 29ABCDE1234F1Z5"
+              placeholder="15-character GSTIN"
+              maxLength={15}
+              disabled={isPending}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="contactInfo">Contact Info</Label>
+          <div>
+            <Label htmlFor="contactInfo">Contact Info (Optional)</Label>
             <Input
               id="contactInfo"
               value={formData.contactInfo}
               onChange={(e) => setFormData({ ...formData, contactInfo: e.target.value })}
-              placeholder="Phone or email"
+              placeholder="Phone, email, etc."
+              disabled={isPending}
             />
           </div>
 
+          {!isReady && (
+            <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
+              {message}
+            </div>
+          )}
+
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : isEditing ? (
-                'Update'
-              ) : (
-                'Add Customer'
-              )}
+            <Button type="submit" disabled={isSubmitDisabled}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isEditing ? 'Update' : 'Add'} Customer
             </Button>
           </div>
         </form>

@@ -80,7 +80,9 @@ export function useSaveBusinessProfile() {
       if (!actor) throw new Error('Actor not available');
       return actor.saveBusinessProfile(profile);
     },
-    onSuccess: () => {
+    onSuccess: (_, profile) => {
+      // Update cache immediately for instant UI feedback
+      queryClient.setQueryData(['businessProfile'], profile);
       queryClient.invalidateQueries({ queryKey: ['businessProfile'] });
     },
   });
@@ -134,7 +136,12 @@ export function useAddCustomer() {
         params.contactInfo
       );
     },
-    onSuccess: () => {
+    onSuccess: (newCustomer) => {
+      // Update cache immediately with the new customer
+      queryClient.setQueryData<Customer[]>(['customers'], (old) => {
+        if (!old) return [newCustomer];
+        return [...old, newCustomer].sort((a, b) => Number(a.id - b.id));
+      });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
     },
   });
@@ -164,6 +171,22 @@ export function useEditCustomer() {
       );
     },
     onSuccess: (_, variables) => {
+      // Update cache immediately with the edited customer
+      queryClient.setQueryData<Customer[]>(['customers'], (old) => {
+        if (!old) return [];
+        return old.map((customer) =>
+          customer.id === variables.id
+            ? {
+                id: variables.id,
+                name: variables.name,
+                billingAddress: variables.billingAddress,
+                gstin: variables.gstin ?? undefined,
+                state: variables.state,
+                contactInfo: variables.contactInfo ?? undefined,
+              }
+            : customer
+        );
+      });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       queryClient.invalidateQueries({ queryKey: ['customer', variables.id.toString()] });
     },

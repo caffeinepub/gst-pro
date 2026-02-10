@@ -1,33 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useGetBusinessProfile, useSaveBusinessProfile } from '../hooks/useQueries';
+import { useBackendReady } from '../hooks/useBackendReady';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollableSelectContent } from '../components/forms/ScrollableSelectContent';
-import { Save, Loader2, Upload, X, Image as ImageIcon, FileCheck, ArrowRight } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { getUserFacingError } from '../utils/userFacingError';
+import { ExternalBlob } from '../backend';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { INDIAN_STATES } from '../utils/indianStates';
-import { ExternalBlob, BankingDetails } from '../backend';
-import { Link } from '@tanstack/react-router';
+import { ScrollableSelectContent } from '../components/forms/ScrollableSelectContent';
 
 export default function SettingsPage() {
   const { data: businessProfile, isLoading } = useGetBusinessProfile();
-  const saveProfile = useSaveBusinessProfile();
+  const saveBusinessProfile = useSaveBusinessProfile();
+  const { isReady, isConnecting, message } = useBackendReady();
 
   const [formData, setFormData] = useState({
     businessName: '',
     address: '',
     gstin: '',
     state: '',
-    invoicePrefix: 'INV',
+    invoicePrefix: '',
     startingNumber: '1',
-  });
-
-  const [bankingDetails, setBankingDetails] = useState({
     accountName: '',
     accountNumber: '',
     ifscCode: '',
@@ -37,8 +36,7 @@ export default function SettingsPage() {
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [existingLogo, setExistingLogo] = useState<ExternalBlob | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [removeLogo, setRemoveLogo] = useState(false);
 
   useEffect(() => {
     if (businessProfile) {
@@ -49,32 +47,15 @@ export default function SettingsPage() {
         state: businessProfile.state,
         invoicePrefix: businessProfile.invoicePrefix,
         startingNumber: businessProfile.startingNumber.toString(),
+        accountName: businessProfile.bankingDetails?.accountName || '',
+        accountNumber: businessProfile.bankingDetails?.accountNumber || '',
+        ifscCode: businessProfile.bankingDetails?.ifscCode || '',
+        bankName: businessProfile.bankingDetails?.bankName || '',
+        branch: businessProfile.bankingDetails?.branch || '',
       });
-      
-      if (businessProfile.logo) {
-        setExistingLogo(businessProfile.logo);
-        setLogoPreview(businessProfile.logo.getDirectURL());
-      } else {
-        setExistingLogo(null);
-        setLogoPreview(null);
-      }
 
-      if (businessProfile.bankingDetails) {
-        setBankingDetails({
-          accountName: businessProfile.bankingDetails.accountName,
-          accountNumber: businessProfile.bankingDetails.accountNumber,
-          ifscCode: businessProfile.bankingDetails.ifscCode,
-          bankName: businessProfile.bankingDetails.bankName,
-          branch: businessProfile.bankingDetails.branch || '',
-        });
-      } else {
-        setBankingDetails({
-          accountName: '',
-          accountNumber: '',
-          ifscCode: '',
-          bankName: '',
-          branch: '',
-        });
+      if (businessProfile.logo) {
+        setLogoPreview(businessProfile.logo.getDirectURL());
       }
     }
   }, [businessProfile]);
@@ -82,68 +63,65 @@ export default function SettingsPage() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file (PNG or JPG)');
-        return;
-      }
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
+        toast.error('Logo file size must be less than 5MB');
         return;
       }
       setLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setLogoPreview(URL.createObjectURL(file));
+      setRemoveLogo(false);
     }
   };
 
-  const handleClearLogo = () => {
+  const handleRemoveLogo = () => {
     setLogoFile(null);
     setLogoPreview(null);
-    setExistingLogo(null);
-    setUploadProgress(0);
+    setRemoveLogo(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.businessName.trim()) {
-      toast.error('Business name is required');
+    if (
+      !formData.businessName.trim() ||
+      !formData.address.trim() ||
+      !formData.gstin.trim() ||
+      !formData.state.trim() ||
+      !formData.invoicePrefix.trim() ||
+      !formData.startingNumber.trim()
+    ) {
+      toast.error('Please fill in all required business information fields');
       return;
     }
 
-    if (!formData.state.trim()) {
-      toast.error('State is required');
+    const startingNum = parseInt(formData.startingNumber, 10);
+    if (isNaN(startingNum) || startingNum < 1) {
+      toast.error('Starting number must be a positive integer');
       return;
     }
 
-    // Validate banking details: if any field is filled, required fields must be present
-    const hasAnyBankingField = 
-      bankingDetails.accountName.trim() ||
-      bankingDetails.accountNumber.trim() ||
-      bankingDetails.ifscCode.trim() ||
-      bankingDetails.bankName.trim() ||
-      bankingDetails.branch.trim();
+    // Validate banking details: if any field is filled, all required fields must be filled
+    const hasBankingData =
+      formData.accountName.trim() ||
+      formData.accountNumber.trim() ||
+      formData.ifscCode.trim() ||
+      formData.bankName.trim();
 
-    if (hasAnyBankingField) {
-      if (!bankingDetails.accountName.trim()) {
-        toast.error('Account Name is required when banking details are provided');
+    if (hasBankingData) {
+      if (
+        !formData.accountName.trim() ||
+        !formData.accountNumber.trim() ||
+        !formData.ifscCode.trim() ||
+        !formData.bankName.trim()
+      ) {
+        toast.error('Please fill in all required banking details fields (Account Name, Account Number, IFSC Code, Bank Name)');
         return;
       }
-      if (!bankingDetails.accountNumber.trim()) {
-        toast.error('Account Number is required when banking details are provided');
-        return;
-      }
-      if (!bankingDetails.ifscCode.trim()) {
-        toast.error('IFSC Code is required when banking details are provided');
-        return;
-      }
-      if (!bankingDetails.bankName.trim()) {
-        toast.error('Bank Name is required when banking details are provided');
-        return;
-      }
+    }
+
+    if (!isReady) {
+      toast.error(message || 'Backend connection not ready');
+      return;
     }
 
     try {
@@ -152,57 +130,56 @@ export default function SettingsPage() {
       if (logoFile) {
         const arrayBuffer = await logoFile.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
-        logoBlob = ExternalBlob.fromBytes(uint8Array).withUploadProgress((percentage) => {
-          setUploadProgress(percentage);
-        });
-      } else if (existingLogo) {
-        logoBlob = existingLogo;
+        logoBlob = ExternalBlob.fromBytes(uint8Array);
+      } else if (!removeLogo && businessProfile?.logo) {
+        logoBlob = businessProfile.logo;
       }
 
-      // Only include bankingDetails if at least one field is filled
-      let bankingDetailsPayload: BankingDetails | undefined = undefined;
-      if (hasAnyBankingField) {
-        bankingDetailsPayload = {
-          accountName: bankingDetails.accountName.trim(),
-          accountNumber: bankingDetails.accountNumber.trim(),
-          ifscCode: bankingDetails.ifscCode.trim(),
-          bankName: bankingDetails.bankName.trim(),
-          branch: bankingDetails.branch.trim() || undefined,
-        };
-      }
+      const bankingDetails =
+        hasBankingData
+          ? {
+              accountName: formData.accountName.trim(),
+              accountNumber: formData.accountNumber.trim(),
+              ifscCode: formData.ifscCode.trim(),
+              bankName: formData.bankName.trim(),
+              branch: formData.branch.trim() || undefined,
+            }
+          : undefined;
 
-      await saveProfile.mutateAsync({
+      await saveBusinessProfile.mutateAsync({
         businessName: formData.businessName,
         address: formData.address,
         gstin: formData.gstin,
         state: formData.state,
         invoicePrefix: formData.invoicePrefix,
-        startingNumber: BigInt(formData.startingNumber || '1'),
+        startingNumber: BigInt(startingNum),
         logo: logoBlob,
-        bankingDetails: bankingDetailsPayload,
+        bankingDetails,
       });
+
       toast.success('Business profile saved successfully');
-      setUploadProgress(0);
     } catch (error: any) {
-      const errorMessage = getUserFacingError(error);
-      toast.error(errorMessage);
-      setUploadProgress(0);
+      const userError = getUserFacingError(error);
+      toast.error(userError);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  const isSaving = saveBusinessProfile.isPending;
+  const isSubmitDisabled = !isReady || isSaving;
+
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your business profile and invoice settings</p>
+    <div className="container mx-auto py-8 px-4 max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground mt-1">Manage your business profile and invoice settings</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -212,47 +189,56 @@ export default function SettingsPage() {
             <CardDescription>Your business details for invoices</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="businessName">Business Name *</Label>
+            <div>
+              <Label htmlFor="businessName">
+                Business Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="businessName"
                 value={formData.businessName}
                 onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                placeholder="Enter your business name"
-                required
+                placeholder="Your Business Name"
+                disabled={isSaving}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Address *</Label>
+            <div>
+              <Label htmlFor="address">
+                Address <span className="text-destructive">*</span>
+              </Label>
               <Textarea
                 id="address"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="Enter your business address"
+                placeholder="Business address"
                 rows={3}
-                required
+                disabled={isSaving}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="gstin">GSTIN *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="gstin">
+                  GSTIN <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="gstin"
                   value={formData.gstin}
                   onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-                  placeholder="e.g., 29ABCDE1234F1Z5"
-                  required
+                  placeholder="15-character GSTIN"
+                  maxLength={15}
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="state">State *</Label>
+              <div>
+                <Label htmlFor="state">
+                  State <span className="text-destructive">*</span>
+                </Label>
                 <Select
                   value={formData.state}
                   onValueChange={(value) => setFormData({ ...formData, state: value })}
-                  required
+                  disabled={isSaving}
                 >
                   <SelectTrigger id="state">
                     <SelectValue placeholder="Select state" />
@@ -267,80 +253,6 @@ export default function SettingsPage() {
                 </Select>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="logo">Invoice Logo</Label>
-              <div className="space-y-3">
-                {logoPreview ? (
-                  <div className="relative inline-block">
-                    <img
-                      src={logoPreview}
-                      alt="Business logo preview"
-                      className="h-24 w-auto border rounded-md object-contain bg-muted"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                      onClick={handleClearLogo}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-24 w-32 border-2 border-dashed rounded-md bg-muted/50">
-                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="logo"
-                    type="file"
-                    accept="image/png,image/jpeg,image/jpg"
-                    onChange={handleLogoChange}
-                    className="hidden"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => document.getElementById('logo')?.click()}
-                    className="gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {logoPreview ? 'Change Logo' : 'Upload Logo'}
-                  </Button>
-                  {logoPreview && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearLogo}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  PNG or JPG, max 5MB. Logo will appear on printed invoices.
-                </p>
-                {uploadProgress > 0 && uploadProgress < 100 && (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>Uploading...</span>
-                      <span>{uploadProgress}%</span>
-                    </div>
-                    <div className="h-1 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
           </CardContent>
         </Card>
 
@@ -350,85 +262,91 @@ export default function SettingsPage() {
             <CardDescription>Bank account information for invoices (optional)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="accountName">Account Name</Label>
-              <Input
-                id="accountName"
-                value={bankingDetails.accountName}
-                onChange={(e) => setBankingDetails({ ...bankingDetails, accountName: e.target.value })}
-                placeholder="Enter account holder name"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="accountName">Account Name</Label>
+                <Input
+                  id="accountName"
+                  value={formData.accountName}
+                  onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
+                  placeholder="Account holder name"
+                  disabled={isSaving}
+                />
+              </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="accountNumber">Account Number</Label>
                 <Input
                   id="accountNumber"
-                  value={bankingDetails.accountNumber}
-                  onChange={(e) => setBankingDetails({ ...bankingDetails, accountNumber: e.target.value })}
-                  placeholder="Enter account number"
+                  value={formData.accountNumber}
+                  onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+                  placeholder="Bank account number"
+                  disabled={isSaving}
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="ifscCode">IFSC Code</Label>
                 <Input
                   id="ifscCode"
-                  value={bankingDetails.ifscCode}
-                  onChange={(e) => setBankingDetails({ ...bankingDetails, ifscCode: e.target.value.toUpperCase() })}
-                  placeholder="e.g., SBIN0001234"
+                  value={formData.ifscCode}
+                  onChange={(e) => setFormData({ ...formData, ifscCode: e.target.value })}
+                  placeholder="IFSC code"
+                  disabled={isSaving}
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="bankName">Bank Name</Label>
                 <Input
                   id="bankName"
-                  value={bankingDetails.bankName}
-                  onChange={(e) => setBankingDetails({ ...bankingDetails, bankName: e.target.value })}
-                  placeholder="Enter bank name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="branch">Branch (Optional)</Label>
-                <Input
-                  id="branch"
-                  value={bankingDetails.branch}
-                  onChange={(e) => setBankingDetails({ ...bankingDetails, branch: e.target.value })}
-                  placeholder="Enter branch name"
+                  value={formData.bankName}
+                  onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                  placeholder="Name of the bank"
+                  disabled={isSaving}
                 />
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Banking details will appear on all invoices when configured.
-            </p>
+            <div>
+              <Label htmlFor="branch">Branch (Optional)</Label>
+              <Input
+                id="branch"
+                value={formData.branch}
+                onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
+                placeholder="Branch name or location"
+                disabled={isSaving}
+              />
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Invoice Settings</CardTitle>
-            <CardDescription>Configure invoice numbering</CardDescription>
+            <CardTitle>Invoice Configuration</CardTitle>
+            <CardDescription>Configure invoice numbering and branding</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="invoicePrefix">Invoice Prefix</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="invoicePrefix">
+                  Invoice Prefix <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="invoicePrefix"
                   value={formData.invoicePrefix}
                   onChange={(e) => setFormData({ ...formData, invoicePrefix: e.target.value })}
                   placeholder="e.g., INV"
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="startingNumber">Starting Number</Label>
+              <div>
+                <Label htmlFor="startingNumber">
+                  Starting Number <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="startingNumber"
                   type="number"
@@ -436,46 +354,67 @@ export default function SettingsPage() {
                   value={formData.startingNumber}
                   onChange={(e) => setFormData({ ...formData, startingNumber: e.target.value })}
                   placeholder="1"
+                  disabled={isSaving}
                 />
               </div>
             </div>
 
-            <div className="text-sm text-muted-foreground">
-              Preview: {formData.invoicePrefix}
-              {formData.startingNumber.padStart(4, '0')}
+            <Separator />
+
+            <div>
+              <Label>Invoice Logo (Optional)</Label>
+              <div className="mt-2 space-y-4">
+                {logoPreview && (
+                  <div className="relative inline-block">
+                    <img src={logoPreview} alt="Logo preview" className="h-24 w-auto border rounded" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={handleRemoveLogo}
+                      disabled={isSaving}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                <div>
+                  <Input
+                    id="logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    disabled={isSaving}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload a logo for your invoices (max 5MB)
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>GST Filing</CardTitle>
-            <CardDescription>View your GST return filing status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link to="/gst-filing-status">
-              <Button type="button" variant="outline" className="gap-2">
-                <FileCheck className="h-4 w-4" />
-                View GST Filing Status
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        {!isReady && (
+          <Card className="border-muted-foreground/50">
+            <CardContent className="pt-6">
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                {isConnecting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {message}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <Button type="submit" disabled={saveProfile.isPending} className="gap-2">
-          {saveProfile.isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              Save Settings
-            </>
-          )}
-        </Button>
+        <div className="flex justify-end">
+          <Button type="submit" size="lg" disabled={isSubmitDisabled}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Settings
+          </Button>
+        </div>
       </form>
     </div>
   );

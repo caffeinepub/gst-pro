@@ -116,7 +116,7 @@ body {
 @media print {
     @page {
         size: A4;
-        margin: 1cm;
+        margin: 0.5cm;
     }
 
     body {
@@ -127,13 +127,45 @@ body {
     .print-page {
         background: white !important;
         color: black !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
+    /* Ensure borders render cleanly */
+    table,
+    th,
+    td,
+    div {
+        border-color: black !important;
+        page-break-inside: avoid;
+    }
+
+    /* Prevent clipping of borders */
+    table {
+        border-collapse: collapse;
+    }
+
+    /* Safe word breaking for long text */
+    p,
+    td,
+    th {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* Hide non-print elements */
     header,
     footer,
     nav,
     button,
     .no-print {
         display: none !important;
+    }
+
+    /* Prevent page breaks inside bordered sections */
+    .border-2,
+    .border {
+        page-break-inside: avoid;
     }
 }

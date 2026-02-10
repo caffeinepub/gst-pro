@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Let users configure banking details once in Settings and automatically include them on all invoices when present.
+**Goal:** Fix “backend connection not ready” save failures for Customers and Business Profile, and update invoice print/export layout by removing QR and delivery-related fields while adding conditional Banking Details.
 
 **Planned changes:**
-- Extend the backend BusinessProfile model to store optional banking details: Account Name, Account Number, IFSC Code, Bank Name, and optional Branch.
-- Add safe upgrade/migration handling (if stable storage is used) so existing BusinessProfile records remain readable and new banking fields default to empty/null without trapping.
-- Update the Settings page to add a “Banking Details” section with inputs for the banking fields, saved/loaded through the existing business profile save/get flow.
-- Update invoice print and invoice detail pages to render a “Banking Details” section using saved BusinessProfile data, and hide the section entirely when no banking fields are configured.
+- Ensure Customer create/edit flows (Customers page and invoice-related customer save) wait for backend readiness before submitting; on success, persist and update the customers list immediately.
+- Ensure Settings (Business Profile) save waits for backend readiness before submitting; on success, persist changes and show them after reload.
+- Update invoice print/export layout to remove the QR section entirely (no option, label, placeholder, image, or reserved space).
+- Remove Delivery Note and the specified payment/dispatch/delivery fields from invoice print/export and any invoice detail/metadata views, without leaving empty rows or separators.
+- Add a “Banking Details” section to invoice print/export sourced from saved Business Profile; show it only when banking details are configured (hide the whole section when not configured).
 
-**User-visible outcome:** Users can add/edit banking details in Settings, and invoices (detail view and print layout) will show those details when configured, otherwise no banking section appears.
+**User-visible outcome:** Signed-in users can save customers and business profile settings without “backend not ready” errors, and invoices print/export without QR and removed delivery fields while showing Banking Details only when configured.
