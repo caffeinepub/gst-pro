@@ -67,7 +67,9 @@ export interface Invoice {
   'id' : bigint,
   'status' : InvoiceStatus,
   'lineItems' : Array<LineItem>,
+  'purchaseOrderNumber' : [] | [string],
   'invoiceDate' : string,
+  'invoiceNumber' : string,
   'customerId' : bigint,
 }
 export interface InvoiceKPIs {
@@ -224,7 +226,10 @@ export interface _SERVICE {
     [string, string],
     CredentialResponse
   >,
-  'createInvoice' : ActorMethod<[bigint, Array<LineItem>, string], Invoice>,
+  'createInvoice' : ActorMethod<
+    [string, [] | [string], bigint, Array<LineItem>, string],
+    Invoice
+  >,
   'createUser' : ActorMethod<[CreateUserRequest], SignUpResponse>,
   'deleteCustomer' : ActorMethod<[bigint], undefined>,
   'deleteInvoice' : ActorMethod<[bigint], undefined>,
@@ -235,7 +240,15 @@ export interface _SERVICE {
     undefined
   >,
   'editInvoice' : ActorMethod<
-    [bigint, bigint, Array<LineItem>, InvoiceStatus, string],
+    [
+      bigint,
+      string,
+      [] | [string],
+      bigint,
+      Array<LineItem>,
+      InvoiceStatus,
+      string,
+    ],
     undefined
   >,
   'editItem' : ActorMethod<

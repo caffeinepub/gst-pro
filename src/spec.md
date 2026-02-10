@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Make mobile navigation reliably accessible and fix GST Status page runtime and data-fetching issues so users can view real filing status and GST profile details in English.
+**Goal:** Let users edit and store invoice numbers and purchase order numbers, ensure the E‑Way Bill link opens the correct login page, and allow GSTIN-based search to view full GST profile and filing status.
 
 **Planned changes:**
-- Update authenticated mobile navigation UI to ensure “Settings” (/settings) and “GST Status” (/gst-filing-status) are always visible and usable on small viewports without overflow/clipping.
-- Fix the GST Status page runtime error (“ReturnType is not defined”) so the page renders and the return-type selector (GSTR-3B / GSTR-1) works correctly.
-- Wire “Show/Refresh Status” to fetch real filing status data via the existing backend integration with https://services.gst.gov.in/services/searchtp, and display results with clear loading, empty, and error states (English).
-- Extend the backend response and frontend rendering to include additional GST profile fields from the GST portal response (when available) and show a GST Profile section that degrades gracefully with English placeholders.
+- Extend the backend `Invoice` model to persist an editable `invoiceNumber` and optional `purchaseOrderNumber` across invoice create/edit/get/list flows, with safe defaults for older invoices.
+- Update the invoice editor to include English-labeled inputs for “Invoice Number” and “Purchase Order Number”, pre-fill on edit, and save both fields.
+- Update invoice detail and print pages to display stored invoice number when present (fallback to existing formatted number only when missing), and show “Purchase Order No” in print when available.
+- Update the in-app “E‑Way Bill” action to open `https://ewaybillgst.gov.in/Login.aspx` in a new tab/window.
+- Update the GST Status page to allow searching any GSTIN and display GST profile details (e.g., legal name, trade name) plus filing status for the selected return type/period, with clear English loading/empty/error states.
 
-**User-visible outcome:** On mobile, users can navigate to Settings and GST Status reliably; the GST Status page no longer crashes, and users can refresh to see real GST filing status (Filed/Not filed and filing date when available) plus a more complete GST profile section with clear English loading/empty/error messaging.
+**User-visible outcome:** Users can enter and edit invoice and PO numbers, see them reflected in invoice views/prints, open the correct E‑Way Bill login page, and search any GSTIN to view its GST profile and filing status.

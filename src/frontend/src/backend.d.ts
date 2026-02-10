@@ -132,7 +132,9 @@ export interface Invoice {
     id: bigint;
     status: InvoiceStatus;
     lineItems: Array<LineItem>;
+    purchaseOrderNumber?: string;
     invoiceDate: string;
+    invoiceNumber: string;
     customerId: bigint;
 }
 export interface Customer {
@@ -212,14 +214,14 @@ export interface backendInterface {
     adminGetUserInvoices(userId: string): Promise<Array<Invoice>>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     authenticateApplicationCredentials(userId: string, password: string): Promise<CredentialResponse>;
-    createInvoice(customerId: bigint, lineItems: Array<LineItem>, invoiceDate: string): Promise<Invoice>;
+    createInvoice(invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, invoiceDate: string): Promise<Invoice>;
     createUser(request: CreateUserRequest): Promise<SignUpResponse>;
     deleteCustomer(id: bigint): Promise<void>;
     deleteInvoice(id: bigint): Promise<void>;
     deleteItem(id: bigint): Promise<void>;
     deleteUser(userId: string): Promise<void>;
     editCustomer(id: bigint, name: string, billingAddress: string, gstin: string | null, state: string, contactInfo: string | null): Promise<void>;
-    editInvoice(id: bigint, customerId: bigint, lineItems: Array<LineItem>, status: InvoiceStatus, invoiceDate: string): Promise<void>;
+    editInvoice(id: bigint, invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, status: InvoiceStatus, invoiceDate: string): Promise<void>;
     editItem(id: bigint, name: string, description: string | null, hsnSac: string | null, unitPrice: number, defaultGstRate: number): Promise<void>;
     fetchGstFilingStatus(gstin: string, period: string, returnType: ReturnType_, filingFrequency: FilingFrequency): Promise<GSTFilingStatus>;
     finalizeInvoice(id: bigint): Promise<void>;

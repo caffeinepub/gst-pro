@@ -214,7 +214,9 @@ export interface Invoice {
     id: bigint;
     status: InvoiceStatus;
     lineItems: Array<LineItem>;
+    purchaseOrderNumber?: string;
     invoiceDate: string;
+    invoiceNumber: string;
     customerId: bigint;
 }
 export interface Customer {
@@ -305,14 +307,14 @@ export interface backendInterface {
     adminGetUserInvoices(userId: string): Promise<Array<Invoice>>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     authenticateApplicationCredentials(userId: string, password: string): Promise<CredentialResponse>;
-    createInvoice(customerId: bigint, lineItems: Array<LineItem>, invoiceDate: string): Promise<Invoice>;
+    createInvoice(invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, invoiceDate: string): Promise<Invoice>;
     createUser(request: CreateUserRequest): Promise<SignUpResponse>;
     deleteCustomer(id: bigint): Promise<void>;
     deleteInvoice(id: bigint): Promise<void>;
     deleteItem(id: bigint): Promise<void>;
     deleteUser(userId: string): Promise<void>;
     editCustomer(id: bigint, name: string, billingAddress: string, gstin: string | null, state: string, contactInfo: string | null): Promise<void>;
-    editInvoice(id: bigint, customerId: bigint, lineItems: Array<LineItem>, status: InvoiceStatus, invoiceDate: string): Promise<void>;
+    editInvoice(id: bigint, invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, status: InvoiceStatus, invoiceDate: string): Promise<void>;
     editItem(id: bigint, name: string, description: string | null, hsnSac: string | null, unitPrice: number, defaultGstRate: number): Promise<void>;
     fetchGstFilingStatus(gstin: string, period: string, returnType: ReturnType_, filingFrequency: FilingFrequency): Promise<GSTFilingStatus>;
     finalizeInvoice(id: bigint): Promise<void>;
@@ -528,17 +530,17 @@ export class Backend implements backendInterface {
             return from_candid_CredentialResponse_n25(this._uploadFile, this._downloadFile, result);
         }
     }
-    async createInvoice(arg0: bigint, arg1: Array<LineItem>, arg2: string): Promise<Invoice> {
+    async createInvoice(arg0: string, arg1: string | null, arg2: bigint, arg3: Array<LineItem>, arg4: string): Promise<Invoice> {
         if (this.processError) {
             try {
-                const result = await this.actor.createInvoice(arg0, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg1), arg2);
+                const result = await this.actor.createInvoice(arg0, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg3), arg4);
                 return from_candid_Invoice_n15(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createInvoice(arg0, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg1), arg2);
+            const result = await this.actor.createInvoice(arg0, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg1), arg2, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg3), arg4);
             return from_candid_Invoice_n15(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -626,17 +628,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async editInvoice(arg0: bigint, arg1: bigint, arg2: Array<LineItem>, arg3: InvoiceStatus, arg4: string): Promise<void> {
+    async editInvoice(arg0: bigint, arg1: string, arg2: string | null, arg3: bigint, arg4: Array<LineItem>, arg5: InvoiceStatus, arg6: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.editInvoice(arg0, arg1, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg2), to_candid_InvoiceStatus_n40(this._uploadFile, this._downloadFile, arg3), arg4);
+                const result = await this.actor.editInvoice(arg0, arg1, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg2), arg3, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg4), to_candid_InvoiceStatus_n40(this._uploadFile, this._downloadFile, arg5), arg6);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.editInvoice(arg0, arg1, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg2), to_candid_InvoiceStatus_n40(this._uploadFile, this._downloadFile, arg3), arg4);
+            const result = await this.actor.editInvoice(arg0, arg1, to_candid_opt_n8(this._uploadFile, this._downloadFile, arg2), arg3, to_candid_vec_n30(this._uploadFile, this._downloadFile, arg4), to_candid_InvoiceStatus_n40(this._uploadFile, this._downloadFile, arg5), arg6);
             return result;
         }
     }
@@ -1195,20 +1197,26 @@ function from_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uin
     id: bigint;
     status: _InvoiceStatus;
     lineItems: Array<_LineItem>;
+    purchaseOrderNumber: [] | [string];
     invoiceDate: string;
+    invoiceNumber: string;
     customerId: bigint;
 }): {
     id: bigint;
     status: InvoiceStatus;
     lineItems: Array<LineItem>;
+    purchaseOrderNumber?: string;
     invoiceDate: string;
+    invoiceNumber: string;
     customerId: bigint;
 } {
     return {
         id: value.id,
         status: from_candid_InvoiceStatus_n17(_uploadFile, _downloadFile, value.status),
         lineItems: from_candid_vec_n19(_uploadFile, _downloadFile, value.lineItems),
+        purchaseOrderNumber: record_opt_to_undefined(from_candid_opt_n11(_uploadFile, _downloadFile, value.purchaseOrderNumber)),
         invoiceDate: value.invoiceDate,
+        invoiceNumber: value.invoiceNumber,
         customerId: value.customerId
     };
 }

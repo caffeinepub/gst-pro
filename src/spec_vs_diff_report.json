@@ -1,59 +1,52 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T22:28:19.054Z",
-  "summary": "Diff adds a mobile navigation drawer with “Settings” and “GST Status” links, refactors GST Status page to use generated ReturnType_ enum (likely fixing “ReturnType is not defined”), and extends backend/FE types plus a new GST Profile UI section. However, the diff evidence is insufficient to confirm the backend actually fetches real filing status data from the GST portal endpoint or that all required loading/empty/error behaviors and English placeholders are implemented. Several unrelated PWA/service-worker and other UI enhancements also appear in the change summary but were not requested.",
-  "missing_requirements": [
-    {
-      "id": "REQ-133",
-      "requirement": "Ensure GST Status “Show/Refresh Status” fetches real filing status data from the GST portal via backend integration (https://services.gst.gov.in/services/searchtp) and displays results with clear loading/empty/error states in English; backend must return a frontend-friendly error object (not a trap).",
-      "reason": "backend/main.mo diff excerpt only shows type additions; it does not show any HTTP outcall implementation or explicit use of the required GST portal endpoint, nor explicit non-trapping error handling. The frontend page shows a refetch handler, but the diff excerpt does not conclusively show the required loading/empty/error UX behavior.",
-      "evidence": [
-        "backend/main.mo (truncated; shows GSTFilingStatus/Profile types but not the fetch/outcall logic)",
-        "frontend/src/pages/GstFilingStatusPage.tsx (truncated; shows refetch wiring but not full UI state handling)"
-      ]
-    },
-    {
-      "id": "REQ-134",
-      "requirement": "GST Status page must degrade gracefully and show sensible English placeholders (e.g., “Not available”) when GST profile fields are missing/unavailable.",
-      "reason": "GstProfileSection’s ProfileRow returns null when value is falsy (hides rows rather than displaying placeholders). The bottom “no profile data available” message logic is truncated and includes an apparent incomplete/invalid expression, so placeholder behavior cannot be confirmed.",
-      "evidence": [
-        "frontend/src/components/gst/GstProfileSection.tsx (ProfileRow: `if (!value) return null;`; truncated bottom section)"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-10T14:34:31.779Z",
+  "summary": "Diff implements editable invoiceNumber and optional purchaseOrderNumber across backend types and frontend invoice create/edit flows, adds a migration module, updates invoice display/print to prefer stored invoiceNumber with fallback formatting, updates E‑Way Bill links to the exact Login.aspx URL (at least in Dashboard and MobileNav), and enhances GST Status page with a searchable GSTIN workflow and profile section import. Diff also includes multiple PWA/service worker/manifest additions not requested, and the migration hardcodes invoiceNumber to \"default\" for old invoices.",
+  "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Added/expanded PWA support (iOS splash meta tags, manifest, service worker, SW registration, update checks, offline caching).",
-      "reason": "Not requested by BuildRequest; it focuses on mobile navigation visibility and GST Status runtime/data/profile fixes.",
+      "description": "Added PWA/iOS install assets and service worker caching (manifest, icons, iOS splash screens, SW registration, extensive meta tags).",
+      "reason": "BuildRequest does not ask for PWA, service worker, iOS splash screens, or related caching/manifest work.",
       "evidence": [
-        "frontend-file-summaries.txt (entries for frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js, frontend/src/pwa/registerServiceWorker.ts)"
+        "frontend-file-summaries.txt (frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js, frontend/src/pwa/registerServiceWorker.ts)"
       ]
     },
     {
-      "description": "Multiple unrelated UI and form/dialog improvements across customers/items/invoices pages (responsive tables, new dialogs, invoice editor behaviors, etc.).",
-      "reason": "Non-goal says not to redesign unrelated pages beyond what’s necessary for mobile navigation access; these changes are not tied to the stated requirements.",
-      "evidence": [
-        "frontend-file-summaries.txt (CustomerFormDialog.tsx, ItemFormDialog.tsx, InvoiceLineItemsEditor.tsx, InvoiceEditorPage.tsx, CustomersTable.tsx, ItemsTable.tsx, InvoicesPage.tsx)"
-      ]
-    },
-    {
-      "description": "Added a global AppErrorBoundary to prevent white screens at boot.",
-      "reason": "Not requested; requirement set does not mention global error boundaries.",
+      "description": "App-level error boundary / boot-time error handling changes.",
+      "reason": "Not requested by any REQ-135..REQ-139; appears as additional robustness work outside scope.",
       "evidence": [
         "frontend-file-summaries.txt (frontend/src/App.tsx: wrapped with AppErrorBoundary)"
       ]
+    },
+    {
+      "description": "Backend migration sets legacy invoices' invoiceNumber to the literal string \"default\".",
+      "reason": "REQ-135 requires old invoices load safely with defaults, but does not request forcing a non-empty placeholder value; this changes user-visible invoice numbering semantics vs falling back to generated formatted number when stored value is empty.",
+      "evidence": [
+        "backend/migration.mo (invoiceNumber = \"default\"; purchaseOrderNumber = null)"
+      ]
+    },
+    {
+      "description": "Expanded GSTFilingStatus backend model with many additional fields (address, state, registrationDate, cancellationDate, taxpayerType, gstStatus, filingFrequencyDetails, principalPlaceOfBusiness, natureOfBusiness).",
+      "reason": "REQ-139 is a frontend requirement; backend model expansion beyond what’s necessary to display legal/trade name and status table was not explicitly requested.",
+      "evidence": [
+        "backend/main.mo (GSTFilingStatus type includes many new optional fields)"
+      ]
     }
   ],
-  "confidence": 0.63,
+  "confidence": 0.66,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/AppShell.tsx",
     "frontend/src/components/MobileNav.tsx",
-    "frontend/src/components/gst/GstProfileSection.tsx",
     "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/DashboardPage.tsx",
     "frontend/src/pages/GstFilingStatusPage.tsx",
+    "frontend/src/pages/InvoiceDetailPage.tsx",
+    "frontend/src/pages/InvoiceEditorPage.tsx",
+    "frontend/src/pages/InvoicePrintPage.tsx",
+    "frontend/src/utils/invoiceNumbering.ts",
     "project_state.json"
   ]
 }

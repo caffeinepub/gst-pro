@@ -54,7 +54,9 @@ export const Invoice = IDL.Record({
   'id' : IDL.Nat,
   'status' : InvoiceStatus,
   'lineItems' : IDL.Vec(LineItem),
+  'purchaseOrderNumber' : IDL.Opt(IDL.Text),
   'invoiceDate' : IDL.Text,
+  'invoiceNumber' : IDL.Text,
   'customerId' : IDL.Nat,
 });
 export const UserRole = IDL.Variant({
@@ -259,7 +261,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'createInvoice' : IDL.Func(
-      [IDL.Nat, IDL.Vec(LineItem), IDL.Text],
+      [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat, IDL.Vec(LineItem), IDL.Text],
       [Invoice],
       [],
     ),
@@ -281,7 +283,15 @@ export const idlService = IDL.Service({
       [],
     ),
   'editInvoice' : IDL.Func(
-      [IDL.Nat, IDL.Nat, IDL.Vec(LineItem), InvoiceStatus, IDL.Text],
+      [
+        IDL.Nat,
+        IDL.Text,
+        IDL.Opt(IDL.Text),
+        IDL.Nat,
+        IDL.Vec(LineItem),
+        InvoiceStatus,
+        IDL.Text,
+      ],
       [],
       [],
     ),
@@ -388,7 +398,9 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Nat,
     'status' : InvoiceStatus,
     'lineItems' : IDL.Vec(LineItem),
+    'purchaseOrderNumber' : IDL.Opt(IDL.Text),
     'invoiceDate' : IDL.Text,
+    'invoiceNumber' : IDL.Text,
     'customerId' : IDL.Nat,
   });
   const UserRole = IDL.Variant({
@@ -591,7 +603,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'createInvoice' : IDL.Func(
-        [IDL.Nat, IDL.Vec(LineItem), IDL.Text],
+        [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat, IDL.Vec(LineItem), IDL.Text],
         [Invoice],
         [],
       ),
@@ -613,7 +625,15 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'editInvoice' : IDL.Func(
-        [IDL.Nat, IDL.Nat, IDL.Vec(LineItem), InvoiceStatus, IDL.Text],
+        [
+          IDL.Nat,
+          IDL.Text,
+          IDL.Opt(IDL.Text),
+          IDL.Nat,
+          IDL.Vec(LineItem),
+          InvoiceStatus,
+          IDL.Text,
+        ],
         [],
         [],
       ),

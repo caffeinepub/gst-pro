@@ -14,7 +14,9 @@ import List "mo:core/List";
 import Time "mo:core/Time";
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   type UserRole = AccessControl.UserRole;
   include MixinStorage();
@@ -69,6 +71,8 @@ actor {
 
   public type Invoice = {
     id : Nat;
+    invoiceNumber : Text;
+    purchaseOrderNumber : ?Text;
     customerId : Nat;
     lineItems : [LineItem];
     status : InvoiceStatus;
@@ -542,6 +546,8 @@ actor {
 
   // Invoice Management - Require user-level access
   public shared ({ caller }) func createInvoice(
+    invoiceNumber : Text,
+    purchaseOrderNumber : ?Text,
     customerId : Nat,
     lineItems : [LineItem],
     invoiceDate : Text,
@@ -563,6 +569,8 @@ actor {
     nextInvoiceId += 1;
     let invoice : Invoice = {
       id = invoiceId;
+      invoiceNumber;
+      purchaseOrderNumber;
       customerId;
       lineItems;
       status = #draft;
@@ -574,6 +582,8 @@ actor {
 
   public shared ({ caller }) func editInvoice(
     id : Nat,
+    invoiceNumber : Text,
+    purchaseOrderNumber : ?Text,
     customerId : Nat,
     lineItems : [LineItem],
     status : InvoiceStatus,
@@ -599,6 +609,8 @@ actor {
       case (?_) {
         let invoice : Invoice = {
           id;
+          invoiceNumber;
+          purchaseOrderNumber;
           customerId;
           lineItems;
           status;
@@ -665,6 +677,8 @@ actor {
       case (?invoice) {
         let updatedInvoice : Invoice = {
           id = invoice.id;
+          invoiceNumber = invoice.invoiceNumber;
+          purchaseOrderNumber = invoice.purchaseOrderNumber;
           customerId = invoice.customerId;
           lineItems = invoice.lineItems;
           status = #finalized;

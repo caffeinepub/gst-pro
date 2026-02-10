@@ -40,6 +40,8 @@ export default function InvoiceEditorPage() {
   const [customerId, setCustomerId] = useState<string>('');
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [invoiceDate, setInvoiceDate] = useState<string>(getTodayISODate());
+  const [invoiceNumber, setInvoiceNumber] = useState<string>('');
+  const [purchaseOrderNumber, setPurchaseOrderNumber] = useState<string>('');
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
 
@@ -47,8 +49,9 @@ export default function InvoiceEditorPage() {
     if (invoice) {
       setCustomerId(invoice.customerId.toString());
       setLineItems(invoice.lineItems);
-      // Use the invoice date string directly, or fallback to today
       setInvoiceDate(invoice.invoiceDate || getTodayISODate());
+      setInvoiceNumber(invoice.invoiceNumber || '');
+      setPurchaseOrderNumber(invoice.purchaseOrderNumber || '');
     }
   }, [invoice]);
 
@@ -75,6 +78,8 @@ export default function InvoiceEditorPage() {
       if (isEditing && invoice) {
         await editInvoice.mutateAsync({
           id: invoice.id,
+          invoiceNumber: invoiceNumber.trim(),
+          purchaseOrderNumber: purchaseOrderNumber.trim() || null,
           customerId: BigInt(customerId),
           lineItems,
           status: invoice.status,
@@ -83,6 +88,8 @@ export default function InvoiceEditorPage() {
         toast.success('Invoice updated successfully');
       } else {
         const newInvoice = await createInvoice.mutateAsync({
+          invoiceNumber: invoiceNumber.trim(),
+          purchaseOrderNumber: purchaseOrderNumber.trim() || null,
           customerId: BigInt(customerId),
           lineItems,
           invoiceDate,
@@ -101,7 +108,6 @@ export default function InvoiceEditorPage() {
   };
 
   const handleItemAdded = (newItem: Item) => {
-    // Add a new line item with the newly created item
     setLineItems([
       ...lineItems,
       {
@@ -188,6 +194,28 @@ export default function InvoiceEditorPage() {
                     type="date"
                     value={invoiceDate}
                     onChange={(e) => setInvoiceDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="invoiceNumber">Invoice Number</Label>
+                  <Input
+                    id="invoiceNumber"
+                    type="text"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    placeholder="e.g., INV-2024-001"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="purchaseOrderNumber">Purchase Order Number (Optional)</Label>
+                  <Input
+                    id="purchaseOrderNumber"
+                    type="text"
+                    value={purchaseOrderNumber}
+                    onChange={(e) => setPurchaseOrderNumber(e.target.value)}
+                    placeholder="e.g., PO-2024-001"
                   />
                 </div>
               </CardContent>

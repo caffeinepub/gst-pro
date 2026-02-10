@@ -8,7 +8,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { calculateInvoiceTotals } from '../utils/gstCalculations';
 import { formatCurrency } from '../utils/formatters';
-import { formatInvoiceNumber } from '../utils/invoiceNumbering';
+import { getDisplayInvoiceNumber } from '../utils/invoiceNumbering';
 import { formatInvoiceDate } from '../utils/dateFormat';
 import { Loader2 } from 'lucide-react';
 import { usePrintOnce } from '../hooks/usePrintOnce';
@@ -69,25 +69,25 @@ export default function InvoicePrintPage() {
                 />
               )}
               <div>
-                <h1 className="text-3xl font-bold mb-2">{businessProfile.businessName}</h1>
-                <p className="text-sm whitespace-pre-line">{businessProfile.address}</p>
-                <p className="text-sm mt-1">
-                  <span className="font-semibold">GSTIN:</span> {businessProfile.gstin}
-                </p>
-                <p className="text-sm">
-                  <span className="font-semibold">State:</span> {businessProfile.state}
-                </p>
+                <h1 className="text-2xl font-bold">{businessProfile.businessName}</h1>
+                <p className="text-sm mt-1">{businessProfile.address}</p>
+                <p className="text-sm">GSTIN: {businessProfile.gstin}</p>
+                <p className="text-sm">State: {businessProfile.state}</p>
               </div>
             </div>
             <div className="text-right">
-              <h2 className="text-2xl font-bold">TAX INVOICE</h2>
+              <h2 className="text-xl font-bold">TAX INVOICE</h2>
               <p className="text-sm mt-2">
-                <span className="font-semibold">Invoice No:</span>{' '}
-                {formatInvoiceNumber(invoice.id, businessProfile)}
+                <strong>Invoice No:</strong> {getDisplayInvoiceNumber(invoice, businessProfile)}
               </p>
               <p className="text-sm">
-                <span className="font-semibold">Date:</span> {formatInvoiceDate(invoice.invoiceDate)}
+                <strong>Date:</strong> {formatInvoiceDate(invoice.invoiceDate)}
               </p>
+              {invoice.purchaseOrderNumber && (
+                <p className="text-sm">
+                  <strong>Purchase Order No:</strong> {invoice.purchaseOrderNumber}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -95,131 +95,112 @@ export default function InvoicePrintPage() {
         {/* Customer Details */}
         <div className="mb-6">
           <h3 className="text-lg font-bold mb-2">Bill To:</h3>
-          <p className="font-semibold">{customer.name}</p>
-          <p className="text-sm whitespace-pre-line">{customer.billingAddress}</p>
-          <p className="text-sm">
-            <span className="font-semibold">State:</span> {customer.state}
-          </p>
-          {customer.gstin && (
-            <p className="text-sm">
-              <span className="font-semibold">GSTIN:</span> {customer.gstin}
-            </p>
-          )}
+          <div className="border border-black p-3">
+            <p className="font-bold">{customer.name}</p>
+            <p className="text-sm">{customer.billingAddress}</p>
+            <p className="text-sm">State: {customer.state}</p>
+            {customer.gstin && <p className="text-sm">GSTIN: {customer.gstin}</p>}
+            {customer.contactInfo && <p className="text-sm">Contact: {customer.contactInfo}</p>}
+          </div>
         </div>
 
-        {/* Line Items */}
-        <div className="mb-6">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-black">
-                <TableHead className="border border-black font-bold text-black">Item</TableHead>
-                <TableHead className="border border-black font-bold text-black text-right">HSN/SAC</TableHead>
-                <TableHead className="border border-black font-bold text-black text-right">Qty</TableHead>
-                <TableHead className="border border-black font-bold text-black text-right">Rate</TableHead>
-                <TableHead className="border border-black font-bold text-black text-right">Discount</TableHead>
-                <TableHead className="border border-black font-bold text-black text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoice.lineItems.map((lineItem, index) => {
-                const item = items.find((i) => i.id === lineItem.itemId);
-                const amount = lineItem.quantity * lineItem.unitPrice;
-                const discount = lineItem.discount || 0;
-                const total = amount - discount;
-                return (
-                  <TableRow key={index} className="border-black">
-                    <TableCell className="border border-black">
-                      <div className="font-medium">{item?.name || 'Unknown Item'}</div>
-                      {item?.description && <div className="text-sm text-gray-600">{item.description}</div>}
-                    </TableCell>
-                    <TableCell className="border border-black text-right">{item?.hsnSac || '—'}</TableCell>
-                    <TableCell className="border border-black text-right">{lineItem.quantity}</TableCell>
-                    <TableCell className="border border-black text-right">
-                      {formatCurrency(lineItem.unitPrice)}
-                    </TableCell>
-                    <TableCell className="border border-black text-right">{formatCurrency(discount)}</TableCell>
-                    <TableCell className="border border-black text-right font-medium">
-                      {formatCurrency(total)}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-            <TableFooter>
-              <TableRow className="border-black">
-                <TableCell colSpan={5} className="border border-black text-right font-bold">
-                  Subtotal
-                </TableCell>
-                <TableCell className="border border-black text-right font-bold">
-                  {formatCurrency(totals.subtotal)}
-                </TableCell>
-              </TableRow>
-              {totals.totalDiscount > 0 && (
-                <TableRow className="border-black">
-                  <TableCell colSpan={5} className="border border-black text-right font-bold">
-                    Total Discount
+        {/* Line Items Table */}
+        <Table className="border border-black mb-6">
+          <TableHeader>
+            <TableRow className="border-b border-black">
+              <TableHead className="border-r border-black text-black font-bold">Item</TableHead>
+              <TableHead className="border-r border-black text-right text-black font-bold">HSN/SAC</TableHead>
+              <TableHead className="border-r border-black text-right text-black font-bold">Qty</TableHead>
+              <TableHead className="border-r border-black text-right text-black font-bold">Rate</TableHead>
+              <TableHead className="border-r border-black text-right text-black font-bold">Discount</TableHead>
+              <TableHead className="text-right text-black font-bold">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {invoice.lineItems.map((lineItem, index) => {
+              const item = items.find((i) => i.id === lineItem.itemId);
+              const amount = lineItem.quantity * lineItem.unitPrice;
+              const discount = lineItem.discount || 0;
+              const total = amount - discount;
+              return (
+                <TableRow key={index} className="border-b border-black">
+                  <TableCell className="border-r border-black">
+                    <div className="font-medium">{item?.name || 'Unknown Item'}</div>
+                    {item?.description && <div className="text-xs text-gray-600">{item.description}</div>}
                   </TableCell>
-                  <TableCell className="border border-black text-right font-bold">
-                    {formatCurrency(totals.totalDiscount)}
+                  <TableCell className="border-r border-black text-right text-sm">
+                    {item?.hsnSac || '-'}
                   </TableCell>
+                  <TableCell className="border-r border-black text-right">{lineItem.quantity}</TableCell>
+                  <TableCell className="border-r border-black text-right">
+                    {formatCurrency(lineItem.unitPrice)}
+                  </TableCell>
+                  <TableCell className="border-r border-black text-right">{formatCurrency(discount)}</TableCell>
+                  <TableCell className="text-right font-medium">{formatCurrency(total)}</TableCell>
                 </TableRow>
-              )}
-              <TableRow className="border-black">
-                <TableCell colSpan={5} className="border border-black text-right font-bold">
-                  Taxable Amount
+              );
+            })}
+          </TableBody>
+          <TableFooter>
+            <TableRow className="border-b border-black">
+              <TableCell colSpan={5} className="text-right font-bold border-r border-black">
+                Subtotal
+              </TableCell>
+              <TableCell className="text-right font-bold">{formatCurrency(totals.subtotal)}</TableCell>
+            </TableRow>
+            {totals.totalDiscount > 0 && (
+              <TableRow className="border-b border-black">
+                <TableCell colSpan={5} className="text-right font-bold border-r border-black">
+                  Total Discount
                 </TableCell>
-                <TableCell className="border border-black text-right font-bold">
-                  {formatCurrency(totals.taxableAmount)}
-                </TableCell>
+                <TableCell className="text-right font-bold">{formatCurrency(totals.totalDiscount)}</TableCell>
               </TableRow>
-              {totals.isInterState ? (
-                <TableRow className="border-black">
-                  <TableCell colSpan={5} className="border border-black text-right font-bold">
-                    IGST
+            )}
+            <TableRow className="border-b border-black">
+              <TableCell colSpan={5} className="text-right font-bold border-r border-black">
+                Taxable Amount
+              </TableCell>
+              <TableCell className="text-right font-bold">{formatCurrency(totals.taxableAmount)}</TableCell>
+            </TableRow>
+            {totals.isInterState ? (
+              <TableRow className="border-b border-black">
+                <TableCell colSpan={5} className="text-right font-bold border-r border-black">
+                  IGST
+                </TableCell>
+                <TableCell className="text-right font-bold">{formatCurrency(totals.igst)}</TableCell>
+              </TableRow>
+            ) : (
+              <>
+                <TableRow className="border-b border-black">
+                  <TableCell colSpan={5} className="text-right font-bold border-r border-black">
+                    CGST
                   </TableCell>
-                  <TableCell className="border border-black text-right font-bold">
-                    {formatCurrency(totals.igst)}
-                  </TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(totals.cgst)}</TableCell>
                 </TableRow>
-              ) : (
-                <>
-                  <TableRow className="border-black">
-                    <TableCell colSpan={5} className="border border-black text-right font-bold">
-                      CGST
-                    </TableCell>
-                    <TableCell className="border border-black text-right font-bold">
-                      {formatCurrency(totals.cgst)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-black">
-                    <TableCell colSpan={5} className="border border-black text-right font-bold">
-                      SGST
-                    </TableCell>
-                    <TableCell className="border border-black text-right font-bold">
-                      {formatCurrency(totals.sgst)}
-                    </TableCell>
-                  </TableRow>
-                </>
-              )}
-              <TableRow className="border-black bg-gray-100">
-                <TableCell colSpan={5} className="border border-black text-right text-lg font-bold">
-                  Grand Total
-                </TableCell>
-                <TableCell className="border border-black text-right text-lg font-bold">
-                  {formatCurrency(totals.grandTotal)}
-                </TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
-        </div>
+                <TableRow className="border-b border-black">
+                  <TableCell colSpan={5} className="text-right font-bold border-r border-black">
+                    SGST
+                  </TableCell>
+                  <TableCell className="text-right font-bold">{formatCurrency(totals.sgst)}</TableCell>
+                </TableRow>
+              </>
+            )}
+            <TableRow className="bg-gray-100">
+              <TableCell colSpan={5} className="text-right text-lg font-bold border-r border-black">
+                Grand Total
+              </TableCell>
+              <TableCell className="text-right text-lg font-bold">{formatCurrency(totals.grandTotal)}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
 
         {/* Footer */}
         <div className="mt-8 pt-4 border-t border-black">
-          <p className="text-sm text-gray-600">
-            {totals.isInterState ? 'Inter-state' : 'Intra-state'} transaction
-          </p>
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-xs text-gray-600">
             This is a computer-generated invoice and does not require a signature.
+          </p>
+          <p className="text-xs text-gray-600 mt-1">
+            Transaction Type: {totals.isInterState ? 'Inter-state (IGST)' : 'Intra-state (CGST + SGST)'}
           </p>
         </div>
       </div>

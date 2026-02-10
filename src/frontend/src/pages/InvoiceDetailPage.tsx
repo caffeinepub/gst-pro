@@ -33,7 +33,7 @@ import { ArrowLeft, Edit, Printer, CheckCircle, Trash2, Loader2 } from 'lucide-r
 import InvoiceStatusBadge from '../components/invoices/InvoiceStatusBadge';
 import { calculateInvoiceTotals } from '../utils/gstCalculations';
 import { formatCurrency } from '../utils/formatters';
-import { formatInvoiceNumber } from '../utils/invoiceNumbering';
+import { getDisplayInvoiceNumber } from '../utils/invoiceNumbering';
 import { formatInvoiceDate } from '../utils/dateFormat';
 import { canDeleteInvoice, getDeleteErrorMessage } from '../utils/invoiceRules';
 import { InvoiceStatus } from '../backend';
@@ -98,7 +98,7 @@ export default function InvoiceDetailPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Invoice {formatInvoiceNumber(invoice.id, businessProfile)}
+              Invoice {getDisplayInvoiceNumber(invoice, businessProfile)}
             </h1>
             <p className="text-muted-foreground">View invoice details</p>
           </div>
@@ -188,13 +188,19 @@ export default function InvoiceDetailPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">Invoice Number</div>
-                  <div className="font-medium">{formatInvoiceNumber(invoice.id, businessProfile)}</div>
+                  <div className="font-medium">{getDisplayInvoiceNumber(invoice, businessProfile)}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Invoice Date</div>
                   <div className="font-medium">{formatInvoiceDate(invoice.invoiceDate)}</div>
                 </div>
               </div>
+              {invoice.purchaseOrderNumber && (
+                <div>
+                  <div className="text-sm text-muted-foreground">Purchase Order Number</div>
+                  <div className="font-medium">{invoice.purchaseOrderNumber}</div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

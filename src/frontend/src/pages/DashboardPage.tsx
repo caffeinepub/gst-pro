@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const isLoadingData = invoicesLoading || itemsLoading || customersLoading || profileLoading;
 
   const handleEWayBillClick = () => {
-    window.open('https://ewaybillgst.gov.in/', '_blank', 'noopener,noreferrer');
+    window.open('https://ewaybillgst.gov.in/Login.aspx', '_blank', 'noopener,noreferrer');
   };
 
   const handleKpiClick = (filter?: 'draft' | 'finalized') => {

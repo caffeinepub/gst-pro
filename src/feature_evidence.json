@@ -2,54 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-authenticated-app-navigation-so-that-on-mobile-screen-sizes-users-can-reliably-access-both-settings-settings-and-gst-status-gst-filing-status-including-when-the-header-nav-is-hidden-currently-hidden-on-md",
-      "featureTitle": "Fix the authenticated app navigation so that on mobile screen sizes users can reliably access both “Settings” (/settings) and “GST Status” (/gst-filing-status), including when the header nav is hidden (currently hidden on < md).",
-      "files": [
-        "frontend/src/components/AppShell.tsx",
-        "frontend/src/components/MobileNav.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-131"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-fix-the-gst-status-page-crash-where-the-ui-shows-returntype-is-not-defined-ensuring-the-page-can-render-and-the-return-type-selector-works-without-runtime-errors",
-      "featureTitle": "Fix the GST Status page crash where the UI shows “ReturnType is not defined”, ensuring the page can render and the return-type selector works without runtime errors.",
-      "files": [
-        "frontend/src/pages/GstFilingStatusPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-132"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-gst-status-show-refresh-status-functionality-fetches-real-filing-status-data-from-the-gst-portal-via-the-existing-backend-integration-https-services-gst-gov-in-services-searchtp-and-displays-the-results-in-the-gst-status-table-filed-not-filed-plus-filing-date-when-available-with-clear-loading-empty-error-states-in-english",
-      "featureTitle": "Ensure GST Status “Show/Refresh Status” functionality fetches real filing status data from the GST portal via the existing backend integration (https://services.gst.gov.in/services/searchtp) and displays the results in the GST Status table (Filed/Not filed plus filing date when available), with clear loading/empty/error states in English.",
+      "featureId": "feature-update-the-invoice-editor-ui-to-allow-the-user-to-enter-edit-the-invoice-number-and-purchase-order-number-in-the-invoice-details-section-and-save-them-to-the-backend-during-invoice-create-and-edit",
+      "featureTitle": "Update the invoice editor UI to allow the user to enter/edit the Invoice Number and Purchase Order Number in the invoice details section, and save them to the backend during invoice create and edit.",
       "files": [
         "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/GstFilingStatusPage.tsx"
+        "frontend/src/pages/InvoiceEditorPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -62,15 +19,59 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-133"
+        "REQ-136"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-extend-gst-status-to-display-a-more-complete-gst-profile-section-as-available-from-the-gst-portal-response-so-the-user-can-verify-the-gstin-is-correct-and-render-these-profile-fields-in-the-gst-status-page-in-english",
-      "featureTitle": "Extend GST Status to display a more complete GST profile section (as available from the GST portal response) so the user can verify the GSTIN is correct, and render these profile fields in the GST Status page in English.",
+      "featureId": "feature-render-the-stored-invoice-number-and-purchase-order-number-in-the-invoice-detail-view-and-print-layout-using-the-stored-invoice-number-when-present-and-falling-back-to-the-generated-formatted-number-only-when-no-stored-invoice-number-exists",
+      "featureTitle": "Render the stored Invoice Number and Purchase Order Number in the invoice detail view and print layout, using the stored invoice number when present (and falling back to the generated formatted number only when no stored invoice number exists).",
       "files": [
-        "frontend/src/components/gst/GstProfileSection.tsx",
+        "frontend/src/pages/InvoiceDetailPage.tsx",
+        "frontend/src/pages/InvoicePrintPage.tsx",
+        "frontend/src/utils/invoiceNumbering.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-137"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-that-clicking-the-in-app-e-way-bill-action-opens-https-ewaybillgst-gov-in-login-aspx-in-a-new-browser-tab-window",
+      "featureTitle": "Ensure that clicking the in-app \"E‑Way Bill\" action opens https://ewaybillgst.gov.in/Login.aspx in a new browser tab/window.",
+      "files": [
+        "frontend/src/components/MobileNav.tsx",
+        "frontend/src/pages/DashboardPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-138"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-gst-status-page-to-support-searching-any-gstin-and-displaying-the-full-gst-profile-details-and-filing-status-for-the-entered-gstin",
+      "featureTitle": "Update the GST Status page to support searching any GSTIN and displaying the full GST profile details and filing status for the entered GSTIN.",
+      "files": [
         "frontend/src/pages/GstFilingStatusPage.tsx"
       ],
       "components": [
@@ -84,7 +85,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-134"
+        "REQ-139"
       ],
       "confidence": "high"
     }

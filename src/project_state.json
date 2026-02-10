@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 67,
+  "projectStateVersion": 69,
   "summary": "Build a GST billing application named \"GST Pro\".",
   "architectural_notes": [
     "GST filing status feature requires external integration with GST.gov.in (data fetch), which may be constrained by authentication, CORS, and availability of official APIs.",
@@ -899,6 +899,38 @@
         "REQ-134"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-invoice-editor-ui-to-allow-the-user-to-enter-edit-the-invoice-number-and-purchase-order-number-in-the-invoice-details-section-and-save-them-to-the-backend-during-invoice-create-and-edit",
+      "title": "Update the invoice editor UI to allow the user to enter/edit the Invoice Number and Purchase Order Number in the invoice details section, and save them to the backend during invoice create and edit.",
+      "reqIds": [
+        "REQ-136"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-render-the-stored-invoice-number-and-purchase-order-number-in-the-invoice-detail-view-and-print-layout-using-the-stored-invoice-number-when-present-and-falling-back-to-the-generated-formatted-number-only-when-no-stored-invoice-number-exists",
+      "title": "Render the stored Invoice Number and Purchase Order Number in the invoice detail view and print layout, using the stored invoice number when present (and falling back to the generated formatted number only when no stored invoice number exists).",
+      "reqIds": [
+        "REQ-137"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-that-clicking-the-in-app-e-way-bill-action-opens-https-ewaybillgst-gov-in-login-aspx-in-a-new-browser-tab-window",
+      "title": "Ensure that clicking the in-app \"E‑Way Bill\" action opens https://ewaybillgst.gov.in/Login.aspx in a new browser tab/window.",
+      "reqIds": [
+        "REQ-138"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-gst-status-page-to-support-searching-any-gstin-and-displaying-the-full-gst-profile-details-and-filing-status-for-the-entered-gstin",
+      "title": "Update the GST Status page to support searching any GSTIN and displaying the full GST profile details and filing status for the entered GSTIN.",
+      "reqIds": [
+        "REQ-139"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1345,6 +1377,32 @@
       "summary": "Fix the backend GST return status fetch so it reliably retrieves real return filing status data from the GST portal endpoint https://services.gst.gov.in/services/searchtp (no dummy/placeholder behavior), and returns a frontend-friendly result that clearly indicates whether each return is filed or not filed (including filing date when available).",
       "reqIds": [
         "REQ-129"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-106",
+      "summary": "Add a Purchase Order Number field in the Invoice3 section and persist/print it with the invoice",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-107",
+      "summary": "Make the Invoice Number editable in the Invoice3 section (and ensure it persists and displays/prints correctly)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-108",
+      "summary": "In GST Status, allow searching any GSTIN and display full GST profile details (e.g., legal name/trade name/address/status) plus filing status for that GSTIN",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-109",
+      "summary": "Extend the backend Invoice data model to store (a) an editable invoice number and (b) an optional purchase order number, and persist these fields for invoice create/edit/get/list flows.",
+      "reqIds": [
+        "REQ-135"
       ],
       "status": "pending"
     }

@@ -310,12 +310,20 @@ export function useCreateInvoice() {
 
   return useMutation({
     mutationFn: async (params: {
+      invoiceNumber: string;
+      purchaseOrderNumber: string | null;
       customerId: bigint;
       lineItems: LineItem[];
       invoiceDate: string;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createInvoice(params.customerId, params.lineItems, params.invoiceDate);
+      return actor.createInvoice(
+        params.invoiceNumber,
+        params.purchaseOrderNumber,
+        params.customerId,
+        params.lineItems,
+        params.invoiceDate
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
@@ -330,6 +338,8 @@ export function useEditInvoice() {
   return useMutation({
     mutationFn: async (params: {
       id: bigint;
+      invoiceNumber: string;
+      purchaseOrderNumber: string | null;
       customerId: bigint;
       lineItems: LineItem[];
       status: InvoiceStatus;
@@ -338,6 +348,8 @@ export function useEditInvoice() {
       if (!actor) throw new Error('Actor not available');
       return actor.editInvoice(
         params.id,
+        params.invoiceNumber,
+        params.purchaseOrderNumber,
         params.customerId,
         params.lineItems,
         params.status,
@@ -382,7 +394,7 @@ export function useFinalizeInvoice() {
   });
 }
 
-// GST Filing Status Query
+// GST Filing Status Queries
 export function useGetGstFilingStatus(
   gstin: string,
   period: string,
@@ -399,6 +411,5 @@ export function useGetGstFilingStatus(
     },
     enabled: !!actor && !actorFetching && !!gstin && !!period,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
   });
 }

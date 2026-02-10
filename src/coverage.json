@@ -1,62 +1,71 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T22:28:19.061Z",
+  "generatedAt": "2026-02-10T14:34:31.786Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
+    "total": 5,
     "implemented": 4,
     "items": [
       {
-        "id": "REQ-131",
-        "summary": "Fix the authenticated app navigation so that on mobile screen sizes users can reliably access both “Settings” (/settings) and “GST Status” (/gst-filing-status), including when the header nav is hidden (currently hidden on < md).",
+        "id": "REQ-135",
+        "summary": "Extend the backend Invoice data model to store (a) an editable invoice number and (b) an optional purchase order number, and persist these fields for invoice create/edit/get/list flows.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-136",
+        "summary": "Update the invoice editor UI to allow the user to enter/edit the Invoice Number and Purchase Order Number in the invoice details section, and save them to the backend during invoice create and edit.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/MobileNav.tsx",
-          "frontend/src/components/AppShell.tsx"
+          "frontend/src/pages/InvoiceEditorPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/MobileNav.tsx",
-          "frontend/src/components/AppShell.tsx"
+          "frontend/src/pages/InvoiceEditorPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ]
       },
       {
-        "id": "REQ-132",
-        "summary": "Fix the GST Status page crash where the UI shows “ReturnType is not defined”, ensuring the page can render and the return-type selector works without runtime errors.",
+        "id": "REQ-137",
+        "summary": "Render the stored Invoice Number and Purchase Order Number in the invoice detail view and print layout, using the stored invoice number when present (and falling back to the generated formatted number only when no stored invoice number exists).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/GstFilingStatusPage.tsx"
+          "frontend/src/utils/invoiceNumbering.ts",
+          "frontend/src/pages/InvoiceDetailPage.tsx",
+          "frontend/src/pages/InvoicePrintPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/GstFilingStatusPage.tsx"
+          "frontend/src/utils/invoiceNumbering.ts",
+          "frontend/src/pages/InvoiceDetailPage.tsx",
+          "frontend/src/pages/InvoicePrintPage.tsx"
         ]
       },
       {
-        "id": "REQ-133",
-        "summary": "Ensure GST Status “Show/Refresh Status” functionality fetches real filing status data from the GST portal via the existing backend integration (https://services.gst.gov.in/services/searchtp) and displays the results in the GST Status table (Filed/Not filed plus filing date when available), with clear loading/empty/error states in English.",
+        "id": "REQ-138",
+        "summary": "Ensure that clicking the in-app \"E‑Way Bill\" action opens https://ewaybillgst.gov.in/Login.aspx in a new browser tab/window.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/GstFilingStatusPage.tsx"
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/components/MobileNav.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/GstFilingStatusPage.tsx"
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/components/MobileNav.tsx"
         ]
       },
       {
-        "id": "REQ-134",
-        "summary": "Extend GST Status to display a more complete GST profile section (as available from the GST portal response) so the user can verify the GSTIN is correct, and render these profile fields in the GST Status page in English.",
+        "id": "REQ-139",
+        "summary": "Update the GST Status page to support searching any GSTIN and displaying the full GST profile details and filing status for the entered GSTIN.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/gst/GstProfileSection.tsx",
           "frontend/src/pages/GstFilingStatusPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/gst/GstProfileSection.tsx",
           "frontend/src/pages/GstFilingStatusPage.tsx"
         ]
       }
@@ -64,19 +73,23 @@
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/AppShell.tsx",
     "frontend/src/components/MobileNav.tsx",
-    "frontend/src/components/gst/GstProfileSection.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/DashboardPage.tsx",
     "frontend/src/pages/GstFilingStatusPage.tsx",
+    "frontend/src/pages/InvoiceDetailPage.tsx",
+    "frontend/src/pages/InvoiceEditorPage.tsx",
+    "frontend/src/pages/InvoicePrintPage.tsx",
+    "frontend/src/utils/invoiceNumbering.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
