@@ -105,6 +105,12 @@ export default function GstFilingStatusPage() {
     return <Badge variant={variant}>{displayText}</Badge>;
   };
 
+  // Check if we have an error from the backend
+  const hasError = error || (filingStatus?.error);
+  const errorMessage = hasError
+    ? (filingStatus?.error?.message || getUserFacingError(error))
+    : null;
+
   return (
     <div className="space-y-6 max-w-5xl">
       <div>
@@ -215,9 +221,9 @@ export default function GstFilingStatusPage() {
           </Card>
 
           {/* Error State */}
-          {error && (
+          {hasError && errorMessage && (
             <Alert variant="destructive">
-              <AlertDescription>{getUserFacingError(error)}</AlertDescription>
+              <AlertDescription>{errorMessage}</AlertDescription>
             </Alert>
           )}
 
@@ -229,10 +235,10 @@ export default function GstFilingStatusPage() {
           )}
 
           {/* GST Profile Section */}
-          {filingStatus && !isLoading && <GstProfileSection filingStatus={filingStatus} />}
+          {filingStatus && !isLoading && !hasError && <GstProfileSection filingStatus={filingStatus} />}
 
           {/* Filing Status Table */}
-          {filingStatus && !isLoading && (
+          {filingStatus && !isLoading && !hasError && (
             <Card>
               <CardHeader>
                 <CardTitle>Filing Status</CardTitle>
@@ -249,7 +255,7 @@ export default function GstFilingStatusPage() {
 
                   <TabsContent value={selectedReturnType} className="mt-0">
                     {filteredEntries.length > 0 ? (
-                      <div className="rounded-md border">
+                      <div className="rounded-md border overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>

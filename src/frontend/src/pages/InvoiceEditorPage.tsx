@@ -20,7 +20,10 @@ import ItemFormDialog from '../components/items/ItemFormDialog';
 import { calculateInvoiceTotals } from '../utils/gstCalculations';
 import { formatCurrency } from '../utils/formatters';
 import { getTodayISODate } from '../utils/dateFormat';
+import { formatInvoiceNumber } from '../utils/invoiceNumbering';
+import { ScrollableSelectContent } from '../components/forms/ScrollableSelectContent';
 import type { LineItem, Customer, Item } from '../backend';
+import { InvoiceType } from '../backend';
 import { toast } from 'sonner';
 import { getUserFacingError } from '../utils/userFacingError';
 
@@ -42,8 +45,19 @@ export default function InvoiceEditorPage() {
   const [invoiceDate, setInvoiceDate] = useState<string>(getTodayISODate());
   const [invoiceNumber, setInvoiceNumber] = useState<string>('');
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState<string>('');
+  const [invoiceType, setInvoiceType] = useState<InvoiceType>(InvoiceType.original);
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
+
+  // Auto-fill invoice number for new invoices
+  useEffect(() => {
+    if (!isEditing && businessProfile && !invoiceNumber) {
+      // Generate a default invoice number
+      const nextId = BigInt(1); // This is a placeholder; in reality, we'd need the next ID
+      const defaultNumber = formatInvoiceNumber(nextId, businessProfile);
+      setInvoiceNumber(defaultNumber);
+    }
+  }, [isEditing, businessProfile, invoiceNumber]);
 
   useEffect(() => {
     if (invoice) {
@@ -52,6 +66,7 @@ export default function InvoiceEditorPage() {
       setInvoiceDate(invoice.invoiceDate || getTodayISODate());
       setInvoiceNumber(invoice.invoiceNumber || '');
       setPurchaseOrderNumber(invoice.purchaseOrderNumber || '');
+      setInvoiceType(invoice.invoiceType || InvoiceType.original);
     }
   }, [invoice]);
 
@@ -84,6 +99,7 @@ export default function InvoiceEditorPage() {
           lineItems,
           status: invoice.status,
           invoiceDate,
+          invoiceType,
         });
         toast.success('Invoice updated successfully');
       } else {
@@ -93,6 +109,7 @@ export default function InvoiceEditorPage() {
           customerId: BigInt(customerId),
           lineItems,
           invoiceDate,
+          invoiceType,
         });
         toast.success('Invoice created successfully');
         navigate({ to: '/invoices/$invoiceId', params: { invoiceId: newInvoice.id.toString() } });
@@ -124,7 +141,7 @@ export default function InvoiceEditorPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/invoices' })}>
               <ArrowLeft className="h-4 w-4" />
@@ -138,7 +155,7 @@ export default function InvoiceEditorPage() {
               </p>
             </div>
           </div>
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 w-full sm:w-auto">
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -161,19 +178,35 @@ export default function InvoiceEditorPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="invoiceType">Invoice Type</Label>
+                  <Select
+                    value={invoiceType}
+                    onValueChange={(value) => setInvoiceType(value as InvoiceType)}
+                  >
+                    <SelectTrigger id="invoiceType">
+                      <SelectValue placeholder="Select invoice type" />
+                    </SelectTrigger>
+                    <ScrollableSelectContent>
+                      <SelectItem value={InvoiceType.original}>Original Invoice</SelectItem>
+                      <SelectItem value={InvoiceType.transportation}>Transportation Invoice</SelectItem>
+                    </ScrollableSelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="customer">Select Customer</Label>
                   <div className="flex gap-2">
                     <Select value={customerId} onValueChange={setCustomerId}>
                       <SelectTrigger id="customer" className="flex-1">
                         <SelectValue placeholder="Choose a customer" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <ScrollableSelectContent>
                         {customers.map((customer) => (
                           <SelectItem key={customer.id.toString()} value={customer.id.toString()}>
                             {customer.name}
                           </SelectItem>
                         ))}
-                      </SelectContent>
+                      </ScrollableSelectContent>
                     </Select>
                     <Button
                       type="button"

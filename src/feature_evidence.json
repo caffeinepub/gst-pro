@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-invoice-editor-ui-to-allow-the-user-to-enter-edit-the-invoice-number-and-purchase-order-number-in-the-invoice-details-section-and-save-them-to-the-backend-during-invoice-create-and-edit",
-      "featureTitle": "Update the invoice editor UI to allow the user to enter/edit the Invoice Number and Purchase Order Number in the invoice details section, and save them to the backend during invoice create and edit.",
+      "featureId": "feature-update-the-settings-page-frontend-src-pages-settingspage-tsx-to-allow-the-user-to-add-edit-banking-details-account-name-account-number-ifsc-code-bank-name-branch-these-fields-must-be-saved-as-part-of-the-business-profile-using-the-existing-business-profile-save-flow",
+      "featureTitle": "Update the Settings page (frontend/src/pages/SettingsPage.tsx) to allow the user to add/edit banking details (Account Name, Account Number, IFSC Code, Bank Name, Branch). These fields must be saved as part of the Business Profile using the existing business profile save flow.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/InvoiceEditorPage.tsx"
+        "frontend/src/pages/SettingsPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,17 +18,16 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-136"
+        "REQ-148"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-render-the-stored-invoice-number-and-purchase-order-number-in-the-invoice-detail-view-and-print-layout-using-the-stored-invoice-number-when-present-and-falling-back-to-the-generated-formatted-number-only-when-no-stored-invoice-number-exists",
-      "featureTitle": "Render the stored Invoice Number and Purchase Order Number in the invoice detail view and print layout, using the stored invoice number when present (and falling back to the generated formatted number only when no stored invoice number exists).",
+      "featureId": "feature-render-the-saved-banking-details-on-invoice-experiences-so-that-all-invoices-include-these-details-when-present-1-invoice-print-layout-frontend-src-pages-invoiceprintpage-tsx-and-2-invoice-detail-view-frontend-src-pages-invoicedetailpage-tsx-if-banking-details-are-not-configured-the-banking-section-must-be-hidden-no-empty-labels",
+      "featureTitle": "Render the saved banking details on invoice experiences so that all invoices include these details when present: (1) Invoice print layout (frontend/src/pages/InvoicePrintPage.tsx) and (2) Invoice detail view (frontend/src/pages/InvoiceDetailPage.tsx). If banking details are not configured, the banking section must be hidden (no empty labels).",
       "files": [
         "frontend/src/pages/InvoiceDetailPage.tsx",
-        "frontend/src/pages/InvoicePrintPage.tsx",
-        "frontend/src/utils/invoiceNumbering.ts"
+        "frontend/src/pages/InvoicePrintPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -42,50 +40,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-137"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-that-clicking-the-in-app-e-way-bill-action-opens-https-ewaybillgst-gov-in-login-aspx-in-a-new-browser-tab-window",
-      "featureTitle": "Ensure that clicking the in-app \"E‑Way Bill\" action opens https://ewaybillgst.gov.in/Login.aspx in a new browser tab/window.",
-      "files": [
-        "frontend/src/components/MobileNav.tsx",
-        "frontend/src/pages/DashboardPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-138"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-gst-status-page-to-support-searching-any-gstin-and-displaying-the-full-gst-profile-details-and-filing-status-for-the-entered-gstin",
-      "featureTitle": "Update the GST Status page to support searching any GSTIN and displaying the full GST profile details and filing status for the entered GSTIN.",
-      "files": [
-        "frontend/src/pages/GstFilingStatusPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-139"
+        "REQ-149"
       ],
       "confidence": "high"
     }

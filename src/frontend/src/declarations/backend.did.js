@@ -41,6 +41,7 @@ export const InvoiceKPIs = IDL.Record({
   'totalInvoices' : IDL.Nat,
 });
 export const InvoiceStatus = IDL.Variant({
+  'cancelled' : IDL.Null,
   'finalized' : IDL.Null,
   'draft' : IDL.Null,
 });
@@ -50,6 +51,10 @@ export const LineItem = IDL.Record({
   'quantity' : IDL.Float64,
   'unitPrice' : IDL.Float64,
 });
+export const InvoiceType = IDL.Variant({
+  'transportation' : IDL.Null,
+  'original' : IDL.Null,
+});
 export const Invoice = IDL.Record({
   'id' : IDL.Nat,
   'status' : InvoiceStatus,
@@ -57,6 +62,7 @@ export const Invoice = IDL.Record({
   'purchaseOrderNumber' : IDL.Opt(IDL.Text),
   'invoiceDate' : IDL.Text,
   'invoiceNumber' : IDL.Text,
+  'invoiceType' : InvoiceType,
   'customerId' : IDL.Nat,
 });
 export const UserRole = IDL.Variant({
@@ -137,8 +143,16 @@ export const GSTFilingStatus = IDL.Record({
   'registrationDate' : IDL.Opt(IDL.Text),
   'returnType' : ReturnType,
 });
+export const BankingDetails = IDL.Record({
+  'branch' : IDL.Opt(IDL.Text),
+  'ifscCode' : IDL.Text,
+  'bankName' : IDL.Text,
+  'accountName' : IDL.Text,
+  'accountNumber' : IDL.Text,
+});
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const BusinessProfile = IDL.Record({
+  'bankingDetails' : IDL.Opt(BankingDetails),
   'startingNumber' : IDL.Nat,
   'logo' : IDL.Opt(ExternalBlob),
   'businessName' : IDL.Text,
@@ -260,8 +274,16 @@ export const idlService = IDL.Service({
       [CredentialResponse],
       [],
     ),
+  'cancelInvoice' : IDL.Func([IDL.Nat], [], []),
   'createInvoice' : IDL.Func(
-      [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat, IDL.Vec(LineItem), IDL.Text],
+      [
+        IDL.Text,
+        IDL.Opt(IDL.Text),
+        IDL.Nat,
+        IDL.Vec(LineItem),
+        IDL.Text,
+        InvoiceType,
+      ],
       [Invoice],
       [],
     ),
@@ -291,6 +313,7 @@ export const idlService = IDL.Service({
         IDL.Vec(LineItem),
         InvoiceStatus,
         IDL.Text,
+        InvoiceType,
       ],
       [],
       [],
@@ -385,6 +408,7 @@ export const idlFactory = ({ IDL }) => {
     'totalInvoices' : IDL.Nat,
   });
   const InvoiceStatus = IDL.Variant({
+    'cancelled' : IDL.Null,
     'finalized' : IDL.Null,
     'draft' : IDL.Null,
   });
@@ -394,6 +418,10 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Float64,
     'unitPrice' : IDL.Float64,
   });
+  const InvoiceType = IDL.Variant({
+    'transportation' : IDL.Null,
+    'original' : IDL.Null,
+  });
   const Invoice = IDL.Record({
     'id' : IDL.Nat,
     'status' : InvoiceStatus,
@@ -401,6 +429,7 @@ export const idlFactory = ({ IDL }) => {
     'purchaseOrderNumber' : IDL.Opt(IDL.Text),
     'invoiceDate' : IDL.Text,
     'invoiceNumber' : IDL.Text,
+    'invoiceType' : InvoiceType,
     'customerId' : IDL.Nat,
   });
   const UserRole = IDL.Variant({
@@ -478,8 +507,16 @@ export const idlFactory = ({ IDL }) => {
     'registrationDate' : IDL.Opt(IDL.Text),
     'returnType' : ReturnType,
   });
+  const BankingDetails = IDL.Record({
+    'branch' : IDL.Opt(IDL.Text),
+    'ifscCode' : IDL.Text,
+    'bankName' : IDL.Text,
+    'accountName' : IDL.Text,
+    'accountNumber' : IDL.Text,
+  });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const BusinessProfile = IDL.Record({
+    'bankingDetails' : IDL.Opt(BankingDetails),
     'startingNumber' : IDL.Nat,
     'logo' : IDL.Opt(ExternalBlob),
     'businessName' : IDL.Text,
@@ -602,8 +639,16 @@ export const idlFactory = ({ IDL }) => {
         [CredentialResponse],
         [],
       ),
+    'cancelInvoice' : IDL.Func([IDL.Nat], [], []),
     'createInvoice' : IDL.Func(
-        [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat, IDL.Vec(LineItem), IDL.Text],
+        [
+          IDL.Text,
+          IDL.Opt(IDL.Text),
+          IDL.Nat,
+          IDL.Vec(LineItem),
+          IDL.Text,
+          InvoiceType,
+        ],
         [Invoice],
         [],
       ),
@@ -633,6 +678,7 @@ export const idlFactory = ({ IDL }) => {
           IDL.Vec(LineItem),
           InvoiceStatus,
           IDL.Text,
+          InvoiceType,
         ],
         [],
         [],

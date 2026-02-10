@@ -10,7 +10,15 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface BankingDetails {
+  'branch' : [] | [string],
+  'ifscCode' : string,
+  'bankName' : string,
+  'accountName' : string,
+  'accountNumber' : string,
+}
 export interface BusinessProfile {
+  'bankingDetails' : [] | [BankingDetails],
   'startingNumber' : bigint,
   'logo' : [] | [ExternalBlob],
   'businessName' : string,
@@ -70,6 +78,7 @@ export interface Invoice {
   'purchaseOrderNumber' : [] | [string],
   'invoiceDate' : string,
   'invoiceNumber' : string,
+  'invoiceType' : InvoiceType,
   'customerId' : bigint,
 }
 export interface InvoiceKPIs {
@@ -77,8 +86,11 @@ export interface InvoiceKPIs {
   'finalizedInvoices' : bigint,
   'totalInvoices' : bigint,
 }
-export type InvoiceStatus = { 'finalized' : null } |
+export type InvoiceStatus = { 'cancelled' : null } |
+  { 'finalized' : null } |
   { 'draft' : null };
+export type InvoiceType = { 'transportation' : null } |
+  { 'original' : null };
 export interface Item {
   'id' : bigint,
   'hsnSac' : [] | [string],
@@ -226,8 +238,9 @@ export interface _SERVICE {
     [string, string],
     CredentialResponse
   >,
+  'cancelInvoice' : ActorMethod<[bigint], undefined>,
   'createInvoice' : ActorMethod<
-    [string, [] | [string], bigint, Array<LineItem>, string],
+    [string, [] | [string], bigint, Array<LineItem>, string, InvoiceType],
     Invoice
   >,
   'createUser' : ActorMethod<[CreateUserRequest], SignUpResponse>,
@@ -248,6 +261,7 @@ export interface _SERVICE {
       Array<LineItem>,
       InvoiceStatus,
       string,
+      InvoiceType,
     ],
     undefined
   >,

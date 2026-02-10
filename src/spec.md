@@ -1,13 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Let users edit and store invoice numbers and purchase order numbers, ensure the E‑Way Bill link opens the correct login page, and allow GSTIN-based search to view full GST profile and filing status.
+**Goal:** Let users configure banking details once in Settings and automatically include them on all invoices when present.
 
 **Planned changes:**
-- Extend the backend `Invoice` model to persist an editable `invoiceNumber` and optional `purchaseOrderNumber` across invoice create/edit/get/list flows, with safe defaults for older invoices.
-- Update the invoice editor to include English-labeled inputs for “Invoice Number” and “Purchase Order Number”, pre-fill on edit, and save both fields.
-- Update invoice detail and print pages to display stored invoice number when present (fallback to existing formatted number only when missing), and show “Purchase Order No” in print when available.
-- Update the in-app “E‑Way Bill” action to open `https://ewaybillgst.gov.in/Login.aspx` in a new tab/window.
-- Update the GST Status page to allow searching any GSTIN and display GST profile details (e.g., legal name, trade name) plus filing status for the selected return type/period, with clear English loading/empty/error states.
+- Extend the backend BusinessProfile model to store optional banking details: Account Name, Account Number, IFSC Code, Bank Name, and optional Branch.
+- Add safe upgrade/migration handling (if stable storage is used) so existing BusinessProfile records remain readable and new banking fields default to empty/null without trapping.
+- Update the Settings page to add a “Banking Details” section with inputs for the banking fields, saved/loaded through the existing business profile save/get flow.
+- Update invoice print and invoice detail pages to render a “Banking Details” section using saved BusinessProfile data, and hide the section entirely when no banking fields are configured.
 
-**User-visible outcome:** Users can enter and edit invoice and PO numbers, see them reflected in invoice views/prints, open the correct E‑Way Bill login page, and search any GSTIN to view its GST profile and filing status.
+**User-visible outcome:** Users can add/edit banking details in Settings, and invoices (detail view and print layout) will show those details when configured, otherwise no banking section appears.

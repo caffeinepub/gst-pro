@@ -1,52 +1,68 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T14:34:31.779Z",
-  "summary": "Diff implements editable invoiceNumber and optional purchaseOrderNumber across backend types and frontend invoice create/edit flows, adds a migration module, updates invoice display/print to prefer stored invoiceNumber with fallback formatting, updates E‑Way Bill links to the exact Login.aspx URL (at least in Dashboard and MobileNav), and enhances GST Status page with a searchable GSTIN workflow and profile section import. Diff also includes multiple PWA/service worker/manifest additions not requested, and the migration hardcodes invoiceNumber to \"default\" for old invoices.",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-10T17:20:08.979Z",
+  "summary": "Backend types were extended to include optional banking details on BusinessProfile, and a new backend/migration.mo file was added suggesting upgrade migration support. Frontend pages (Settings, Invoice Detail, Invoice Print) were modified and now reference bankingDetails and compute a hasBankingDetails flag, but the diff excerpts are truncated before showing the actual UI sections and save payload wiring. Additionally, the repository’s frontend-file-summaries.txt describes multiple unrelated frontend/PWA changes not requested in the BuildRequest.",
+  "missing_requirements": [
     {
-      "description": "Added PWA/iOS install assets and service worker caching (manifest, icons, iOS splash screens, SW registration, extensive meta tags).",
-      "reason": "BuildRequest does not ask for PWA, service worker, iOS splash screens, or related caching/manifest work.",
+      "id": "REQ-146",
+      "requirement": "Business profile get/save APIs correctly persist and return the banking details for the signed-in Principal; existing BusinessProfile data remains readable after upgrade with missing banking fields defaulting to null/empty option.",
+      "reason": "The diff shows new types/fields (BusinessProfile.bankingDetails) but does not include evidence of updated get/save logic or defaulting behavior for pre-existing records within backend/main.mo (code is truncated before API implementations).",
       "evidence": [
-        "frontend-file-summaries.txt (frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js, frontend/src/pwa/registerServiceWorker.ts)"
+        "backend/main.mo (truncated)"
       ]
     },
     {
-      "description": "App-level error boundary / boot-time error handling changes.",
-      "reason": "Not requested by any REQ-135..REQ-139; appears as additional robustness work outside scope.",
+      "id": "REQ-147",
+      "requirement": "Add conditional stable migration logic to migrate existing BusinessProfile records to include new optional banking fields without traps/data loss.",
+      "reason": "backend/migration.mo was added and defines OldBusinessProfile/NewBusinessProfile types, but the excerpt is truncated before showing concrete migration/run logic that initializes the new optional fields and guarantees no traps on upgrade.",
       "evidence": [
-        "frontend-file-summaries.txt (frontend/src/App.tsx: wrapped with AppErrorBoundary)"
+        "backend/migration.mo (truncated)",
+        "backend/main.mo (shows `(with migration = Migration.run)` but not the migration implementation)"
       ]
     },
     {
-      "description": "Backend migration sets legacy invoices' invoiceNumber to the literal string \"default\".",
-      "reason": "REQ-135 requires old invoices load safely with defaults, but does not request forcing a non-empty placeholder value; this changes user-visible invoice numbering semantics vs falling back to generated formatted number when stored value is empty.",
+      "id": "REQ-148",
+      "requirement": "Settings page displays a clearly labeled \"Banking Details\" section with inputs and saves them via the existing business profile save flow (useSaveBusinessProfile), with English labels/validation.",
+      "reason": "SettingsPage.tsx shows state initialization/loading of bankingDetails from businessProfile and a comment starting banking validation, but the diff is truncated before showing the actual rendered UI section/labels and before showing the submit payload sent via useSaveBusinessProfile().",
       "evidence": [
-        "backend/migration.mo (invoiceNumber = \"default\"; purchaseOrderNumber = null)"
+        "frontend/src/pages/SettingsPage.tsx (truncated)"
       ]
     },
     {
-      "description": "Expanded GSTFilingStatus backend model with many additional fields (address, state, registrationDate, cancellationDate, taxpayerType, gstStatus, filingFrequencyDetails, principalPlaceOfBusiness, natureOfBusiness).",
-      "reason": "REQ-139 is a frontend requirement; backend model expansion beyond what’s necessary to display legal/trade name and status table was not explicitly requested.",
+      "id": "REQ-149",
+      "requirement": "Render banking details on InvoicePrintPage and InvoiceDetailPage when configured, and hide the section entirely when not configured.",
+      "reason": "Both invoice pages compute a hasBankingDetails boolean, but the diff excerpts are truncated before showing any JSX that actually renders a \"Banking Details\" section or conditionally hides it when fields are empty.",
       "evidence": [
-        "backend/main.mo (GSTFilingStatus type includes many new optional fields)"
+        "frontend/src/pages/InvoiceDetailPage.tsx (truncated)",
+        "frontend/src/pages/InvoicePrintPage.tsx (truncated)"
       ]
     }
   ],
-  "confidence": 0.66,
+  "hallucinated_features": [
+    {
+      "description": "PWA-related additions/changes (iOS PWA meta tags, manifest icons, service worker caching, service worker registration).",
+      "reason": "Not requested by any REQ-146..149, but described as implemented in the diff summary file.",
+      "evidence": [
+        "frontend-file-summaries.txt (entries for frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js, frontend/src/pwa/registerServiceWorker.ts)"
+      ]
+    },
+    {
+      "description": "Multiple unrelated UI/feature enhancements (InvoiceEditorPage improvements, tables responsiveness, AppErrorBoundary/AppShell changes, etc.).",
+      "reason": "Not part of the banking-details-on-invoices/settings scope, but described as modified/implemented in the diff summary file.",
+      "evidence": [
+        "frontend-file-summaries.txt (entries for frontend/src/pages/InvoiceEditorPage.tsx, frontend/src/components/AppShell.tsx, frontend/src/components/customers/CustomersTable.tsx, frontend/src/components/items/ItemsTable.tsx, frontend/src/pages/InvoicesPage.tsx, etc.)"
+      ]
+    }
+  ],
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/MobileNav.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/GstFilingStatusPage.tsx",
     "frontend/src/pages/InvoiceDetailPage.tsx",
-    "frontend/src/pages/InvoiceEditorPage.tsx",
     "frontend/src/pages/InvoicePrintPage.tsx",
-    "frontend/src/utils/invoiceNumbering.ts",
+    "frontend/src/pages/SettingsPage.tsx",
     "project_state.json"
   ]
 }

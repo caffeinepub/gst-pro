@@ -1,13 +1,11 @@
 import type { Invoice } from '../backend';
-import { InvoiceStatus } from '../backend';
 
 export function canDeleteInvoice(invoice: Invoice): boolean {
-  return invoice.status === InvoiceStatus.draft;
+  // All invoices can now be deleted
+  return true;
 }
 
 export function getDeleteErrorMessage(invoice: Invoice): string {
-  if (invoice.status === InvoiceStatus.finalized) {
-    return 'Finalized invoices cannot be deleted. Only draft invoices can be removed.';
-  }
+  // No longer blocking deletion based on status
   return 'This invoice cannot be deleted.';
 }

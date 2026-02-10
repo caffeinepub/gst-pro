@@ -1,6 +1,6 @@
+import Nat "mo:core/Nat";
 import Map "mo:core/Map";
 import Array "mo:core/Array";
-import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import Order "mo:core/Order";
 import Iter "mo:core/Iter";
@@ -21,12 +21,19 @@ actor {
   type UserRole = AccessControl.UserRole;
   include MixinStorage();
 
-  // Initialize the user system state
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
   public type UserProfile = {
     name : Text;
+  };
+
+  public type BankingDetails = {
+    accountName : Text;
+    accountNumber : Text;
+    ifscCode : Text;
+    bankName : Text;
+    branch : ?Text;
   };
 
   public type BusinessProfile = {
@@ -37,6 +44,7 @@ actor {
     invoicePrefix : Text;
     startingNumber : Nat;
     logo : ?Storage.ExternalBlob;
+    bankingDetails : ?BankingDetails;
   };
 
   public type Customer = {
@@ -64,9 +72,15 @@ actor {
     discount : ?Float;
   };
 
+  public type InvoiceType = {
+    #original;
+    #transportation;
+  };
+
   public type InvoiceStatus = {
     #draft;
     #finalized;
+    #cancelled;
   };
 
   public type Invoice = {
@@ -77,6 +91,7 @@ actor {
     lineItems : [LineItem];
     status : InvoiceStatus;
     invoiceDate : Text;
+    invoiceType : InvoiceType;
   };
 
   module Customer {
@@ -116,12 +131,12 @@ actor {
     isActive : ?Bool;
     legalName : ?Text;
     tradeName : ?Text;
-    address : ?Text; // New field for full address
-    state : ?Text; // State information
+    address : ?Text;
+    state : ?Text;
     registrationDate : ?Text;
     cancellationDate : ?Text;
     taxpayerType : ?Text;
-    gstStatus : ?Text; // Active/Inactive status
+    gstStatus : ?Text;
     filingFrequencyDetails : ?Text;
     principalPlaceOfBusiness : ?Text;
     natureOfBusiness : ?Text;
@@ -166,7 +181,6 @@ actor {
     natureOfBusiness : ?Text;
   };
 
-  // InventSum-specific types
   public type SystemRole = {
     #superAdmin;
     #auditor;
@@ -205,7 +219,6 @@ actor {
     };
   };
 
-  // Track Principal-only users (Internet Identity users without credential accounts)
   public type PrincipalUserRecord = {
     principal : Principal;
     lastSignIn : ?Time.Time;
@@ -215,11 +228,8 @@ actor {
   let users = Map.empty<Text, UserRecord>();
   let deletedUsers = Set.empty<Text>();
   let emailToPrincipal = Map.empty<Text, Principal>();
-  // Track which principals have been authenticated via credential system
   let authenticatedAdminPrincipals = Set.empty<Principal>();
-  // Map principals to their user IDs for access expiry tracking
   let principalToUserId = Map.empty<Principal, Text>();
-  // Track Principal-only users (Internet Identity users)
   let principalOnlyUsers = Map.empty<Principal, PrincipalUserRecord>();
 
   public type CreateUserRequest = {
@@ -271,18 +281,12 @@ actor {
     };
   };
 
-  // Helper function to check access expiry and update last used timestamp
-  // This enforces the access expiry requirement for credential-authenticated users
   func checkAccessAndUpdateUsage(caller : Principal) {
     switch (principalToUserId.get(caller)) {
       case (null) {
-        // Not a credential-authenticated user, check if Principal-only user
         switch (principalOnlyUsers.get(caller)) {
-          case (null) {
-            // Not tracked yet, this is fine for Principal-based users
-          };
+          case (null) {};
           case (?principalUser) {
-            // Update last used for Principal-only user
             let now = Time.now();
             let updatedPrincipalUser : PrincipalUserRecord = {
               principalUser with
@@ -294,16 +298,11 @@ actor {
       };
       case (?userId) {
         switch (users.get(userId)) {
-          case (null) {
-            // User record not found, should not happen
-          };
+          case (null) {};
           case (?user) {
-            // Check if user is deleted
             if (user.deleted) {
               Runtime.trap("Access denied: Your account has been disabled");
             };
-
-            // Check access expiry
             switch (user.accessExpiry) {
               case (?expiryTime) {
                 let currentTime = Time.now();
@@ -311,12 +310,8 @@ actor {
                   Runtime.trap("Access denied: Your access to the application has expired");
                 };
               };
-              case (null) {
-                // No expiry set, access is unlimited
-              };
+              case (null) {};
             };
-
-            // Update last used timestamp
             let now = Time.now();
             let updatedUser : UserRecord = {
               user with
@@ -329,14 +324,10 @@ actor {
     };
   };
 
-  // Admin check function - Required by frontend for /admin route protection
-  // This checks BOTH Principal-based admin role AND credential-based admin authentication
   public query ({ caller }) func isAdmin() : async Bool {
-    // Check if caller is in the authenticated admin principals set (credential-based)
     if (authenticatedAdminPrincipals.contains(caller)) {
       return true;
     };
-    // Check if caller has admin role via AccessControl (Principal-based)
     AccessControl.isAdmin(accessControlState, caller);
   };
 
@@ -347,7 +338,6 @@ actor {
     userProfiles.get(caller) != null;
   };
 
-  // User Profile Functions - Require user-level access
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -370,7 +360,6 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Customer Management - Require user-level access
   public shared ({ caller }) func addCustomer(
     name : Text,
     billingAddress : Text,
@@ -457,7 +446,6 @@ actor {
     customers.remove(id);
   };
 
-  // Item Management - Require user-level access
   public shared ({ caller }) func addItem(
     name : Text,
     description : ?Text,
@@ -544,13 +532,13 @@ actor {
     items.remove(id);
   };
 
-  // Invoice Management - Require user-level access
   public shared ({ caller }) func createInvoice(
     invoiceNumber : Text,
     purchaseOrderNumber : ?Text,
     customerId : Nat,
     lineItems : [LineItem],
     invoiceDate : Text,
+    invoiceType : InvoiceType,
   ) : async Invoice {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create invoices");
@@ -575,6 +563,7 @@ actor {
       lineItems;
       status = #draft;
       invoiceDate;
+      invoiceType;
     };
     invoices.add(invoiceId, invoice);
     invoice;
@@ -588,6 +577,7 @@ actor {
     lineItems : [LineItem],
     status : InvoiceStatus,
     invoiceDate : Text,
+    invoiceType : InvoiceType,
   ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can edit invoices");
@@ -615,6 +605,7 @@ actor {
           lineItems;
           status;
           invoiceDate;
+          invoiceType;
         };
         invoices.add(id, invoice);
       };
@@ -652,14 +643,7 @@ actor {
         Runtime.trap("Invoice not found");
       };
       case (?invoice) {
-        switch (invoice.status) {
-          case (#draft) {
-            invoices.remove(id);
-          };
-          case (#finalized) {
-            Runtime.trap("Cannot delete finalized invoices");
-          };
-        };
+        invoices.remove(id);
       };
     };
   };
@@ -683,6 +667,33 @@ actor {
           lineItems = invoice.lineItems;
           status = #finalized;
           invoiceDate = invoice.invoiceDate;
+          invoiceType = invoice.invoiceType;
+        };
+        invoices.add(id, updatedInvoice);
+      };
+    };
+  };
+
+  public shared ({ caller }) func cancelInvoice(id : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can cancel invoices");
+    };
+    checkAccessAndUpdateUsage(caller);
+    let invoices = getOrCreateInvoiceMap(caller);
+    switch (invoices.get(id)) {
+      case (null) {
+        Runtime.trap("Invoice not found");
+      };
+      case (?invoice) {
+        let updatedInvoice : Invoice = {
+          id = invoice.id;
+          invoiceNumber = invoice.invoiceNumber;
+          purchaseOrderNumber = invoice.purchaseOrderNumber;
+          customerId = invoice.customerId;
+          lineItems = invoice.lineItems;
+          status = #cancelled;
+          invoiceDate = invoice.invoiceDate;
+          invoiceType = invoice.invoiceType;
         };
         invoices.add(id, updatedInvoice);
       };
@@ -733,7 +744,6 @@ actor {
     };
   };
 
-  // GST Filing Status - Require user-level access
   public shared ({ caller }) func fetchGstFilingStatus(
     gstin : Text,
     period : Text,
@@ -746,11 +756,9 @@ actor {
 
     checkAccessAndUpdateUsage(caller);
 
-    // Make HTTP outcall to GST portal
     let url = "https://services.gst.gov.in/services/searchtp";
     let response = await OutCall.httpGetRequest(url, [], transform);
 
-    // Fallback to default response if HTTP call fails
     let statusEntries = [
       {
         periodLabel = period;
@@ -776,7 +784,7 @@ actor {
       isActive = ?true;
       legalName = ?"Aditya Birla Health Insurance Co. Ltd.";
       tradeName = ?"Aditya Birla Health Insurance Co. Ltd.";
-      address = ?"50/2/1 THIRD FLOOR,CAMP PUNE"; // Default values for new backend-only fields
+      address = ?"50/2/1 THIRD FLOOR,CAMP PUNE";
       state = ?"WEST BENGAL";
       registrationDate = ?"2021-07-01";
       cancellationDate = null;
@@ -842,12 +850,10 @@ actor {
     text.size().toText();
   };
 
-  // Bootstrap admin credential for admin panel
   let adminPanelUserId = "kashi280622";
   let adminPanelPassword = "Kashi@123";
   let adminPanelPasswordHash = simpleHash(adminPanelPassword);
 
-  // Migrate from email-based identifier to userId-based identifier system
   func initializeAdminPanel() {
     let now = Time.now().toNat();
     let adminUser : UserRecord = {
@@ -861,7 +867,7 @@ actor {
       updatedAt = now;
       deleted = false;
       principal = null;
-      accessExpiry = null; // Admin panel has no expiry by default
+      accessExpiry = null;
       lastUsed = null;
       lastSignIn = null;
     };
@@ -874,8 +880,6 @@ actor {
     role : ?SystemRole;
   };
 
-  // Public authentication endpoint - no authorization required (it's the entry point)
-  // After successful authentication, grants admin access to the caller's Principal
   public shared ({ caller }) func authenticateApplicationCredentials(
     userId : Text,
     password : Text,
@@ -888,7 +892,6 @@ actor {
       authenticatedAdminPrincipals.add(caller);
       principalToUserId.add(caller, adminPanelUserId);
 
-      // Update lastSignIn timestamp
       switch (users.get(adminPanelUserId)) {
         case (?user) {
           let now = Time.now();
@@ -918,7 +921,6 @@ actor {
         };
       };
       case (?user) {
-        // Check if user has expired access
         if (user.deleted) {
           return {
             success = false;
@@ -946,9 +948,7 @@ actor {
           if (user.role == #superAdmin) {
             authenticatedAdminPrincipals.add(caller);
           };
-          // Map principal to userId for access expiry tracking
           principalToUserId.add(caller, userId);
-          // Update last used timestamp and lastSignIn on successful authentication
           let now = Time.now();
           let updatedUser : UserRecord = {
             user with
@@ -972,7 +972,6 @@ actor {
     };
   };
 
-  // Public sign-up endpoint - no authorization required (it's the entry point)
   public shared ({ caller }) func signUp(request : SignUpRequest) : async SignUpResponse {
     switch (users.get(request.email)) {
       case (?_) {
@@ -996,7 +995,7 @@ actor {
       updatedAt = now;
       deleted = false;
       principal = null;
-      accessExpiry = request.accessExpiry; // Save expiry from request
+      accessExpiry = request.accessExpiry;
       lastUsed = ?Time.now();
       lastSignIn = null;
     };
@@ -1016,12 +1015,10 @@ actor {
     };
   };
 
-  // Public query - no authorization required
   public query ({ caller }) func getPotentialSystemRoles() : async [SystemRole] {
     [#superAdmin, #auditor, #standard];
   };
 
-  // Business Profile - Require user-level access
   public shared ({ caller }) func saveBusinessProfile(profile : BusinessProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save business profiles");
@@ -1037,10 +1034,7 @@ actor {
     businessProfiles.get(caller);
   };
 
-  // Admin-only user management functions
-  // These check for EITHER credential-based admin OR Principal-based admin
   public shared ({ caller }) func createUser(request : CreateUserRequest) : async SignUpResponse {
-    // Check credential-based admin OR Principal-based admin
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can create users");
     };
@@ -1070,7 +1064,7 @@ actor {
       updatedAt = now;
       deleted = false;
       principal = null;
-      accessExpiry = request.accessExpiry; // Save access expiry from request
+      accessExpiry = request.accessExpiry;
       lastUsed = ?Time.now();
       lastSignIn = null;
     };
@@ -1091,7 +1085,6 @@ actor {
   };
 
   public shared ({ caller }) func updateUser(userId : Text, request : UpdateUserRequest) : async () {
-    // Check credential-based admin OR Principal-based admin
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update users");
     };
@@ -1113,7 +1106,7 @@ actor {
           updatedAt = now;
           deleted = existingUser.deleted;
           principal = existingUser.principal;
-          accessExpiry = request.accessExpiry; // Update access expiry
+          accessExpiry = request.accessExpiry;
           lastUsed = existingUser.lastUsed;
           lastSignIn = existingUser.lastSignIn;
         };
@@ -1123,7 +1116,6 @@ actor {
   };
 
   public shared ({ caller }) func deleteUser(userId : Text) : async () {
-    // Check credential-based admin OR Principal-based admin
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete users");
     };
@@ -1156,16 +1148,12 @@ actor {
   };
 
   public query ({ caller }) func listUsers() : async [UserRecord] {
-    // Check credential-based admin OR Principal-based admin
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can list users");
     };
     users.values().toArray().sort();
   };
 
-  // Additional admin endpoints for access expiry and usage tracking
-
-  // ADMIN: Set access expiry for a user
   public shared ({ caller }) func setAccessExpiry(userId : Text, expiryTimestamp : ?Time.Time) : async () {
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can set access expiry");
@@ -1187,7 +1175,6 @@ actor {
     };
   };
 
-  // ADMIN: Get access expiry for a user
   public query ({ caller }) func getAccessExpiry(userId : Text) : async ?Time.Time {
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can get access expiry");
@@ -1199,7 +1186,6 @@ actor {
     };
   };
 
-  // ADMIN: Get last used timestamp for a user
   public query ({ caller }) func getLastUsed(userId : Text) : async ?Time.Time {
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can get last used time");
@@ -1211,7 +1197,6 @@ actor {
     };
   };
 
-  // ADMIN: Get last sign-in timestamp for a user
   public query ({ caller }) func getLastSignIn(userId : Text) : async ?Time.Time {
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can get last sign-in time");
@@ -1223,25 +1208,18 @@ actor {
     };
   };
 
-  // ADMIN-ONLY: View another user's invoices for admin dashboard
-  // This allows admins to view a specific user's data without impersonation
   public query ({ caller }) func adminGetUserInvoices(userId : Text) : async [Invoice] {
-    // Admin-only authorization check
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view other users' invoices");
     };
 
-    // Find the user record to get their principal
     switch (users.get(userId)) {
       case (null) {
         Runtime.trap("User not found");
       };
       case (?user) {
-        // Get the user's bound principal
         switch (user.principal) {
           case (null) {
-            // User has no bound principal yet, check principalToUserId map
-            // Find principal by userId
             var targetPrincipal : ?Principal = null;
             for ((principal, uid) in principalToUserId.entries()) {
               if (uid == userId) {
@@ -1251,11 +1229,9 @@ actor {
 
             switch (targetPrincipal) {
               case (null) {
-                // User has never logged in, return empty array
                 return [];
               };
               case (?principal) {
-                // Get invoices for this principal
                 switch (invoicesByUser.get(principal)) {
                   case (null) { [] };
                   case (?invoices) { invoices.values().toArray().sort() };
@@ -1264,7 +1240,6 @@ actor {
             };
           };
           case (?principal) {
-            // Get invoices for the user's principal
             switch (invoicesByUser.get(principal)) {
               case (null) { [] };
               case (?invoices) { invoices.values().toArray().sort() };
@@ -1275,7 +1250,6 @@ actor {
     };
   };
 
-  // ADMIN-ONLY: Get invoice KPIs for a specific user
   public type InvoiceKPIs = {
     totalInvoices : Nat;
     draftInvoices : Nat;
@@ -1283,21 +1257,17 @@ actor {
   };
 
   public query ({ caller }) func adminGetUserInvoiceKPIs(userId : Text) : async InvoiceKPIs {
-    // Admin-only authorization check
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view other users' invoice KPIs");
     };
 
-    // Find the user record to get their principal
     switch (users.get(userId)) {
       case (null) {
         Runtime.trap("User not found");
       };
       case (?user) {
-        // Get the user's bound principal
         switch (user.principal) {
           case (null) {
-            // User has no bound principal yet, check principalToUserId map
             var targetPrincipal : ?Principal = null;
             for ((principal, uid) in principalToUserId.entries()) {
               if (uid == userId) {
@@ -1307,7 +1277,6 @@ actor {
 
             switch (targetPrincipal) {
               case (null) {
-                // User has never logged in, return zero KPIs
                 return {
                   totalInvoices = 0;
                   draftInvoices = 0;
@@ -1315,7 +1284,6 @@ actor {
                 };
               };
               case (?principal) {
-                // Calculate KPIs for this principal
                 switch (invoicesByUser.get(principal)) {
                   case (null) {
                     {
@@ -1331,6 +1299,7 @@ actor {
                       switch (invoice.status) {
                         case (#draft) { draftCount += 1 };
                         case (#finalized) { finalizedCount += 1 };
+                        case (#cancelled) {};
                       };
                     };
                     {
@@ -1344,7 +1313,6 @@ actor {
             };
           };
           case (?principal) {
-            // Calculate KPIs for the user's principal
             switch (invoicesByUser.get(principal)) {
               case (null) {
                 {
@@ -1360,6 +1328,7 @@ actor {
                   switch (invoice.status) {
                     case (#draft) { draftCount += 1 };
                     case (#finalized) { finalizedCount += 1 };
+                    case (#cancelled) {};
                   };
                 };
                 {
@@ -1375,21 +1344,15 @@ actor {
     };
   };
 
-  // NEW: Record Internet Identity sign-in event
-  // This is called by the frontend after successful Internet Identity authentication
-  // Requires authenticated caller (not anonymous)
   public shared ({ caller }) func recordInternetIdentitySignIn() : async () {
-    // Reject anonymous principals
     if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Anonymous principals cannot record sign-in");
     };
 
     let now = Time.now();
 
-    // Check if this is a credential-based user
     switch (principalToUserId.get(caller)) {
       case (?userId) {
-        // This is a credential-based user, update their record
         switch (users.get(userId)) {
           case (?user) {
             let updatedUser : UserRecord = {
@@ -1403,10 +1366,8 @@ actor {
         };
       };
       case (null) {
-        // This is a Principal-only user (Internet Identity only)
         switch (principalOnlyUsers.get(caller)) {
           case (?principalUser) {
-            // Update existing record
             let updatedPrincipalUser : PrincipalUserRecord = {
               principal = caller;
               lastSignIn = ?now;
@@ -1415,7 +1376,6 @@ actor {
             principalOnlyUsers.add(caller, updatedPrincipalUser);
           };
           case (null) {
-            // Create new record for this Principal-only user
             let newPrincipalUser : PrincipalUserRecord = {
               principal = caller;
               lastSignIn = ?now;
@@ -1428,14 +1388,11 @@ actor {
     };
   };
 
-  // NEW: Unified user list for admin panel
-  // Returns both credential-based users and Principal-only users
   public type UnifiedUserInfo = {
-    identifier : Text; // Either userId or Principal text
+    identifier : Text;
     userType : { #credential; #principalOnly };
     lastSignIn : ?Time.Time;
     lastUsed : ?Time.Time;
-    // Credential-specific fields (null for Principal-only users)
     email : ?Text;
     role : ?SystemRole;
     deleted : ?Bool;
@@ -1443,14 +1400,12 @@ actor {
   };
 
   public query ({ caller }) func listAllUsers() : async [UnifiedUserInfo] {
-    // Admin-only authorization check
     if (not (authenticatedAdminPrincipals.contains(caller)) and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can list all users");
     };
 
     var result : [UnifiedUserInfo] = [];
 
-    // Add credential-based users
     for (user in users.values()) {
       let userInfo : UnifiedUserInfo = {
         identifier = user.id;
@@ -1465,9 +1420,7 @@ actor {
       result := result.concat([userInfo]);
     };
 
-    // Add Principal-only users (those not in credential system)
     for (principalUser in principalOnlyUsers.values()) {
-      // Check if this principal is already associated with a credential user
       let isCredentialUser = switch (principalToUserId.get(principalUser.principal)) {
         case (null) { false };
         case (?_) { true };

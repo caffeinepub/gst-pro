@@ -5,13 +5,22 @@ import {
   useGetItems,
   useGetBusinessProfile,
 } from '../hooks/useQueries';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableFooter,
+} from '@/components/ui/table';
+import { Loader2 } from 'lucide-react';
 import { calculateInvoiceTotals } from '../utils/gstCalculations';
 import { formatCurrency } from '../utils/formatters';
 import { getDisplayInvoiceNumber } from '../utils/invoiceNumbering';
 import { formatInvoiceDate } from '../utils/dateFormat';
-import { Loader2 } from 'lucide-react';
 import { usePrintOnce } from '../hooks/usePrintOnce';
+import { InvoiceType } from '../backend';
 
 export default function InvoicePrintPage() {
   const params = useParams({ strict: false });
@@ -22,70 +31,73 @@ export default function InvoicePrintPage() {
   const { data: items = [], isLoading: itemsLoading } = useGetItems();
   const { data: businessProfile, isLoading: businessLoading } = useGetBusinessProfile();
 
-  // Determine if all required data is ready
-  const isDataReady = !!(
-    invoice &&
-    customer &&
-    businessProfile &&
-    !invoiceLoading &&
-    !customerLoading &&
-    !itemsLoading &&
-    !businessLoading
-  );
+  const isLoading = invoiceLoading || customerLoading || itemsLoading || businessLoading;
+  const isDataReady = !isLoading && !!invoice && !!customer && !!businessProfile;
 
-  // Trigger print once when ready
   usePrintOnce({ isReady: isDataReady });
 
-  // Show loading state while any data is missing or loading
-  if (!isDataReady) {
+  if (isLoading || !invoice || !customer || !businessProfile) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-600 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">Preparing invoice for printing...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   const totals = calculateInvoiceTotals(invoice.lineItems, items, businessProfile, customer);
-  const logoUrl = businessProfile.logo?.getDirectURL();
+  const invoiceTypeLabel = invoice.invoiceType === InvoiceType.transportation
+    ? 'Transportation Invoice'
+    : 'Original Invoice';
+  const statusLabel = invoice.status === 'cancelled' ? 'Canceled' : invoice.status === 'finalized' ? 'Finalized' : 'Draft';
+
+  // Check if banking details are configured
+  const hasBankingDetails = businessProfile.bankingDetails && (
+    businessProfile.bankingDetails.accountName ||
+    businessProfile.bankingDetails.accountNumber ||
+    businessProfile.bankingDetails.ifscCode ||
+    businessProfile.bankingDetails.bankName
+  );
 
   return (
-    <div className="print-page min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto p-8 bg-white text-black print:p-0">
+    <div className="max-w-4xl mx-auto p-8 bg-white text-black print:p-0">
+      <div className="space-y-6">
         {/* Header */}
-        <div className="border-b-2 border-black pb-4 mb-6">
+        <div className="border-b-2 border-black pb-4">
           <div className="flex justify-between items-start">
-            <div className="flex items-start gap-4">
-              {logoUrl && (
-                <img
-                  src={logoUrl}
-                  alt="Business Logo"
-                  className="h-16 w-auto object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              )}
-              <div>
-                <h1 className="text-2xl font-bold">{businessProfile.businessName}</h1>
-                <p className="text-sm mt-1">{businessProfile.address}</p>
-                <p className="text-sm">GSTIN: {businessProfile.gstin}</p>
-                <p className="text-sm">State: {businessProfile.state}</p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold">{businessProfile.businessName}</h1>
+              <p className="text-sm mt-2">{businessProfile.address}</p>
+              <p className="text-sm">GSTIN: {businessProfile.gstin}</p>
+              <p className="text-sm">State: {businessProfile.state}</p>
+            </div>
+            {businessProfile.logo && (
+              <img
+                src={businessProfile.logo.getDirectURL()}
+                alt="Business Logo"
+                className="h-16 w-auto object-contain"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Invoice Title and Details */}
+        <div>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h2 className="text-2xl font-bold">{invoiceTypeLabel}</h2>
+              <p className="text-sm text-gray-600">Status: {statusLabel}</p>
             </div>
             <div className="text-right">
-              <h2 className="text-xl font-bold">TAX INVOICE</h2>
-              <p className="text-sm mt-2">
-                <strong>Invoice No:</strong> {getDisplayInvoiceNumber(invoice, businessProfile)}
+              <p className="text-sm">
+                <span className="font-semibold">Invoice #:</span>{' '}
+                {getDisplayInvoiceNumber(invoice, businessProfile)}
               </p>
               <p className="text-sm">
-                <strong>Date:</strong> {formatInvoiceDate(invoice.invoiceDate)}
+                <span className="font-semibold">Date:</span> {formatInvoiceDate(invoice.invoiceDate)}
               </p>
               {invoice.purchaseOrderNumber && (
                 <p className="text-sm">
-                  <strong>Purchase Order No:</strong> {invoice.purchaseOrderNumber}
+                  <span className="font-semibold">PO #:</span> {invoice.purchaseOrderNumber}
                 </p>
               )}
             </div>
@@ -93,115 +105,171 @@ export default function InvoicePrintPage() {
         </div>
 
         {/* Customer Details */}
-        <div className="mb-6">
-          <h3 className="text-lg font-bold mb-2">Bill To:</h3>
-          <div className="border border-black p-3">
-            <p className="font-bold">{customer.name}</p>
-            <p className="text-sm">{customer.billingAddress}</p>
-            <p className="text-sm">State: {customer.state}</p>
-            {customer.gstin && <p className="text-sm">GSTIN: {customer.gstin}</p>}
-            {customer.contactInfo && <p className="text-sm">Contact: {customer.contactInfo}</p>}
-          </div>
+        <div className="border border-black p-4">
+          <h3 className="font-bold mb-2">Bill To:</h3>
+          <p className="font-semibold">{customer.name}</p>
+          <p className="text-sm">{customer.billingAddress}</p>
+          {customer.gstin && <p className="text-sm">GSTIN: {customer.gstin}</p>}
+          <p className="text-sm">State: {customer.state}</p>
+          {customer.contactInfo && <p className="text-sm">Contact: {customer.contactInfo}</p>}
         </div>
 
-        {/* Line Items Table */}
-        <Table className="border border-black mb-6">
-          <TableHeader>
-            <TableRow className="border-b border-black">
-              <TableHead className="border-r border-black text-black font-bold">Item</TableHead>
-              <TableHead className="border-r border-black text-right text-black font-bold">HSN/SAC</TableHead>
-              <TableHead className="border-r border-black text-right text-black font-bold">Qty</TableHead>
-              <TableHead className="border-r border-black text-right text-black font-bold">Rate</TableHead>
-              <TableHead className="border-r border-black text-right text-black font-bold">Discount</TableHead>
-              <TableHead className="text-right text-black font-bold">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {invoice.lineItems.map((lineItem, index) => {
-              const item = items.find((i) => i.id === lineItem.itemId);
-              const amount = lineItem.quantity * lineItem.unitPrice;
-              const discount = lineItem.discount || 0;
-              const total = amount - discount;
-              return (
-                <TableRow key={index} className="border-b border-black">
-                  <TableCell className="border-r border-black">
-                    <div className="font-medium">{item?.name || 'Unknown Item'}</div>
-                    {item?.description && <div className="text-xs text-gray-600">{item.description}</div>}
-                  </TableCell>
-                  <TableCell className="border-r border-black text-right text-sm">
-                    {item?.hsnSac || '-'}
-                  </TableCell>
-                  <TableCell className="border-r border-black text-right">{lineItem.quantity}</TableCell>
-                  <TableCell className="border-r border-black text-right">
-                    {formatCurrency(lineItem.unitPrice)}
-                  </TableCell>
-                  <TableCell className="border-r border-black text-right">{formatCurrency(discount)}</TableCell>
-                  <TableCell className="text-right font-medium">{formatCurrency(total)}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-          <TableFooter>
-            <TableRow className="border-b border-black">
-              <TableCell colSpan={5} className="text-right font-bold border-r border-black">
-                Subtotal
-              </TableCell>
-              <TableCell className="text-right font-bold">{formatCurrency(totals.subtotal)}</TableCell>
-            </TableRow>
-            {totals.totalDiscount > 0 && (
+        {/* Line Items */}
+        <div className="border border-black">
+          <Table>
+            <TableHeader>
               <TableRow className="border-b border-black">
-                <TableCell colSpan={5} className="text-right font-bold border-r border-black">
-                  Total Discount
-                </TableCell>
-                <TableCell className="text-right font-bold">{formatCurrency(totals.totalDiscount)}</TableCell>
+                <TableHead className="border-r border-black font-bold text-black">Item</TableHead>
+                <TableHead className="border-r border-black text-right font-bold text-black">
+                  Qty
+                </TableHead>
+                <TableHead className="border-r border-black text-right font-bold text-black">
+                  Price
+                </TableHead>
+                <TableHead className="border-r border-black text-right font-bold text-black">
+                  Discount
+                </TableHead>
+                <TableHead className="text-right font-bold text-black">Total</TableHead>
               </TableRow>
-            )}
-            <TableRow className="border-b border-black">
-              <TableCell colSpan={5} className="text-right font-bold border-r border-black">
-                Taxable Amount
-              </TableCell>
-              <TableCell className="text-right font-bold">{formatCurrency(totals.taxableAmount)}</TableCell>
-            </TableRow>
-            {totals.isInterState ? (
+            </TableHeader>
+            <TableBody>
+              {invoice.lineItems.map((lineItem, index) => {
+                const item = items.find((i) => i.id === lineItem.itemId);
+                const lineTotal = lineItem.quantity * lineItem.unitPrice - (lineItem.discount || 0);
+                return (
+                  <TableRow key={index} className="border-b border-black">
+                    <TableCell className="border-r border-black">
+                      <div>
+                        <p className="font-medium">{item?.name || 'Unknown Item'}</p>
+                        {item?.description && (
+                          <p className="text-xs text-gray-600">{item.description}</p>
+                        )}
+                        {item?.hsnSac && (
+                          <p className="text-xs text-gray-600">HSN/SAC: {item.hsnSac}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="border-r border-black text-right">
+                      {lineItem.quantity}
+                    </TableCell>
+                    <TableCell className="border-r border-black text-right">
+                      {formatCurrency(lineItem.unitPrice)}
+                    </TableCell>
+                    <TableCell className="border-r border-black text-right">
+                      {formatCurrency(lineItem.discount || 0)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(lineTotal)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+            <TableFooter>
               <TableRow className="border-b border-black">
-                <TableCell colSpan={5} className="text-right font-bold border-r border-black">
-                  IGST
+                <TableCell colSpan={4} className="text-right font-medium border-r border-black">
+                  Subtotal
                 </TableCell>
-                <TableCell className="text-right font-bold">{formatCurrency(totals.igst)}</TableCell>
+                <TableCell className="text-right font-medium">
+                  {formatCurrency(totals.subtotal)}
+                </TableCell>
               </TableRow>
-            ) : (
-              <>
+              {totals.totalDiscount > 0 && (
                 <TableRow className="border-b border-black">
-                  <TableCell colSpan={5} className="text-right font-bold border-r border-black">
-                    CGST
+                  <TableCell colSpan={4} className="text-right border-r border-black">
+                    Total Discount
                   </TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(totals.cgst)}</TableCell>
+                  <TableCell className="text-right">
+                    {formatCurrency(totals.totalDiscount)}
+                  </TableCell>
                 </TableRow>
+              )}
+              <TableRow className="border-b border-black">
+                <TableCell colSpan={4} className="text-right border-r border-black">
+                  Taxable Amount
+                </TableCell>
+                <TableCell className="text-right">{formatCurrency(totals.taxableAmount)}</TableCell>
+              </TableRow>
+              {totals.isInterState ? (
                 <TableRow className="border-b border-black">
-                  <TableCell colSpan={5} className="text-right font-bold border-r border-black">
-                    SGST
+                  <TableCell colSpan={4} className="text-right border-r border-black">
+                    IGST
                   </TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(totals.sgst)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(totals.igst)}</TableCell>
                 </TableRow>
-              </>
-            )}
-            <TableRow className="bg-gray-100">
-              <TableCell colSpan={5} className="text-right text-lg font-bold border-r border-black">
-                Grand Total
-              </TableCell>
-              <TableCell className="text-right text-lg font-bold">{formatCurrency(totals.grandTotal)}</TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+              ) : (
+                <>
+                  <TableRow className="border-b border-black">
+                    <TableCell colSpan={4} className="text-right border-r border-black">
+                      CGST
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(totals.cgst)}</TableCell>
+                  </TableRow>
+                  <TableRow className="border-b border-black">
+                    <TableCell colSpan={4} className="text-right border-r border-black">
+                      SGST
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(totals.sgst)}</TableCell>
+                  </TableRow>
+                </>
+              )}
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-right font-bold text-lg border-r border-black"
+                >
+                  Grand Total
+                </TableCell>
+                <TableCell className="text-right font-bold text-lg">
+                  {formatCurrency(totals.grandTotal)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </div>
+
+        {/* Banking Details */}
+        {hasBankingDetails && businessProfile.bankingDetails && (
+          <div className="border border-black p-4">
+            <h3 className="font-bold mb-2">Banking Details:</h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              {businessProfile.bankingDetails.accountName && (
+                <>
+                  <p className="text-gray-600">Account Name:</p>
+                  <p className="font-medium">{businessProfile.bankingDetails.accountName}</p>
+                </>
+              )}
+              {businessProfile.bankingDetails.accountNumber && (
+                <>
+                  <p className="text-gray-600">Account Number:</p>
+                  <p className="font-medium">{businessProfile.bankingDetails.accountNumber}</p>
+                </>
+              )}
+              {businessProfile.bankingDetails.ifscCode && (
+                <>
+                  <p className="text-gray-600">IFSC Code:</p>
+                  <p className="font-medium">{businessProfile.bankingDetails.ifscCode}</p>
+                </>
+              )}
+              {businessProfile.bankingDetails.bankName && (
+                <>
+                  <p className="text-gray-600">Bank Name:</p>
+                  <p className="font-medium">{businessProfile.bankingDetails.bankName}</p>
+                </>
+              )}
+              {businessProfile.bankingDetails.branch && (
+                <>
+                  <p className="text-gray-600">Branch:</p>
+                  <p className="font-medium">{businessProfile.bankingDetails.branch}</p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
-        <div className="mt-8 pt-4 border-t border-black">
-          <p className="text-xs text-gray-600">
-            This is a computer-generated invoice and does not require a signature.
-          </p>
-          <p className="text-xs text-gray-600 mt-1">
-            Transaction Type: {totals.isInterState ? 'Inter-state (IGST)' : 'Intra-state (CGST + SGST)'}
-          </p>
+        <div className="text-center text-sm text-gray-600 border-t border-black pt-4">
+          <p>Thank you for your business!</p>
         </div>
       </div>
     </div>

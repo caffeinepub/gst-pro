@@ -11,7 +11,7 @@ import { Save, Loader2, Upload, X, Image as ImageIcon, FileCheck, ArrowRight } f
 import { toast } from 'sonner';
 import { getUserFacingError } from '../utils/userFacingError';
 import { INDIAN_STATES } from '../utils/indianStates';
-import { ExternalBlob } from '../backend';
+import { ExternalBlob, BankingDetails } from '../backend';
 import { Link } from '@tanstack/react-router';
 
 export default function SettingsPage() {
@@ -25,6 +25,14 @@ export default function SettingsPage() {
     state: '',
     invoicePrefix: 'INV',
     startingNumber: '1',
+  });
+
+  const [bankingDetails, setBankingDetails] = useState({
+    accountName: '',
+    accountNumber: '',
+    ifscCode: '',
+    bankName: '',
+    branch: '',
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -49,6 +57,24 @@ export default function SettingsPage() {
       } else {
         setExistingLogo(null);
         setLogoPreview(null);
+      }
+
+      if (businessProfile.bankingDetails) {
+        setBankingDetails({
+          accountName: businessProfile.bankingDetails.accountName,
+          accountNumber: businessProfile.bankingDetails.accountNumber,
+          ifscCode: businessProfile.bankingDetails.ifscCode,
+          bankName: businessProfile.bankingDetails.bankName,
+          branch: businessProfile.bankingDetails.branch || '',
+        });
+      } else {
+        setBankingDetails({
+          accountName: '',
+          accountNumber: '',
+          ifscCode: '',
+          bankName: '',
+          branch: '',
+        });
       }
     }
   }, [businessProfile]);
@@ -93,6 +119,33 @@ export default function SettingsPage() {
       return;
     }
 
+    // Validate banking details: if any field is filled, required fields must be present
+    const hasAnyBankingField = 
+      bankingDetails.accountName.trim() ||
+      bankingDetails.accountNumber.trim() ||
+      bankingDetails.ifscCode.trim() ||
+      bankingDetails.bankName.trim() ||
+      bankingDetails.branch.trim();
+
+    if (hasAnyBankingField) {
+      if (!bankingDetails.accountName.trim()) {
+        toast.error('Account Name is required when banking details are provided');
+        return;
+      }
+      if (!bankingDetails.accountNumber.trim()) {
+        toast.error('Account Number is required when banking details are provided');
+        return;
+      }
+      if (!bankingDetails.ifscCode.trim()) {
+        toast.error('IFSC Code is required when banking details are provided');
+        return;
+      }
+      if (!bankingDetails.bankName.trim()) {
+        toast.error('Bank Name is required when banking details are provided');
+        return;
+      }
+    }
+
     try {
       let logoBlob: ExternalBlob | undefined = undefined;
 
@@ -106,6 +159,18 @@ export default function SettingsPage() {
         logoBlob = existingLogo;
       }
 
+      // Only include bankingDetails if at least one field is filled
+      let bankingDetailsPayload: BankingDetails | undefined = undefined;
+      if (hasAnyBankingField) {
+        bankingDetailsPayload = {
+          accountName: bankingDetails.accountName.trim(),
+          accountNumber: bankingDetails.accountNumber.trim(),
+          ifscCode: bankingDetails.ifscCode.trim(),
+          bankName: bankingDetails.bankName.trim(),
+          branch: bankingDetails.branch.trim() || undefined,
+        };
+      }
+
       await saveProfile.mutateAsync({
         businessName: formData.businessName,
         address: formData.address,
@@ -114,6 +179,7 @@ export default function SettingsPage() {
         invoicePrefix: formData.invoicePrefix,
         startingNumber: BigInt(formData.startingNumber || '1'),
         logo: logoBlob,
+        bankingDetails: bankingDetailsPayload,
       });
       toast.success('Business profile saved successfully');
       setUploadProgress(0);
@@ -275,6 +341,72 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Banking Details</CardTitle>
+            <CardDescription>Bank account information for invoices (optional)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="accountName">Account Name</Label>
+              <Input
+                id="accountName"
+                value={bankingDetails.accountName}
+                onChange={(e) => setBankingDetails({ ...bankingDetails, accountName: e.target.value })}
+                placeholder="Enter account holder name"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="accountNumber">Account Number</Label>
+                <Input
+                  id="accountNumber"
+                  value={bankingDetails.accountNumber}
+                  onChange={(e) => setBankingDetails({ ...bankingDetails, accountNumber: e.target.value })}
+                  placeholder="Enter account number"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ifscCode">IFSC Code</Label>
+                <Input
+                  id="ifscCode"
+                  value={bankingDetails.ifscCode}
+                  onChange={(e) => setBankingDetails({ ...bankingDetails, ifscCode: e.target.value.toUpperCase() })}
+                  placeholder="e.g., SBIN0001234"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bankName">Bank Name</Label>
+                <Input
+                  id="bankName"
+                  value={bankingDetails.bankName}
+                  onChange={(e) => setBankingDetails({ ...bankingDetails, bankName: e.target.value })}
+                  placeholder="Enter bank name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="branch">Branch (Optional)</Label>
+                <Input
+                  id="branch"
+                  value={bankingDetails.branch}
+                  onChange={(e) => setBankingDetails({ ...bankingDetails, branch: e.target.value })}
+                  placeholder="Enter branch name"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Banking details will appear on all invoices when configured.
+            </p>
           </CardContent>
         </Card>
 

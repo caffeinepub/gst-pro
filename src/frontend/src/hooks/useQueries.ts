@@ -1,16 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import type {
+  UserProfile,
   BusinessProfile,
   Customer,
   Item,
   Invoice,
   LineItem,
   InvoiceStatus,
-  UserProfile,
+  InvoiceType,
+  GSTFilingStatus,
   ReturnType_,
   FilingFrequency,
-  GSTFilingStatus,
+  CreateUserRequest,
+  SignUpResponse,
+  UpdateUserRequest,
+  UserRecord,
+  Time,
+  InvoiceKPIs,
+  UnifiedUserInfo,
 } from '../backend';
 
 // User Profile Queries
@@ -27,7 +35,6 @@ export function useGetCallerUserProfile() {
     retry: false,
   });
 
-  // Return custom state that properly reflects actor dependency
   return {
     ...query,
     isLoading: actorFetching || query.isLoading,
@@ -93,16 +100,16 @@ export function useGetCustomers() {
   });
 }
 
-export function useGetCustomer(id: bigint | null) {
+export function useGetCustomer(customerId: bigint | null) {
   const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Customer | null>({
-    queryKey: ['customer', id?.toString()],
+    queryKey: ['customer', customerId?.toString()],
     queryFn: async () => {
-      if (!actor || id === null) return null;
-      return actor.getCustomer(id);
+      if (!actor || !customerId) return null;
+      return actor.getCustomer(customerId);
     },
-    enabled: !!actor && !actorFetching && id !== null,
+    enabled: !!actor && !actorFetching && customerId !== null,
   });
 }
 
@@ -192,16 +199,16 @@ export function useGetItems() {
   });
 }
 
-export function useGetItem(id: bigint | null) {
+export function useGetItem(itemId: bigint | null) {
   const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Item | null>({
-    queryKey: ['item', id?.toString()],
+    queryKey: ['item', itemId?.toString()],
     queryFn: async () => {
-      if (!actor || id === null) return null;
-      return actor.getItem(id);
+      if (!actor || !itemId) return null;
+      return actor.getItem(itemId);
     },
-    enabled: !!actor && !actorFetching && id !== null,
+    enabled: !!actor && !actorFetching && itemId !== null,
   });
 }
 
@@ -291,16 +298,16 @@ export function useGetInvoices() {
   });
 }
 
-export function useGetInvoice(id: bigint | null) {
+export function useGetInvoice(invoiceId: bigint | null) {
   const { actor, isFetching: actorFetching } = useActor();
 
   return useQuery<Invoice | null>({
-    queryKey: ['invoice', id?.toString()],
+    queryKey: ['invoice', invoiceId?.toString()],
     queryFn: async () => {
-      if (!actor || id === null) return null;
-      return actor.getInvoice(id);
+      if (!actor || !invoiceId) return null;
+      return actor.getInvoice(invoiceId);
     },
-    enabled: !!actor && !actorFetching && id !== null,
+    enabled: !!actor && !actorFetching && invoiceId !== null,
   });
 }
 
@@ -315,6 +322,7 @@ export function useCreateInvoice() {
       customerId: bigint;
       lineItems: LineItem[];
       invoiceDate: string;
+      invoiceType: InvoiceType;
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createInvoice(
@@ -322,7 +330,8 @@ export function useCreateInvoice() {
         params.purchaseOrderNumber,
         params.customerId,
         params.lineItems,
-        params.invoiceDate
+        params.invoiceDate,
+        params.invoiceType
       );
     },
     onSuccess: () => {
@@ -344,6 +353,7 @@ export function useEditInvoice() {
       lineItems: LineItem[];
       status: InvoiceStatus;
       invoiceDate: string;
+      invoiceType: InvoiceType;
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.editInvoice(
@@ -353,7 +363,8 @@ export function useEditInvoice() {
         params.customerId,
         params.lineItems,
         params.status,
-        params.invoiceDate
+        params.invoiceDate,
+        params.invoiceType
       );
     },
     onSuccess: (_, variables) => {
@@ -394,7 +405,23 @@ export function useFinalizeInvoice() {
   });
 }
 
-// GST Filing Status Queries
+export function useCancelInvoice() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.cancelInvoice(id);
+    },
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice', id.toString()] });
+    },
+  });
+}
+
+// GST Filing Status Query
 export function useGetGstFilingStatus(
   gstin: string,
   period: string,
@@ -410,6 +437,123 @@ export function useGetGstFilingStatus(
       return actor.fetchGstFilingStatus(gstin, period, returnType, filingFrequency);
     },
     enabled: !!actor && !actorFetching && !!gstin && !!period,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false,
+  });
+}
+
+// Admin User Management Queries
+export function useCreateUser() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (request: CreateUserRequest) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createUser(request);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { userId: string; request: UpdateUserRequest }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateUser(params.userId, params.request);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteUser(userId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+    },
+  });
+}
+
+export function useListUsers() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<UserRecord[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.listUsers();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useListAllUsers() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<UnifiedUserInfo[]>({
+    queryKey: ['allUsers'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.listAllUsers();
+    },
+    enabled: !!actor && !actorFetching,
+  });
+}
+
+export function useSetAccessExpiry() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { userId: string; expiryTimestamp: Time | null }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.setAccessExpiry(params.userId, params.expiryTimestamp);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+    },
+  });
+}
+
+export function useAdminGetUserInvoices(userId: string) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<Invoice[]>({
+    queryKey: ['adminUserInvoices', userId],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.adminGetUserInvoices(userId);
+    },
+    enabled: !!actor && !actorFetching && !!userId,
+  });
+}
+
+export function useAdminGetUserInvoiceKPIs(userId: string) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<InvoiceKPIs>({
+    queryKey: ['adminUserInvoiceKPIs', userId],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.adminGetUserInvoiceKPIs(userId);
+    },
+    enabled: !!actor && !actorFetching && !!userId,
   });
 }

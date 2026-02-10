@@ -1,72 +1,51 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T14:34:31.786Z",
+  "generatedAt": "2026-02-10T17:20:08.987Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
-    "implemented": 4,
+    "total": 4,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-135",
-        "summary": "Extend the backend Invoice data model to store (a) an editable invoice number and (b) an optional purchase order number, and persist these fields for invoice create/edit/get/list flows.",
+        "id": "REQ-146",
+        "summary": "Extend the backend BusinessProfile model to store optional banking details that can be configured once in Settings and then reused on all invoices. Banking details must include at minimum: Account Name, Account Number, IFSC Code, Bank Name, and Branch (optional).",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-136",
-        "summary": "Update the invoice editor UI to allow the user to enter/edit the Invoice Number and Purchase Order Number in the invoice details section, and save them to the backend during invoice create and edit.",
+        "id": "REQ-147",
+        "summary": "If the backend uses stable storage for BusinessProfile across upgrades, add conditional migration logic (backend/migration.mo) to safely migrate existing BusinessProfile records to include the new optional banking fields without data loss.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-148",
+        "summary": "Update the Settings page (frontend/src/pages/SettingsPage.tsx) to allow the user to add/edit banking details (Account Name, Account Number, IFSC Code, Bank Name, Branch). These fields must be saved as part of the Business Profile using the existing business profile save flow.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/InvoiceEditorPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/SettingsPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/InvoiceEditorPage.tsx",
-          "frontend/src/hooks/useQueries.ts"
+          "frontend/src/pages/SettingsPage.tsx"
         ]
       },
       {
-        "id": "REQ-137",
-        "summary": "Render the stored Invoice Number and Purchase Order Number in the invoice detail view and print layout, using the stored invoice number when present (and falling back to the generated formatted number only when no stored invoice number exists).",
+        "id": "REQ-149",
+        "summary": "Render the saved banking details on invoice experiences so that all invoices include these details when present: (1) Invoice print layout (frontend/src/pages/InvoicePrintPage.tsx) and (2) Invoice detail view (frontend/src/pages/InvoiceDetailPage.tsx). If banking details are not configured, the banking section must be hidden (no empty labels).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/invoiceNumbering.ts",
-          "frontend/src/pages/InvoiceDetailPage.tsx",
-          "frontend/src/pages/InvoicePrintPage.tsx"
+          "frontend/src/pages/InvoicePrintPage.tsx",
+          "frontend/src/pages/InvoiceDetailPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/invoiceNumbering.ts",
-          "frontend/src/pages/InvoiceDetailPage.tsx",
-          "frontend/src/pages/InvoicePrintPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-138",
-        "summary": "Ensure that clicking the in-app \"E‑Way Bill\" action opens https://ewaybillgst.gov.in/Login.aspx in a new browser tab/window.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/components/MobileNav.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/DashboardPage.tsx",
-          "frontend/src/components/MobileNav.tsx"
-        ]
-      },
-      {
-        "id": "REQ-139",
-        "summary": "Update the GST Status page to support searching any GSTIN and displaying the full GST profile details and filing status for the entered GSTIN.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/GstFilingStatusPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/GstFilingStatusPage.tsx"
+          "frontend/src/pages/InvoicePrintPage.tsx",
+          "frontend/src/pages/InvoiceDetailPage.tsx"
         ]
       }
     ]
@@ -80,16 +59,11 @@
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/MobileNav.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/GstFilingStatusPage.tsx",
     "frontend/src/pages/InvoiceDetailPage.tsx",
-    "frontend/src/pages/InvoiceEditorPage.tsx",
     "frontend/src/pages/InvoicePrintPage.tsx",
-    "frontend/src/utils/invoiceNumbering.ts",
+    "frontend/src/pages/SettingsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

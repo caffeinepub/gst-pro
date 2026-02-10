@@ -91,6 +91,11 @@ function normalizeErrorMessage(message: string): string {
     return 'Connection to the backend is not ready. Please wait a moment and try again.';
   }
 
+  // Handle GST-specific errors
+  if (cleaned.includes('GST') || cleaned.includes('GSTIN')) {
+    return cleaned; // Return GST errors as-is since they're likely user-friendly
+  }
+
   // Return cleaned message if it's user-friendly (not too technical)
   if (cleaned.length > 0 && cleaned.length < 200 && !cleaned.includes('stack') && !cleaned.includes('at ')) {
     return cleaned;

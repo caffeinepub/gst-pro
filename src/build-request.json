@@ -1,114 +1,103 @@
 {
   "kind": "build_request",
-  "title": "Add editable invoice number + purchase order number, verify E‑Way Bill link, and enable GSTIN search for full GST profile/status",
+  "title": "Add Banking Details in Settings and Include Them on All Invoices",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-135",
-      "text": "Extend the backend Invoice data model to store (a) an editable invoice number and (b) an optional purchase order number, and persist these fields for invoice create/edit/get/list flows.",
+      "id": "REQ-146",
+      "text": "Extend the backend BusinessProfile model to store optional banking details that can be configured once in Settings and then reused on all invoices. Banking details must include at minimum: Account Name, Account Number, IFSC Code, Bank Name, and Branch (optional).",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-7"
+          "msg-user-1"
         ],
         "quotes": [
-          "add purchase order number and invoice number is editable in invoice3 section"
+          "invoice add banking details like account number ifsc code name and etc it can user add through settings and all invoice have this details."
         ]
       },
       "acceptanceCriteria": [
-        "Backend `Invoice` type includes new fields for `invoiceNumber` (editable text) and `purchaseOrderNumber` (optional text).",
-        "`createInvoice` and `editInvoice` accept and persist the new fields.",
-        "`getInvoice` / `getInvoices` return the new fields so the frontend can render them.",
-        "Existing invoices created before this change continue to load without traps (missing fields default safely)."
+        "Backend BusinessProfile type includes new optional fields for banking details (Account Name, Account Number, IFSC Code, Bank Name, and optional Branch).",
+        "Existing BusinessProfile data for existing users remains readable after upgrade (missing banking fields default to null/empty option).",
+        "Business profile get/save APIs correctly persist and return the banking details for the signed-in Principal."
       ]
     },
     {
-      "id": "REQ-136",
-      "text": "Update the invoice editor UI to allow the user to enter/edit the Invoice Number and Purchase Order Number in the invoice details section, and save them to the backend during invoice create and edit.",
-      "target": "frontend",
+      "id": "REQ-147",
+      "text": "If the backend uses stable storage for BusinessProfile across upgrades, add conditional migration logic (backend/migration.mo) to safely migrate existing BusinessProfile records to include the new optional banking fields without data loss.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-7"
+          "msg-user-1"
         ],
         "quotes": [
-          "add purchase order number and invoice number is editable in invoice3 section"
+          "it can user add through settings and all invoice have this details."
         ]
       },
       "acceptanceCriteria": [
-        "On `frontend/src/pages/InvoiceEditorPage.tsx`, the form includes inputs labeled \"Invoice Number\" and \"Purchase Order Number\" (English).",
-        "When creating a new invoice, the entered Invoice Number and Purchase Order Number are sent to the backend and persisted.",
-        "When editing an invoice, existing values are pre-filled and can be updated and saved.",
-        "If the user leaves Invoice Number empty, the app continues to work (no crashes) and other invoice fields can still be saved."
+        "On canister upgrade, existing BusinessProfile records are migrated so that new banking fields are initialized to null/empty option values.",
+        "No traps occur during upgrade/migration when older BusinessProfile records (without banking fields) are present."
       ]
     },
     {
-      "id": "REQ-137",
-      "text": "Render the stored Invoice Number and Purchase Order Number in the invoice detail view and print layout, using the stored invoice number when present (and falling back to the generated formatted number only when no stored invoice number exists).",
+      "id": "REQ-148",
+      "text": "Update the Settings page (frontend/src/pages/SettingsPage.tsx) to allow the user to add/edit banking details (Account Name, Account Number, IFSC Code, Bank Name, Branch). These fields must be saved as part of the Business Profile using the existing business profile save flow.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-7"
+          "msg-user-1"
         ],
         "quotes": [
-          "add purchase order number and invoice number is editable in invoice3 section"
+          "it can user add through settings"
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/src/pages/InvoiceDetailPage.tsx` shows \"Invoice Number\" using the stored invoice number when available; otherwise it shows the current formatted fallback.",
-        "`frontend/src/pages/InvoicePrintPage.tsx` shows \"Invoice No\" using the stored invoice number when available; otherwise it shows the current formatted fallback.",
-        "`frontend/src/pages/InvoicePrintPage.tsx` includes a clearly labeled \"Purchase Order No\" field/row/line when a purchase order number exists, and hides it (or shows a neutral placeholder) when it is not set.",
-        "All labels and helper text remain in English."
+        "Settings page displays a clearly labeled section (e.g., \"Banking Details\") with inputs for Account Name, Account Number, IFSC Code, Bank Name, and Branch.",
+        "Saving Settings persists banking details via the existing useSaveBusinessProfile() mutation and they are reloaded correctly via useGetBusinessProfile().",
+        "All user-facing labels and validation messages for these fields are in English."
       ]
     },
     {
-      "id": "REQ-138",
-      "text": "Ensure that clicking the in-app \"E‑Way Bill\" action opens https://ewaybillgst.gov.in/Login.aspx in a new browser tab/window.",
+      "id": "REQ-149",
+      "text": "Render the saved banking details on invoice experiences so that all invoices include these details when present: (1) Invoice print layout (frontend/src/pages/InvoicePrintPage.tsx) and (2) Invoice detail view (frontend/src/pages/InvoiceDetailPage.tsx). If banking details are not configured, the banking section must be hidden (no empty labels).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-7"
+          "msg-user-1"
         ],
         "quotes": [
-          "when user click on  eway bill make https://ewaybillgst.gov.in/Login.aspx this url to open"
+          "and all invoice have this details."
         ]
       },
       "acceptanceCriteria": [
-        "From the authenticated UI, clicking \"E‑Way Bill\" opens exactly `https://ewaybillgst.gov.in/Login.aspx` in a new tab/window.",
-        "No other E‑Way Bill targets (e.g., `https://ewaybillgst.gov.in/`) are used by the UI entry points."
-      ]
-    },
-    {
-      "id": "REQ-139",
-      "text": "Update the GST Status page to support searching any GSTIN and displaying the full GST profile details and filing status for the entered GSTIN.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-7"
-        ],
-        "quotes": [
-          "in gst status user can serch any gst number which show all gst details about gst number and gst profile of gst number user like name, trade and and filling status"
-        ]
-      },
-      "acceptanceCriteria": [
-        "On `frontend/src/pages/GstFilingStatusPage.tsx`, the user can enter any 15-character GSTIN and trigger a fetch (e.g., via a \"Search\" or \"Refresh Status\" action) without requiring the business profile GSTIN.",
-        "After searching, the page displays GST profile details (including legal name and trade name when available) and the filing status table for the selected return type and period.",
-        "Loading, empty, and error states remain clear and in English (no blank sections or runtime errors when searching different GSTINs)."
+        "InvoicePrintPage shows a \"Banking Details\" section containing configured banking fields (Account Name, Account Number, IFSC Code, Bank Name, and Branch if set).",
+        "InvoiceDetailPage shows the same banking details section (using BusinessProfile data) when configured.",
+        "If none of the banking fields are set, the banking section does not render (no blank rows/labels).",
+        "All user-facing text is in English."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in `backend/main.mo` (no additional backend services).",
-    "Do not modify files under `frontend/src/components/ui` (compose existing UI components instead).",
-    "Do not modify immutable frontend hook/entry paths listed in SYSTEM_CONTEXT (e.g., `frontend/src/hooks/useInternetIdentity.ts(x)`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`).",
-    "All user-facing text must be in English."
+    "Backend must remain a single-actor Motoko architecture with all logic in backend/main.mo; only add backend/migration.mo changes if required for stable upgrade compatibility.",
+    "Do not modify any frontend files under frontend/src/components/ui or other immutable paths listed in SYSTEM_CONTEXT.",
+    "Banking details must be stored and retrieved as part of the user-scoped BusinessProfile (scoped to the signed-in Principal), not as per-invoice duplicated data unless required for backward compatibility."
   ],
   "nonGoals": [
-    "Do not add new third-party authentication providers (only existing auth mechanisms).",
-    "Do not add external databases or non-IC backend infrastructure.",
-    "Do not redesign unrelated pages or change existing invoice tax calculation logic."
+    "Do not implement payment collection, payment links, UPI QR generation, or payment status tracking.",
+    "Do not integrate with external banking verification APIs.",
+    "Do not change invoice tax/GST calculations as part of this work."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

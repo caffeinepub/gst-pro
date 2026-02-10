@@ -1,90 +1,43 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Editable invoice number and PO number, correct E‑Way Bill link behavior, and GSTIN search for full GST profile/status",
+  "title": "Banking details in Settings and invoices",
   "requirements": [
     {
-      "id": "REQ-136",
-      "summary": "Add editable Invoice Number and optional Purchase Order Number inputs to the invoice editor and persist them on create/edit.",
+      "id": "REQ-148",
+      "summary": "Add Banking Details section to Settings and persist it via the existing BusinessProfile save/get flow.",
       "acceptanceCriteria": [
-        "On `frontend/src/pages/InvoiceEditorPage.tsx`, the form includes inputs labeled \"Invoice Number\" and \"Purchase Order Number\" (English).",
-        "When creating a new invoice, the entered Invoice Number and Purchase Order Number are sent to the backend and persisted.",
-        "When editing an invoice, existing values are pre-filled and can be updated and saved.",
-        "If the user leaves Invoice Number empty, the app continues to work (no crashes) and other invoice fields can still be saved."
+        "Settings page displays a clearly labeled section (e.g., \"Banking Details\") with inputs for Account Name, Account Number, IFSC Code, Bank Name, and Branch.",
+        "Saving Settings persists banking details via the existing useSaveBusinessProfile() mutation and they are reloaded correctly via useGetBusinessProfile().",
+        "All user-facing labels and validation messages for these fields are in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/InvoiceEditorPage.tsx",
+          "path": "frontend/src/pages/SettingsPage.tsx",
           "operation": "modify",
-          "description": "Add controlled form fields for \"Invoice Number\" (editable text; allow empty) and \"Purchase Order Number\" (optional text); prefill values from `invoice.invoiceNumber` / `invoice.purchaseOrderNumber` when editing; include these values in the save flow for both create and edit mutations while preserving existing invoice calculation logic."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Update `useCreateInvoice` and `useEditInvoice` mutations to pass `invoiceNumber` and `purchaseOrderNumber` to the backend actor calls (matching the backend interface), and update the mutation parameter types accordingly so invoice create/edit from the UI can persist these fields."
+          "description": "Implement a new \"Banking Details\" form section using existing shadcn-ui form components (Card/Label/Input) to capture Account Name, Account Number, IFSC Code, Bank Name, and optional Branch; populate initial values from businessProfile.bankingDetails; on save, include bankingDetails in the existing saveBusinessProfile payload, omitting the object entirely when all fields are blank; add client-side validation so that when any banking field is entered, required fields (Account Name, Account Number, IFSC Code, Bank Name) must be present with English error messages. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-137",
-      "summary": "Display stored Invoice Number and Purchase Order Number in invoice detail and print views, with fallback to formatted number when stored value is absent.",
+      "id": "REQ-149",
+      "summary": "Render configured BusinessProfile banking details on invoice print and invoice detail views, hiding the section when not configured.",
       "acceptanceCriteria": [
-        "`frontend/src/pages/InvoiceDetailPage.tsx` shows \"Invoice Number\" using the stored invoice number when available; otherwise it shows the current formatted fallback.",
-        "`frontend/src/pages/InvoicePrintPage.tsx` shows \"Invoice No\" using the stored invoice number when available; otherwise it shows the current formatted fallback.",
-        "`frontend/src/pages/InvoicePrintPage.tsx` includes a clearly labeled \"Purchase Order No\" field/row/line when a purchase order number exists, and hides it (or shows a neutral placeholder) when it is not set.",
-        "All labels and helper text remain in English."
+        "InvoicePrintPage shows a \"Banking Details\" section containing configured banking fields (Account Name, Account Number, IFSC Code, Bank Name, and Branch if set).",
+        "InvoiceDetailPage shows the same banking details section (using BusinessProfile data) when configured.",
+        "If none of the banking fields are set, the banking section does not render (no blank rows/labels).",
+        "All user-facing text is in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/invoiceNumbering.ts",
+          "path": "frontend/src/pages/InvoicePrintPage.tsx",
           "operation": "modify",
-          "description": "Add a small helper for deriving the display invoice number that prefers the stored invoice number when non-empty (trimmed), and falls back to the existing formatted invoice number logic when the stored value is missing/empty."
+          "description": "Add a conditional \"Banking Details\" section driven by businessProfile.bankingDetails; render only non-empty fields (Account Name, Account Number, IFSC Code, Bank Name, and Branch when set) and hide the entire section when all are missing/blank; ensure all labels are in English and match Settings terminology."
         },
         {
           "path": "frontend/src/pages/InvoiceDetailPage.tsx",
           "operation": "modify",
-          "description": "Render \"Invoice Number\" using the stored invoice number when available (fallback to the existing formatted invoice number only when missing/empty) and keep all labels in English."
-        },
-        {
-          "path": "frontend/src/pages/InvoicePrintPage.tsx",
-          "operation": "modify",
-          "description": "Render \"Invoice No\" using the stored invoice number when available (fallback otherwise), and add a clearly labeled \"Purchase Order No\" line/row that is shown only when `invoice.purchaseOrderNumber` exists (otherwise hide or show a neutral placeholder) while preserving the existing print layout."
-        }
-      ]
-    },
-    {
-      "id": "REQ-138",
-      "summary": "Ensure the in-app E‑Way Bill action opens the exact login URL in a new tab/window.",
-      "acceptanceCriteria": [
-        "From the authenticated UI, clicking \"E‑Way Bill\" opens exactly `https://ewaybillgst.gov.in/Login.aspx` in a new tab/window.",
-        "No other E‑Way Bill targets (e.g., `https://ewaybillgst.gov.in/`) are used by the UI entry points."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "modify",
-          "description": "Locate the \"E‑Way Bill\" action (button/link) and ensure it opens exactly `https://ewaybillgst.gov.in/Login.aspx` in a new browser tab/window (e.g., via a safe external-link pattern with `target=\"_blank\"` and appropriate `rel`)."
-        },
-        {
-          "path": "frontend/src/components/MobileNav.tsx",
-          "operation": "modify",
-          "description": "If the mobile navigation includes an \"E‑Way Bill\" entry, ensure it opens exactly `https://ewaybillgst.gov.in/Login.aspx` in a new browser tab/window and does not use any other E‑Way Bill base URL."
-        }
-      ]
-    },
-    {
-      "id": "REQ-139",
-      "summary": "Enable GST Status page to search any GSTIN and show full GST profile details and filing status with clear states.",
-      "acceptanceCriteria": [
-        "On `frontend/src/pages/GstFilingStatusPage.tsx`, the user can enter any 15-character GSTIN and trigger a fetch (e.g., via a \"Search\" or \"Refresh Status\" action) without requiring the business profile GSTIN.",
-        "After searching, the page displays GST profile details (including legal name and trade name when available) and the filing status table for the selected return type and period.",
-        "Loading, empty, and error states remain clear and in English (no blank sections or runtime errors when searching different GSTINs)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/GstFilingStatusPage.tsx",
-          "operation": "modify",
-          "description": "Refactor the GSTIN section to support searching arbitrary GSTINs via a dedicated input + explicit \"Search\" action (15-character validation, uppercase normalization), decouple search input state from the queried GSTIN state, and ensure profile details (via existing `GstProfileSection`) and filing status table update correctly with clear loading/empty/error states in English."
+          "description": "Add a conditional \"Banking Details\" card/section in the invoice detail view using businessProfile.bankingDetails; render only non-empty fields and hide the entire section when all are missing/blank; ensure all labels are in English and match InvoicePrintPage."
         }
       ]
     }

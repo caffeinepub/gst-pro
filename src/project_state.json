@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 69,
+  "projectStateVersion": 73,
   "summary": "Build a GST billing application named \"GST Pro\".",
   "architectural_notes": [
     "GST filing status feature requires external integration with GST.gov.in (data fetch), which may be constrained by authentication, CORS, and availability of official APIs.",
@@ -26,7 +26,7 @@
     "Sign In button is not working (does not open Internet Identity login).",
     "Admin Panel does not currently show which users have signed in/used the application (usage/last-used or sign-in list) and does not display the full expected user data list."
   ],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-create-the-application-branding-and-shell-for-a-gst-billing-app-named-gst-pro-including-app-title-navigation-and-core-pages-scaffold-dashboard-customers-items-invoices-settings",
@@ -931,6 +931,70 @@
         "REQ-139"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-support-for-two-invoice-variants-in-the-invoices-section-original-invoice-and-transportation-invoice-the-user-must-be-able-to-choose-the-variant-when-creating-editing-an-invoice-and-the-chosen-variant-must-be-persisted-with-the-invoice-and-visible-in-the-invoice-detail-view-and-invoice-print-layout",
+      "title": "Add support for two invoice variants in the Invoices section: “Original Invoice” and “Transportation Invoice”. The user must be able to choose the variant when creating/editing an invoice, and the chosen variant must be persisted with the invoice and visible in the invoice detail view and invoice print layout.",
+      "reqIds": [
+        "REQ-140"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-invoice-number-field-is-auto-filled-by-default-using-the-existing-invoice-numbering-logic-while-remaining-editable-by-the-user-and-ensure-the-stored-invoice-number-is-used-consistently-across-invoice-list-invoice-detail-and-invoice-print-views",
+      "title": "Ensure the Invoice Number field is auto-filled by default (using the existing invoice numbering logic) while remaining editable by the user, and ensure the stored invoice number is used consistently across invoice list, invoice detail, and invoice print views.",
+      "reqIds": [
+        "REQ-141"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-allow-deletion-of-finalized-invoices-not-only-draft-invoices-update-both-backend-deletion-rules-and-frontend-gating-messaging-so-the-delete-action-is-enabled-for-finalized-invoices-as-well",
+      "title": "Allow deletion of finalized invoices (not only draft invoices). Update both backend deletion rules and frontend gating/messaging so the Delete action is enabled for finalized invoices as well.",
+      "reqIds": [
+        "REQ-142"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-cancel-invoice-action-in-the-invoice-section-that-allows-a-user-to-cancel-an-invoice-cancelling-must-be-persisted-in-the-backend-reflected-in-the-invoice-status-display-and-handled-in-invoice-list-detail-print-experiences-with-clear-english-labels",
+      "title": "Add a “Cancel Invoice” action in the Invoice section that allows a user to cancel an invoice. Cancelling must be persisted in the backend, reflected in the invoice status display, and handled in invoice list/detail/print experiences with clear English labels.",
+      "reqIds": [
+        "REQ-143"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-gst-status-so-that-entering-a-valid-gstin-fetches-real-data-from-the-gst-portal-endpoint-https-services-gst-gov-in-services-searchtp-no-placeholder-dummy-behavior-ensure-robust-loading-empty-and-error-states-in-english-and-ensure-results-render-correctly-when-the-upstream-request-succeeds",
+      "title": "Fix GST Status so that entering a valid GSTIN fetches real data from the GST portal endpoint https://services.gst.gov.in/services/searchtp (no placeholder/dummy behavior). Ensure robust loading, empty, and error states in English, and ensure results render correctly when the upstream request succeeds.",
+      "reqIds": [
+        "REQ-144"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-invoice-section-mobile-friendly-for-the-new-and-updated-actions-variant-selection-delete-finalized-cancel-invoice-ensure-primary-invoice-actions-in-the-invoice-detail-header-do-not-overflow-on-small-screens-and-remain-easily-tappable",
+      "title": "Make the Invoice section mobile-friendly for the new and updated actions (variant selection, delete finalized, cancel invoice). Ensure primary invoice actions in the invoice detail header do not overflow on small screens and remain easily tappable.",
+      "reqIds": [
+        "REQ-145"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-settings-page-frontend-src-pages-settingspage-tsx-to-allow-the-user-to-add-edit-banking-details-account-name-account-number-ifsc-code-bank-name-branch-these-fields-must-be-saved-as-part-of-the-business-profile-using-the-existing-business-profile-save-flow",
+      "title": "Update the Settings page (frontend/src/pages/SettingsPage.tsx) to allow the user to add/edit banking details (Account Name, Account Number, IFSC Code, Bank Name, Branch). These fields must be saved as part of the Business Profile using the existing business profile save flow.",
+      "reqIds": [
+        "REQ-148"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-render-the-saved-banking-details-on-invoice-experiences-so-that-all-invoices-include-these-details-when-present-1-invoice-print-layout-frontend-src-pages-invoiceprintpage-tsx-and-2-invoice-detail-view-frontend-src-pages-invoicedetailpage-tsx-if-banking-details-are-not-configured-the-banking-section-must-be-hidden-no-empty-labels",
+      "title": "Render the saved banking details on invoice experiences so that all invoices include these details when present: (1) Invoice print layout (frontend/src/pages/InvoicePrintPage.tsx) and (2) Invoice detail view (frontend/src/pages/InvoiceDetailPage.tsx). If banking details are not configured, the banking section must be hidden (no empty labels).",
+      "reqIds": [
+        "REQ-149"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1403,6 +1467,52 @@
       "summary": "Extend the backend Invoice data model to store (a) an editable invoice number and (b) an optional purchase order number, and persist these fields for invoice create/edit/get/list flows.",
       "reqIds": [
         "REQ-135"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-110",
+      "summary": "In the Invoice section, add support for an \"Original Invoice\" and a \"Transportation Invoice\" variant that users can generate/use for transportation purposes.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-111",
+      "summary": "Allow deleting Finalized invoices (adjust safe-deletion rules so finalized invoices can be removed).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-112",
+      "summary": "Add a \"Cancel Invoice\" action/button in the Invoice section so users can cancel an invoice.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-113",
+      "summary": "Make the Invoice section (invoice list and invoice flows) mobile friendly/responsive.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-114",
+      "summary": "Add Banking Details (Account Name, Account Number, IFSC, etc.) in Settings and automatically include them on all invoices (view/print/export).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-115",
+      "summary": "Extend the backend BusinessProfile model to store optional banking details that can be configured once in Settings and then reused on all invoices. Banking details must include at minimum: Account Name, Account Number, IFSC Code, Bank Name, and Branch (optional).",
+      "reqIds": [
+        "REQ-146"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-116",
+      "summary": "If the backend uses stable storage for BusinessProfile across upgrades, add conditional migration logic (backend/migration.mo) to safely migrate existing BusinessProfile records to include the new optional banking fields without data loss.",
+      "reqIds": [
+        "REQ-147"
       ],
       "status": "pending"
     }
