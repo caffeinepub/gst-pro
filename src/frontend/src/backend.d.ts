@@ -93,6 +93,17 @@ export interface BankingDetails {
     accountName: string;
     accountNumber: string;
 }
+export interface AddressDetails {
+    city: string;
+    name: string;
+    contactPerson: string;
+    state: string;
+    addressLine1: string;
+    addressLine2?: string;
+    gstin?: string;
+    pinCode: string;
+    phoneNumber?: string;
+}
 export interface TransformationInput {
     context: Uint8Array;
     response: http_request_result;
@@ -144,6 +155,8 @@ export interface Invoice {
     invoiceNumber: string;
     invoiceType: InvoiceType;
     customerId: bigint;
+    shipToOverride?: AddressDetails;
+    billToOverride?: AddressDetails;
 }
 export interface Customer {
     id: bigint;
@@ -229,14 +242,14 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     authenticateApplicationCredentials(userId: string, password: string): Promise<CredentialResponse>;
     cancelInvoice(id: bigint): Promise<void>;
-    createInvoice(invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, invoiceDate: string, invoiceType: InvoiceType): Promise<Invoice>;
+    createInvoice(invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, invoiceDate: string, invoiceType: InvoiceType, billToOverride: AddressDetails | null, shipToOverride: AddressDetails | null): Promise<Invoice>;
     createUser(request: CreateUserRequest): Promise<SignUpResponse>;
     deleteCustomer(id: bigint): Promise<void>;
     deleteInvoice(id: bigint): Promise<void>;
     deleteItem(id: bigint): Promise<void>;
     deleteUser(userId: string): Promise<void>;
     editCustomer(id: bigint, name: string, billingAddress: string, gstin: string | null, state: string, contactInfo: string | null): Promise<void>;
-    editInvoice(id: bigint, invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, status: InvoiceStatus, invoiceDate: string, invoiceType: InvoiceType): Promise<void>;
+    editInvoice(id: bigint, invoiceNumber: string, purchaseOrderNumber: string | null, customerId: bigint, lineItems: Array<LineItem>, status: InvoiceStatus, invoiceDate: string, invoiceType: InvoiceType, billToOverride: AddressDetails | null, shipToOverride: AddressDetails | null): Promise<void>;
     editItem(id: bigint, name: string, description: string | null, hsnSac: string | null, unitPrice: number, defaultGstRate: number): Promise<void>;
     fetchGstFilingStatus(gstin: string, period: string, returnType: ReturnType_, filingFrequency: FilingFrequency): Promise<GSTFilingStatus>;
     finalizeInvoice(id: bigint): Promise<void>;

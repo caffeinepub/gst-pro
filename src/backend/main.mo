@@ -14,7 +14,9 @@ import List "mo:core/List";
 import Time "mo:core/Time";
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   type UserRole = AccessControl.UserRole;
   include MixinStorage();
@@ -43,6 +45,18 @@ actor {
     startingNumber : Nat;
     logo : ?Storage.ExternalBlob;
     bankingDetails : ?BankingDetails;
+  };
+
+  public type AddressDetails = {
+    name : Text;
+    addressLine1 : Text;
+    addressLine2 : ?Text;
+    city : Text;
+    state : Text;
+    pinCode : Text;
+    contactPerson : Text;
+    phoneNumber : ?Text;
+    gstin : ?Text;
   };
 
   public type Customer = {
@@ -90,6 +104,8 @@ actor {
     status : InvoiceStatus;
     invoiceDate : Text;
     invoiceType : InvoiceType;
+    billToOverride : ?AddressDetails;
+    shipToOverride : ?AddressDetails;
   };
 
   module Customer {
@@ -119,7 +135,6 @@ actor {
   var nextItemId = 1;
   var nextInvoiceId = 1;
 
-  // GST Filing Status related types remain as before.
   public type GSTFilingStatus = {
     gstin : Text;
     period : Text;
@@ -538,6 +553,8 @@ actor {
     lineItems : [LineItem],
     invoiceDate : Text,
     invoiceType : InvoiceType,
+    billToOverride : ?AddressDetails,
+    shipToOverride : ?AddressDetails,
   ) : async Invoice {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create invoices");
@@ -563,6 +580,8 @@ actor {
       status = #draft;
       invoiceDate;
       invoiceType;
+      billToOverride;
+      shipToOverride;
     };
     invoices.add(invoiceId, invoice);
     invoice;
@@ -577,6 +596,8 @@ actor {
     status : InvoiceStatus,
     invoiceDate : Text,
     invoiceType : InvoiceType,
+    billToOverride : ?AddressDetails,
+    shipToOverride : ?AddressDetails,
   ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can edit invoices");
@@ -605,6 +626,8 @@ actor {
           status;
           invoiceDate;
           invoiceType;
+          billToOverride;
+          shipToOverride;
         };
         invoices.add(id, invoice);
       };
@@ -667,6 +690,8 @@ actor {
           status = #finalized;
           invoiceDate = invoice.invoiceDate;
           invoiceType = invoice.invoiceType;
+          billToOverride = invoice.billToOverride;
+          shipToOverride = invoice.shipToOverride;
         };
         invoices.add(id, updatedInvoice);
       };
@@ -693,6 +718,8 @@ actor {
           status = #cancelled;
           invoiceDate = invoice.invoiceDate;
           invoiceType = invoice.invoiceType;
+          billToOverride = invoice.billToOverride;
+          shipToOverride = invoice.shipToOverride;
         };
         invoices.add(id, updatedInvoice);
       };
@@ -1443,3 +1470,4 @@ actor {
     result;
   };
 };
+

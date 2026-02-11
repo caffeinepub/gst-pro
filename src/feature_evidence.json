@@ -2,34 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-issue-where-saving-a-customer-from-customers-page-and-invoice-related-customer-save-flows-fails-with-a-user-visible-error-like-connection-of-backend-is-not-ready-ensuring-the-save-completes-successfully-when-the-user-is-signed-in-and-the-new-updated-customer-persists-and-appears-immediately-in-the-customers-list",
-      "featureTitle": "Fix the issue where saving a Customer (from Customers page and invoice-related customer save flows) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the new/updated customer persists and appears immediately in the customers list.",
-      "files": [
-        "frontend/src/components/customers/CustomerFormDialog.tsx",
-        "frontend/src/hooks/useBackendReady.ts",
-        "frontend/src/hooks/useQueries.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-156"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-fix-the-issue-where-saving-settings-business-profile-fails-with-a-user-visible-error-like-connection-of-backend-is-not-ready-ensuring-the-save-completes-successfully-when-the-user-is-signed-in-and-the-updated-business-profile-persists",
-      "featureTitle": "Fix the issue where saving Settings (Business Profile) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the updated business profile persists.",
+      "featureId": "feature-add-per-invoice-editable-bill-to-address-and-ship-to-address-fields-that-the-user-can-optionally-override-while-creating-editing-an-invoice-and-persist-these-overrides-with-the-invoice-record",
+      "featureTitle": "Add per-invoice editable “Bill To Address” and “Ship To Address” fields that the user can optionally override while creating/editing an invoice, and persist these overrides with the invoice record.",
       "files": [
         "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/SettingsPage.tsx"
+        "frontend/src/pages/InvoiceEditorPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -42,34 +19,13 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-157"
+        "REQ-161"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-invoice-print-export-layout-to-remove-the-qr-option-qr-section-entirely-no-qr-label-placeholder-image-or-empty-space-reserved-for-it",
-      "featureTitle": "Update the invoice print/export layout to remove the QR option/QR section entirely (no QR label, placeholder, image, or empty space reserved for it).",
-      "files": [
-        "frontend/src/pages/InvoicePrintPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "http-outcalls@3.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-158"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-invoice-print-export-and-any-invoice-detail-metadata-layouts-to-remove-the-delivery-note-field-and-remove-all-of-the-following-fields-labels-completely-mode-terms-of-payment-other-references-dispatch-doc-no-delivery-note-date-dispatched-through-destination-and-terms-of-delivery",
-      "featureTitle": "Update invoice print/export and any invoice detail/metadata layouts to remove the “Delivery Note” field and remove all of the following fields/labels completely: “Mode/Terms of Payment”, “Other References”, “Dispatch Doc No.”, “Delivery Note Date”, “Dispatched through”, “Destination”, and “Terms of Delivery”.",
+      "featureId": "feature-update-invoice-detail-and-invoice-print-experiences-to-display-the-stored-per-invoice-bill-to-address-and-ship-to-address-overrides-falling-back-to-the-customer-billing-address-only-when-an-override-is-not-present",
+      "featureTitle": "Update invoice detail and invoice print experiences to display the stored per-invoice “Bill To Address” and “Ship To Address” overrides (falling back to the customer billing address only when an override is not present).",
       "files": [
         "frontend/src/pages/InvoiceDetailPage.tsx",
         "frontend/src/pages/InvoicePrintPage.tsx"
@@ -85,15 +41,14 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-159"
+        "REQ-162"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-invoices-include-a-clearly-formatted-banking-details-section-sourced-from-the-saved-business-profile-banking-details-and-render-it-only-when-banking-details-are-configured-hide-the-entire-section-when-not-configured",
-      "featureTitle": "Ensure invoices include a clearly formatted “Banking Details” section sourced from the saved Business Profile banking details, and render it only when banking details are configured (hide the entire section when not configured).",
+      "featureId": "feature-remove-the-total-invoice-amount-in-words-section-from-the-invoice-print-export-layout-so-it-no-longer-appears-anywhere-in-the-printed-invoice-output",
+      "featureTitle": "Remove the “Total Invoice Amount in Words” section from the invoice print/export layout so it no longer appears anywhere in the printed invoice output.",
       "files": [
-        "frontend/src/pages/InvoiceDetailPage.tsx",
         "frontend/src/pages/InvoicePrintPage.tsx"
       ],
       "components": [
@@ -107,7 +62,51 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-160"
+        "REQ-163"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-improve-multi-page-invoice-printing-so-that-when-an-invoice-prints-on-2-pages-the-invoice-header-section-and-line-items-table-header-row-repeat-appropriately-on-subsequent-pages-and-table-rows-do-not-render-as-broken-partial-across-page-boundaries",
+      "featureTitle": "Improve multi-page invoice printing so that when an invoice prints on 2+ pages, the invoice header section and line-items table header row repeat appropriately on subsequent pages and table rows do not render as broken/partial across page boundaries.",
+      "files": [
+        "frontend/src/index.css",
+        "frontend/src/pages/InvoicePrintPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-164"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-the-invoice-print-flow-so-that-after-printing-the-user-has-a-clear-and-working-way-to-navigate-back-in-the-application-and-is-not-left-on-a-screen-with-no-back-return-path",
+      "featureTitle": "Fix the invoice print flow so that after printing, the user has a clear and working way to navigate back in the application (and is not left on a screen with no back/return path).",
+      "files": [
+        "frontend/src/index.css",
+        "frontend/src/pages/InvoicePrintPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-165"
       ],
       "confidence": "high"
     }

@@ -124,48 +124,77 @@ body {
         -webkit-print-color-adjust: exact;
     }
 
-    .print-page {
-        background: white !important;
-        color: black !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* Ensure borders render cleanly */
-    table,
-    th,
-    td,
-    div {
-        border-color: black !important;
-        page-break-inside: avoid;
-    }
-
-    /* Prevent clipping of borders */
-    table {
-        border-collapse: collapse;
-    }
-
-    /* Safe word breaking for long text */
-    p,
-    td,
-    th {
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-
-    /* Hide non-print elements */
-    header,
-    footer,
-    nav,
+    /* Hide non-printable elements */
+    .no-print,
     button,
-    .no-print {
+    nav,
+    header:not(.print-page header),
+    footer:not(.print-page footer) {
         display: none !important;
     }
 
-    /* Prevent page breaks inside bordered sections */
-    .border-2,
-    .border {
+    /* Print-specific table styling for multi-page support */
+    .print-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .print-thead {
+        display: table-header-group;
+    }
+
+    .print-row {
         page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Prevent page breaks inside important elements */
+    .print-page > div {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Allow tables to break across pages but keep rows together */
+    table {
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    tfoot {
+        display: table-footer-group;
+    }
+
+    /* Ensure borders print correctly */
+    * {
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+    }
+
+    /* Remove shadows and backgrounds that might not print well */
+    .print-page {
+        box-shadow: none !important;
+        background: white !important;
+    }
+
+    /* Ensure text is black for printing */
+    .print-page * {
+        color: black !important;
+    }
+
+    /* Keep borders visible */
+    .print-page table,
+    .print-page th,
+    .print-page td,
+    .print-page div {
+        border-color: black !important;
     }
 }
+

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Save, Loader2, Plus } from 'lucide-react';
 import InvoiceLineItemsEditor from '../components/invoices/InvoiceLineItemsEditor';
@@ -46,19 +47,21 @@ export default function InvoiceEditorPage() {
   const [invoiceNumber, setInvoiceNumber] = useState<string>('');
   const [purchaseOrderNumber, setPurchaseOrderNumber] = useState<string>('');
   const [invoiceType, setInvoiceType] = useState<InvoiceType>(InvoiceType.original);
+  const [billToAddress, setBillToAddress] = useState<string>('');
+  const [shipToAddress, setShipToAddress] = useState<string>('');
   const [customerDialogOpen, setCustomerDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
 
   // Auto-fill invoice number for new invoices
   useEffect(() => {
     if (!isEditing && businessProfile && !invoiceNumber) {
-      // Generate a default invoice number
-      const nextId = BigInt(1); // This is a placeholder; in reality, we'd need the next ID
+      const nextId = BigInt(1);
       const defaultNumber = formatInvoiceNumber(nextId, businessProfile);
       setInvoiceNumber(defaultNumber);
     }
   }, [isEditing, businessProfile, invoiceNumber]);
 
+  // Load invoice data when editing
   useEffect(() => {
     if (invoice) {
       setCustomerId(invoice.customerId.toString());
@@ -67,8 +70,34 @@ export default function InvoiceEditorPage() {
       setInvoiceNumber(invoice.invoiceNumber || '');
       setPurchaseOrderNumber(invoice.purchaseOrderNumber || '');
       setInvoiceType(invoice.invoiceType || InvoiceType.original);
+      
+      // Load address overrides if they exist
+      if (invoice.billToOverride) {
+        const addr = invoice.billToOverride;
+        const formatted = `${addr.name}\n${addr.addressLine1}${addr.addressLine2 ? '\n' + addr.addressLine2 : ''}\n${addr.city}, ${addr.state} - ${addr.pinCode}\nContact: ${addr.contactPerson}${addr.phoneNumber ? '\nPhone: ' + addr.phoneNumber : ''}${addr.gstin ? '\nGSTIN: ' + addr.gstin : ''}`;
+        setBillToAddress(formatted);
+      }
+      if (invoice.shipToOverride) {
+        const addr = invoice.shipToOverride;
+        const formatted = `${addr.name}\n${addr.addressLine1}${addr.addressLine2 ? '\n' + addr.addressLine2 : ''}\n${addr.city}, ${addr.state} - ${addr.pinCode}\nContact: ${addr.contactPerson}${addr.phoneNumber ? '\nPhone: ' + addr.phoneNumber : ''}${addr.gstin ? '\nGSTIN: ' + addr.gstin : ''}`;
+        setShipToAddress(formatted);
+      }
     }
   }, [invoice]);
+
+  // Auto-fill addresses when customer changes (only for new invoices or when addresses are empty)
+  useEffect(() => {
+    const selectedCustomer = customers.find((c) => c.id.toString() === customerId);
+    if (selectedCustomer && !isEditing) {
+      // For new invoices, default to customer's billing address
+      if (!billToAddress) {
+        setBillToAddress(selectedCustomer.billingAddress);
+      }
+      if (!shipToAddress) {
+        setShipToAddress(selectedCustomer.billingAddress);
+      }
+    }
+  }, [customerId, customers, isEditing, billToAddress, shipToAddress]);
 
   const selectedCustomer = customers.find((c) => c.id.toString() === customerId);
   const totals = calculateInvoiceTotals(lineItems, items, businessProfile, selectedCustomer);
@@ -89,6 +118,31 @@ export default function InvoiceEditorPage() {
       return;
     }
 
+    // Parse addresses into AddressDetails format (simplified - using text as-is)
+    const billToOverride = billToAddress.trim() ? {
+      name: selectedCustomer?.name || '',
+      addressLine1: billToAddress.trim(),
+      addressLine2: undefined,
+      city: selectedCustomer?.state || '',
+      state: selectedCustomer?.state || '',
+      pinCode: '',
+      contactPerson: '',
+      phoneNumber: undefined,
+      gstin: selectedCustomer?.gstin || undefined,
+    } : null;
+
+    const shipToOverride = shipToAddress.trim() ? {
+      name: selectedCustomer?.name || '',
+      addressLine1: shipToAddress.trim(),
+      addressLine2: undefined,
+      city: selectedCustomer?.state || '',
+      state: selectedCustomer?.state || '',
+      pinCode: '',
+      contactPerson: '',
+      phoneNumber: undefined,
+      gstin: selectedCustomer?.gstin || undefined,
+    } : null;
+
     try {
       if (isEditing && invoice) {
         await editInvoice.mutateAsync({
@@ -100,6 +154,8 @@ export default function InvoiceEditorPage() {
           status: invoice.status,
           invoiceDate,
           invoiceType,
+          billToOverride,
+          shipToOverride,
         });
         toast.success('Invoice updated successfully');
       } else {
@@ -110,6 +166,8 @@ export default function InvoiceEditorPage() {
           lineItems,
           invoiceDate,
           invoiceType,
+          billToOverride,
+          shipToOverride,
         });
         toast.success('Invoice created successfully');
         navigate({ to: '/invoices/$invoiceId', params: { invoiceId: newInvoice.id.toString() } });
@@ -250,6 +308,36 @@ export default function InvoiceEditorPage() {
                     onChange={(e) => setPurchaseOrderNumber(e.target.value)}
                     placeholder="e.g., PO-2024-001"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="billToAddress">Bill To Address</Label>
+                  <Textarea
+                    id="billToAddress"
+                    value={billToAddress}
+                    onChange={(e) => setBillToAddress(e.target.value)}
+                    placeholder="Enter billing address"
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Edit this address if needed. Defaults to customer's billing address.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="shipToAddress">Ship To Address</Label>
+                  <Textarea
+                    id="shipToAddress"
+                    value={shipToAddress}
+                    onChange={(e) => setShipToAddress(e.target.value)}
+                    placeholder="Enter shipping address"
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Edit this address if needed. Defaults to customer's billing address.
+                  </p>
                 </div>
               </CardContent>
             </Card>

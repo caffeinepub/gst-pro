@@ -19,6 +19,7 @@ import type {
   Time,
   InvoiceKPIs,
   UnifiedUserInfo,
+  AddressDetails,
 } from '../backend';
 
 // User Profile Queries
@@ -346,6 +347,8 @@ export function useCreateInvoice() {
       lineItems: LineItem[];
       invoiceDate: string;
       invoiceType: InvoiceType;
+      billToOverride: AddressDetails | null;
+      shipToOverride: AddressDetails | null;
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.createInvoice(
@@ -354,7 +357,9 @@ export function useCreateInvoice() {
         params.customerId,
         params.lineItems,
         params.invoiceDate,
-        params.invoiceType
+        params.invoiceType,
+        params.billToOverride,
+        params.shipToOverride
       );
     },
     onSuccess: () => {
@@ -377,6 +382,8 @@ export function useEditInvoice() {
       status: InvoiceStatus;
       invoiceDate: string;
       invoiceType: InvoiceType;
+      billToOverride: AddressDetails | null;
+      shipToOverride: AddressDetails | null;
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.editInvoice(
@@ -387,7 +394,9 @@ export function useEditInvoice() {
         params.lineItems,
         params.status,
         params.invoiceDate,
-        params.invoiceType
+        params.invoiceType,
+        params.billToOverride,
+        params.shipToOverride
       );
     },
     onSuccess: (_, variables) => {

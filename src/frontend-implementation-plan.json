@@ -1,116 +1,109 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend fixes for backend-readiness save errors and invoice layout updates (remove QR & delivery fields, add banking details)",
+  "title": "Invoice address overrides + print layout fixes (pagination, remove amount-in-words, restore back navigation)",
   "requirements": [
     {
-      "id": "REQ-156",
-      "summary": "Prevent Customer save attempts before backend actor is ready; ensure customer create/edit immediately updates the customers list and invoice customer flows without user-visible readiness errors.",
+      "id": "REQ-161",
+      "summary": "Add editable per-invoice Bill To / Ship To address fields in the invoice editor and include them in save payloads.",
       "acceptanceCriteria": [
-        "After successful sign-in, creating a new customer from Customers page succeeds without showing any “backend not ready”/connection error toast.",
-        "After saving, the customer list updates immediately to include the new customer (no manual refresh).",
-        "Editing an existing customer saves successfully and the updated values are visible immediately.",
-        "If the backend actor/connection is not ready yet, the UI prevents submission and shows a clear English message (e.g., “Connecting to backend, please wait...”) instead of failing the mutation."
+        "In the invoice editor (new + edit), the user can view and edit two address text fields labeled “Bill To Address” and “Ship To Address”.",
+        "For a new invoice, both fields default to the selected customer’s billing address but remain user-editable.",
+        "When the invoice is saved, the overridden addresses are persisted with the invoice (not only derived from the customer record).",
+        "When editing an existing invoice, the previously saved Bill To / Ship To addresses are loaded and displayed in the editor.",
+        "All user-facing labels/help text for these fields are in English."
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/hooks/useBackendReady.ts",
-          "operation": "create",
-          "description": "Create a small hook that derives an explicit backend readiness state (e.g., ready vs connecting) from the existing actor hook, so UI flows can block mutations until the actor is usable."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Adjust customer mutations to avoid stale UI and support immediate list refresh by updating the React Query cache for the customers list on successful add/edit (in addition to invalidation), ensuring newly created/edited customers appear instantly."
-        },
-        {
-          "path": "frontend/src/components/customers/CustomerFormDialog.tsx",
-          "operation": "modify",
-          "description": "Use the backend readiness hook to disable the submit button and prevent form submission while connecting; show a clear English helper message (e.g., “Connecting to backend, please wait...”) instead of triggering a failing mutation and toast."
-        },
         {
           "path": "frontend/src/pages/InvoiceEditorPage.tsx",
           "operation": "modify",
-          "description": "Ensure invoice-related customer save flows benefit from the readiness guard by passing any needed props/state to the existing CustomerFormDialog usage (and confirm the selected customer updates immediately after a successful add)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-157",
-      "summary": "Prevent Settings (Business Profile) save attempts before backend actor is ready; ensure profile saves persist and reload correctly without readiness errors.",
-      "acceptanceCriteria": [
-        "After successful sign-in, saving Settings (Business Profile) succeeds without showing any “backend not ready”/connection error toast.",
-        "Reloading the app shows the saved Business Profile values (persistence verified).",
-        "If the backend actor/connection is not ready yet, the Save action is disabled and the user sees a clear English helper message explaining they must wait for the connection."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/SettingsPage.tsx",
-          "operation": "modify",
-          "description": "Use the backend readiness hook to disable the Save action while connecting and show a clear English helper message; keep existing validation and error handling, but prevent submissions when the actor is not ready."
+          "description": "Add two multiline, user-editable fields labeled “Bill To Address” and “Ship To Address”; default them from the selected customer’s billing address for new invoices (without overwriting user edits), and when editing load initial values from invoice.billToOverride/shipToOverride when present. Ensure the save logic includes these overrides when calling create/edit invoice mutations (mapping the text fields into the override object shape expected by the frontend backend typings)."
         },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Ensure business profile save behavior remains consistent with immediate UI updates by keeping query invalidation after save and (if needed) setting the cached business profile data on success so reload and subsequent screens reflect persisted values promptly."
+          "description": "Extend the create/edit invoice mutation parameter objects to accept Bill To / Ship To override values from the editor, and pass them through to the backend actor method calls (using null when an override is not set/blank)."
         }
       ]
     },
     {
-      "id": "REQ-158",
-      "summary": "Remove the QR option/QR section entirely from the invoice print/export layout without leaving blank space.",
+      "id": "REQ-162",
+      "summary": "Show per-invoice Bill To / Ship To overrides in invoice detail and print views, with safe fallback to customer billing address.",
       "acceptanceCriteria": [
-        "Invoice print page renders without any QR code section or QR-related text.",
-        "The layout remains visually aligned (no awkward blank area where QR used to be).",
-        "Printing the invoice produces a clean A4 output without the removed QR area."
+        "Invoice detail view shows the correct addresses based on invoice overrides when present.",
+        "Invoice print layout shows “Bill To” and “Ship To” addresses using the invoice’s stored values when present.",
+        "If an invoice does not have stored overrides (older invoices), the UI falls back to the customer billing address without crashing."
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/pages/InvoicePrintPage.tsx",
-          "operation": "modify",
-          "description": "Remove the entire QR-related UI block (label/placeholder/image/space) from the print layout and rebalance the header/title alignment so the A4 print layout remains clean and visually aligned."
-        }
-      ]
-    },
-    {
-      "id": "REQ-159",
-      "summary": "Remove Delivery/transport metadata fields from invoice print/export and invoice detail layouts, without leaving empty rows or separators.",
-      "acceptanceCriteria": [
-        "Invoice print page does not display: Delivery Note, Mode/Terms of Payment, Other References, Dispatch Doc No., Delivery Note Date, Dispatched through, Destination, Terms of Delivery.",
-        "No empty rows/boxes/separators remain for these removed fields.",
-        "Invoice detail view does not show these removed fields anywhere (if previously shown)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/InvoicePrintPage.tsx",
-          "operation": "modify",
-          "description": "Remove the Delivery Note block and all listed delivery/dispatch/payment-reference labels from the print layout, and adjust surrounding grid/borders so no empty placeholders or separators remain."
-        },
         {
           "path": "frontend/src/pages/InvoiceDetailPage.tsx",
           "operation": "modify",
-          "description": "Audit and remove any rendering of the listed delivery/dispatch/payment-reference fields in the invoice detail/metadata sections (if present), ensuring no empty rows or headings remain."
+          "description": "Update the customer/address section to display “Bill To Address” and “Ship To Address” derived from invoice.billToOverride/shipToOverride when present, otherwise fall back to customer.billingAddress. Keep labels in English and render as multiline where appropriate."
+        },
+        {
+          "path": "frontend/src/pages/InvoicePrintPage.tsx",
+          "operation": "modify",
+          "description": "Update the “Bill To” and “Ship To” blocks to render invoice-level stored overrides when present, otherwise fall back to customer.billingAddress, ensuring older invoices (missing override fields) do not crash and still render correctly."
         }
       ]
     },
     {
-      "id": "REQ-160",
-      "summary": "Add a conditional “Banking Details” section to invoice print/export and ensure invoice detail view shows/hides it based on configured Business Profile banking details.",
+      "id": "REQ-163",
+      "summary": "Remove the “Total Invoice Amount in Words” section from the printed invoice layout.",
       "acceptanceCriteria": [
-        "When Banking Details are configured in Settings, the invoice print layout shows a “Banking Details” section with the configured fields.",
-        "When Banking Details are not configured, invoice print layout shows no Banking Details section (no empty labels).",
-        "Invoice detail view continues to show banking details when configured (and hides it when not configured)."
+        "The invoice print page (frontend/src/pages/InvoicePrintPage.tsx) does not render the “Total Invoice Amount in Words” block.",
+        "No empty space, border box, or placeholder remains where the removed section previously appeared.",
+        "All other print sections (line items, GST breakdown, banking details when configured) still render correctly."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/InvoicePrintPage.tsx",
           "operation": "modify",
-          "description": "Add a clearly formatted “Banking Details” section sourced from the loaded Business Profile, and render it only when banking details are configured (hide the entire section otherwise)."
+          "description": "Remove rendering of the “Total Invoice Amount in Words” section and any related imports/variables (e.g., amountInWordsINR usage) so the block no longer appears and does not leave layout gaps."
+        }
+      ]
+    },
+    {
+      "id": "REQ-164",
+      "summary": "Improve multi-page invoice print pagination so headers repeat and table rows avoid splitting across pages using print CSS.",
+      "acceptanceCriteria": [
+        "When printing an invoice with enough line items to span multiple pages, each page repeats the line-items table column headers (thead repeats).",
+        "Printed pages do not show clipped borders or partially overlapped content at page breaks.",
+        "Table rows are not split in a way that makes a single row unreadable (avoid breaking inside rows where feasible via print CSS).",
+        "The changes use print CSS (e.g., in frontend/src/index.css and/or print-page scoped classes) and do not require any backend changes."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Adjust/add print CSS to support multi-page invoice printing: ensure thead repeats on subsequent pages (e.g., display: table-header-group for the print-page table thead), prefer avoiding breaks inside table rows/cells (break-inside/page-break-inside rules for tr), and refine existing broad page-break-inside rules so tables can paginate cleanly without clipped borders or overlapped content."
         },
         {
-          "path": "frontend/src/pages/InvoiceDetailPage.tsx",
+          "path": "frontend/src/pages/InvoicePrintPage.tsx",
           "operation": "modify",
-          "description": "Ensure invoice detail view displays a “Banking Details” section using Business Profile banking details when configured and hides it entirely when not configured."
+          "description": "Add/adjust print-page scoped class names on the line-items table (and any key sections if needed) to align with the updated print CSS for repeating headers and preventing row splits, without redesigning the overall print layout."
+        }
+      ]
+    },
+    {
+      "id": "REQ-165",
+      "summary": "Add a reliable in-app back navigation path from the invoice print page and hide it during printing; optionally auto-navigate after print.",
+      "acceptanceCriteria": [
+        "The invoice print page provides a visible on-screen “Back” action (English label) that returns the user to a sensible page (e.g., the Invoice Detail page for the same invoice).",
+        "The “Back” action is hidden during actual printing (print media) so it does not appear on paper/PDF.",
+        "Optionally, the existing usePrintOnce hook’s onAfterPrint callback is used so that after closing the print dialog, the app can automatically navigate back (without breaking manual navigation).",
+        "User does not get stuck on the print route after printing; navigation back works reliably."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/InvoicePrintPage.tsx",
+          "operation": "modify",
+          "description": "Add a visible on-screen “Back” action that navigates to the corresponding invoice detail route, mark it as non-printable (e.g., using the existing .no-print convention and/or a button element already hidden by print CSS), and wire usePrintOnce({ onAfterPrint }) to optionally auto-navigate back after the print dialog closes while preserving manual Back behavior."
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Ensure the print stylesheet hides the new Back action during print media (confirm .no-print and/or button hiding rules cover it) so it never appears in the printed/PDF output."
         }
       ]
     }

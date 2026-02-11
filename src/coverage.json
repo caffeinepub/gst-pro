@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T18:17:26.032Z",
+  "generatedAt": "2026-02-10T19:09:34.499Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -11,37 +11,34 @@
     "implemented": 5,
     "items": [
       {
-        "id": "REQ-156",
-        "summary": "Fix the issue where saving a Customer (from Customers page and invoice-related customer save flows) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the new/updated customer persists and appears immediately in the customers list.",
+        "id": "REQ-161",
+        "summary": "Add per-invoice editable “Bill To Address” and “Ship To Address” fields that the user can optionally override while creating/editing an invoice, and persist these overrides with the invoice record.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useBackendReady.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/customers/CustomerFormDialog.tsx",
-          "frontend/src/pages/InvoiceEditorPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useBackendReady.ts",
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/customers/CustomerFormDialog.tsx"
-        ]
-      },
-      {
-        "id": "REQ-157",
-        "summary": "Fix the issue where saving Settings (Business Profile) fails with a user-visible error like “connection of backend is not ready”, ensuring the save completes successfully when the user is signed in and the updated business profile persists.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/pages/InvoiceEditorPage.tsx",
           "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/SettingsPage.tsx",
+          "frontend/src/pages/InvoiceEditorPage.tsx",
           "frontend/src/hooks/useQueries.ts"
         ]
       },
       {
-        "id": "REQ-158",
-        "summary": "Update the invoice print/export layout to remove the QR option/QR section entirely (no QR label, placeholder, image, or empty space reserved for it).",
+        "id": "REQ-162",
+        "summary": "Update invoice detail and invoice print experiences to display the stored per-invoice “Bill To Address” and “Ship To Address” overrides (falling back to the customer billing address only when an override is not present).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/InvoiceDetailPage.tsx",
+          "frontend/src/pages/InvoicePrintPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/InvoiceDetailPage.tsx",
+          "frontend/src/pages/InvoicePrintPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-163",
+        "summary": "Remove the “Total Invoice Amount in Words” section from the invoice print/export layout so it no longer appears anywhere in the printed invoice output.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/InvoicePrintPage.tsx"
@@ -51,45 +48,50 @@
         ]
       },
       {
-        "id": "REQ-159",
-        "summary": "Update invoice print/export and any invoice detail/metadata layouts to remove the “Delivery Note” field and remove all of the following fields/labels completely: “Mode/Terms of Payment”, “Other References”, “Dispatch Doc No.”, “Delivery Note Date”, “Dispatched through”, “Destination”, and “Terms of Delivery”.",
+        "id": "REQ-164",
+        "summary": "Improve multi-page invoice printing so that when an invoice prints on 2+ pages, the invoice header section and line-items table header row repeat appropriately on subsequent pages and table rows do not render as broken/partial across page boundaries.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/InvoicePrintPage.tsx",
-          "frontend/src/pages/InvoiceDetailPage.tsx"
+          "frontend/src/index.css",
+          "frontend/src/pages/InvoicePrintPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/InvoicePrintPage.tsx",
-          "frontend/src/pages/InvoiceDetailPage.tsx"
+          "frontend/src/index.css",
+          "frontend/src/pages/InvoicePrintPage.tsx"
         ]
       },
       {
-        "id": "REQ-160",
-        "summary": "Ensure invoices include a clearly formatted “Banking Details” section sourced from the saved Business Profile banking details, and render it only when banking details are configured (hide the entire section when not configured).",
+        "id": "REQ-165",
+        "summary": "Fix the invoice print flow so that after printing, the user has a clear and working way to navigate back in the application (and is not left on a screen with no back/return path).",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/pages/InvoicePrintPage.tsx",
-          "frontend/src/pages/InvoiceDetailPage.tsx"
+          "frontend/src/index.css"
         ],
         "matchedFiles": [
           "frontend/src/pages/InvoicePrintPage.tsx",
-          "frontend/src/pages/InvoiceDetailPage.tsx"
+          "frontend/src/index.css"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/customers/CustomerFormDialog.tsx",
-    "frontend/src/hooks/useBackendReady.ts",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/usePrintOnce.ts",
     "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
     "frontend/src/pages/InvoiceDetailPage.tsx",
+    "frontend/src/pages/InvoiceEditorPage.tsx",
     "frontend/src/pages/InvoicePrintPage.tsx",
-    "frontend/src/pages/SettingsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

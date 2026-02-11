@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 79,
+  "projectStateVersion": 81,
   "summary": "Build a GST billing application named \"GST Pro\".",
   "architectural_notes": [
     "GST filing status feature requires external integration with GST.gov.in (data fetch), which may be constrained by authentication, CORS, and availability of official APIs.",
@@ -1083,6 +1083,46 @@
         "REQ-160"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-per-invoice-editable-bill-to-address-and-ship-to-address-fields-that-the-user-can-optionally-override-while-creating-editing-an-invoice-and-persist-these-overrides-with-the-invoice-record",
+      "title": "Add per-invoice editable “Bill To Address” and “Ship To Address” fields that the user can optionally override while creating/editing an invoice, and persist these overrides with the invoice record.",
+      "reqIds": [
+        "REQ-161"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-invoice-detail-and-invoice-print-experiences-to-display-the-stored-per-invoice-bill-to-address-and-ship-to-address-overrides-falling-back-to-the-customer-billing-address-only-when-an-override-is-not-present",
+      "title": "Update invoice detail and invoice print experiences to display the stored per-invoice “Bill To Address” and “Ship To Address” overrides (falling back to the customer billing address only when an override is not present).",
+      "reqIds": [
+        "REQ-162"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-remove-the-total-invoice-amount-in-words-section-from-the-invoice-print-export-layout-so-it-no-longer-appears-anywhere-in-the-printed-invoice-output",
+      "title": "Remove the “Total Invoice Amount in Words” section from the invoice print/export layout so it no longer appears anywhere in the printed invoice output.",
+      "reqIds": [
+        "REQ-163"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-multi-page-invoice-printing-so-that-when-an-invoice-prints-on-2-pages-the-invoice-header-section-and-line-items-table-header-row-repeat-appropriately-on-subsequent-pages-and-table-rows-do-not-render-as-broken-partial-across-page-boundaries",
+      "title": "Improve multi-page invoice printing so that when an invoice prints on 2+ pages, the invoice header section and line-items table header row repeat appropriately on subsequent pages and table rows do not render as broken/partial across page boundaries.",
+      "reqIds": [
+        "REQ-164"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-invoice-print-flow-so-that-after-printing-the-user-has-a-clear-and-working-way-to-navigate-back-in-the-application-and-is-not-left-on-a-screen-with-no-back-return-path",
+      "title": "Fix the invoice print flow so that after printing, the user has a clear and working way to navigate back in the application (and is not left on a screen with no back/return path).",
+      "reqIds": [
+        "REQ-165"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -1619,6 +1659,30 @@
     {
       "id": "AR-119",
       "summary": "Update invoice view/print layout to remove the QR option and remove Delivery Note and related fields (Mode/Terms of Payment, Other References, Dispatch Doc No., Delivery Note Date, Dispatched through, Destination, Terms of Delivery).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-120",
+      "summary": "Make “Bill To” and “Ship To” addresses editable in the invoice (allow user to edit these address fields when needed)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-121",
+      "summary": "Remove the “Total Amount in Words” section from the invoice print/export layout",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-122",
+      "summary": "Improve multi-page invoice printing so that when an invoice prints on 2+ pages, the invoice header/table headings repeat appropriately on subsequent pages (no broken/partial layout across pages)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-123",
+      "summary": "Fix invoice print flow UX so that after printing, the user can navigate back in the application (restore a working Back button/return path from the print experience)",
       "reqIds": [],
       "status": "pending"
     }

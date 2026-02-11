@@ -10,6 +10,17 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AddressDetails {
+  'city' : string,
+  'name' : string,
+  'contactPerson' : string,
+  'state' : string,
+  'addressLine1' : string,
+  'addressLine2' : [] | [string],
+  'gstin' : [] | [string],
+  'pinCode' : string,
+  'phoneNumber' : [] | [string],
+}
 export interface BankingDetails {
   'branch' : [] | [string],
   'ifscCode' : string,
@@ -80,6 +91,8 @@ export interface Invoice {
   'invoiceNumber' : string,
   'invoiceType' : InvoiceType,
   'customerId' : bigint,
+  'shipToOverride' : [] | [AddressDetails],
+  'billToOverride' : [] | [AddressDetails],
 }
 export interface InvoiceKPIs {
   'draftInvoices' : bigint,
@@ -240,7 +253,16 @@ export interface _SERVICE {
   >,
   'cancelInvoice' : ActorMethod<[bigint], undefined>,
   'createInvoice' : ActorMethod<
-    [string, [] | [string], bigint, Array<LineItem>, string, InvoiceType],
+    [
+      string,
+      [] | [string],
+      bigint,
+      Array<LineItem>,
+      string,
+      InvoiceType,
+      [] | [AddressDetails],
+      [] | [AddressDetails],
+    ],
     Invoice
   >,
   'createUser' : ActorMethod<[CreateUserRequest], SignUpResponse>,
@@ -262,6 +284,8 @@ export interface _SERVICE {
       InvoiceStatus,
       string,
       InvoiceType,
+      [] | [AddressDetails],
+      [] | [AddressDetails],
     ],
     undefined
   >,

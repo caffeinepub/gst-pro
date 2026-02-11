@@ -1,84 +1,77 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T18:17:26.024Z",
-  "summary": "Backend readiness hook was added and is used in Customer and Settings forms; React Query customer/business profile caches are updated on mutation success. However, the diff summary does not provide sufficient evidence that the invoice print/detail layout changes (remove QR and delivery-related fields, add conditional Banking Details) are fully implemented, and Settings save-disable/helper UX is not clearly shown in the provided truncation. Several unrelated PWA/UI/UX enhancements appear to have been added beyond the request.",
+  "generatedAt": "2026-02-10T19:09:34.490Z",
+  "summary": "REQ-161 appears implemented end-to-end with new per-invoice Bill To/Ship To override fields in the backend Invoice type plus a migration that preserves existing invoices and initializes overrides to null, and the invoice editor shows/loads editable fields. REQ-164/165 have partial evidence via print CSS improvements and print flow changes (usePrintOnce + afterprint navigation), but some acceptance criteria cannot be confirmed from the truncated diffs. REQ-162/163 cannot be fully verified from the provided diff snippets (detail page + print page render portions are truncated). Several unrelated PWA/UX changes were introduced that were not requested.",
   "missing_requirements": [
     {
-      "id": "REQ-157",
-      "requirement": "If the backend actor/connection is not ready yet, the Save action is disabled and the user sees a clear English helper message explaining they must wait for the connection (Settings / Business Profile).",
-      "reason": "SettingsPage.tsx shows useBackendReady() usage and defines isReady/message, but the provided diff is truncated before showing the Save button disabled state and any helper text rendering; only toast-based blocking is visible in the shown portion.",
+      "id": "REQ-162",
+      "requirement": "Invoice detail view shows the correct Bill To / Ship To addresses based on per-invoice overrides when present (fallback to customer billing address when not).",
+      "reason": "InvoiceDetailPage.tsx is truncated before any address rendering logic is visible, so there is no confirmable evidence that the detail view displays bill-to/ship-to using stored overrides with fallback for older invoices.",
       "evidence": [
-        "frontend/src/pages/SettingsPage.tsx"
+        "frontend/src/pages/InvoiceDetailPage.tsx (truncated in diff summary)"
       ]
     },
     {
-      "id": "REQ-158",
-      "requirement": "Update the invoice print/export layout to remove the QR option/QR section entirely (no QR label, placeholder, image, or empty space reserved for it).",
-      "reason": "InvoicePrintPage.tsx is truncated and does not show whether a QR section previously existed and has been removed; no explicit evidence of QR removal is present in the visible portion or in the diff summary.",
+      "id": "REQ-162",
+      "requirement": "Invoice print layout shows Bill To and Ship To addresses using the invoice’s stored override values when present, otherwise falls back to customer billing address without crashing.",
+      "reason": "Print page shows a fallback selection, but it only uses `addressLine1` for the override addresses in the visible snippet; the actual rendered output is truncated, so it’s not verifiable that both Bill To/Ship To blocks display correctly and completely per requirements.",
       "evidence": [
-        "frontend/src/pages/InvoicePrintPage.tsx"
+        "frontend/src/pages/InvoicePrintPage.tsx (truncated in diff summary)"
       ]
     },
     {
-      "id": "REQ-159",
-      "requirement": "Remove Delivery Note and related fields/labels (Mode/Terms of Payment, Other References, Dispatch Doc No., Delivery Note Date, Dispatched through, Destination, Terms of Delivery) from invoice print/export and invoice detail/metadata layouts with no empty space left behind.",
-      "reason": "Both InvoicePrintPage.tsx and InvoiceDetailPage.tsx are truncated before any metadata field rendering; the diff summary does not explicitly confirm these fields were removed or that spacing/rows were cleaned up.",
+      "id": "REQ-163",
+      "requirement": "Remove the “Total Invoice Amount in Words” section from the invoice print/export layout so it no longer appears anywhere and leaves no empty placeholder.",
+      "reason": "InvoicePrintPage.tsx output markup is truncated; the diff summary does not explicitly show removal of the 'Total Invoice Amount in Words' block or confirm no placeholder remains.",
       "evidence": [
-        "frontend/src/pages/InvoicePrintPage.tsx",
-        "frontend/src/pages/InvoiceDetailPage.tsx"
+        "frontend/src/pages/InvoicePrintPage.tsx (truncated in diff summary)"
       ]
     },
     {
-      "id": "REQ-160",
-      "requirement": "Add a clearly formatted “Banking Details” section sourced from Business Profile and render it only when configured (print/export + detail view).",
-      "reason": "InvoicePrintPage.tsx computes a hasBankingDetails boolean, but the truncated content does not show an actual rendered “Banking Details” section or its conditional hiding. InvoiceDetailPage.tsx is also truncated before confirming the banking details section behavior.",
+      "id": "REQ-165",
+      "requirement": "Invoice print page provides a visible on-screen “Back” action (hidden during printing) that returns to a sensible page.",
+      "reason": "Print flow auto-navigates via `onAfterPrint`, but the rendered UI is truncated; while `ArrowLeft` and `Button` are imported, the diff does not show an actual on-screen 'Back' control being rendered with an English label and being hidden for print.",
       "evidence": [
-        "frontend/src/pages/InvoicePrintPage.tsx",
-        "frontend/src/pages/InvoiceDetailPage.tsx"
+        "frontend/src/pages/InvoicePrintPage.tsx (truncated in diff summary)",
+        "frontend/src/index.css (print rule hides `button` elements globally)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "PWA enhancements: iOS PWA meta tags, splash screens, manifest updates, and a new service worker with caching/offline behavior and registration helper.",
-      "reason": "Not requested by the BuildRequest; unrelated to backend readiness errors or invoice layout updates.",
+      "description": "Added/expanded PWA support (manifest, service worker caching/offline behavior, iOS splash screens/meta tags, service worker registration).",
+      "reason": "Not requested by any of REQ-161..REQ-165 and goes beyond the stated scope (invoice address overrides + print pagination + remove amount-in-words + back navigation).",
       "evidence": [
         "frontend-file-summaries.txt (frontend/index.html, frontend/public/manifest.webmanifest, frontend/public/sw.js, frontend/src/pwa/registerServiceWorker.ts)"
       ]
     },
     {
-      "description": "App-wide structural/UI additions: AppErrorBoundary integration, AppShell changes (safe-area padding, navigation, footer install section/attribution).",
-      "reason": "Not requested; scope creep beyond fixing save readiness errors and invoice print layout adjustments.",
+      "description": "Profile setup dialog change (use of showCloseButton prop).",
+      "reason": "Not requested by the BuildRequest requirements.",
       "evidence": [
-        "frontend-file-summaries.txt (frontend/src/App.tsx, frontend/src/components/AppShell.tsx)"
+        "frontend-file-summaries.txt (frontend/src/components/ProfileSetupDialog.tsx)"
       ]
     },
     {
-      "description": "Multiple responsive UI/table/editor redesigns and filtering features across invoices/customers/items pages (mobile card layouts, new filters, monthly summary prop fixes).",
-      "reason": "Not requested; the BuildRequest focuses on readiness errors for Customer/Settings saves and invoice print/detail field removals + banking details.",
+      "description": "Broad UI/feature enhancements unrelated to invoice print/address requirements (responsive tables, filters, additional error handling improvements).",
+      "reason": "Not requested by REQ-161..REQ-165 and may be outside the targeted high-priority changes.",
       "evidence": [
-        "frontend-file-summaries.txt (frontend/src/components/customers/CustomersTable.tsx, frontend/src/components/items/ItemsTable.tsx, frontend/src/pages/InvoicesPage.tsx, frontend/src/components/invoices/InvoiceLineItemsEditor.tsx, frontend/src/pages/InvoiceEditorPage.tsx)"
-      ]
-    },
-    {
-      "description": "Global styling changes including enhanced print CSS, touch improvements, OKLCH color system updates.",
-      "reason": "Not requested explicitly; may be beneficial but is not part of the stated requirements and constraints.",
-      "evidence": [
-        "frontend-file-summaries.txt (frontend/src/index.css)"
+        "frontend-file-summaries.txt (CustomersTable.tsx, ItemsTable.tsx, InvoicesPage.tsx, frontend/src/utils/userFacingError.ts)"
       ]
     }
   ],
   "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/customers/CustomerFormDialog.tsx",
-    "frontend/src/hooks/useBackendReady.ts",
+    "frontend/src/hooks/usePrintOnce.ts",
     "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
     "frontend/src/pages/InvoiceDetailPage.tsx",
+    "frontend/src/pages/InvoiceEditorPage.tsx",
     "frontend/src/pages/InvoicePrintPage.tsx",
-    "frontend/src/pages/SettingsPage.tsx",
     "project_state.json"
   ]
 }

@@ -55,6 +55,17 @@ export const InvoiceType = IDL.Variant({
   'transportation' : IDL.Null,
   'original' : IDL.Null,
 });
+export const AddressDetails = IDL.Record({
+  'city' : IDL.Text,
+  'name' : IDL.Text,
+  'contactPerson' : IDL.Text,
+  'state' : IDL.Text,
+  'addressLine1' : IDL.Text,
+  'addressLine2' : IDL.Opt(IDL.Text),
+  'gstin' : IDL.Opt(IDL.Text),
+  'pinCode' : IDL.Text,
+  'phoneNumber' : IDL.Opt(IDL.Text),
+});
 export const Invoice = IDL.Record({
   'id' : IDL.Nat,
   'status' : InvoiceStatus,
@@ -64,6 +75,8 @@ export const Invoice = IDL.Record({
   'invoiceNumber' : IDL.Text,
   'invoiceType' : InvoiceType,
   'customerId' : IDL.Nat,
+  'shipToOverride' : IDL.Opt(AddressDetails),
+  'billToOverride' : IDL.Opt(AddressDetails),
 });
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
@@ -283,6 +296,8 @@ export const idlService = IDL.Service({
         IDL.Vec(LineItem),
         IDL.Text,
         InvoiceType,
+        IDL.Opt(AddressDetails),
+        IDL.Opt(AddressDetails),
       ],
       [Invoice],
       [],
@@ -314,6 +329,8 @@ export const idlService = IDL.Service({
         InvoiceStatus,
         IDL.Text,
         InvoiceType,
+        IDL.Opt(AddressDetails),
+        IDL.Opt(AddressDetails),
       ],
       [],
       [],
@@ -422,6 +439,17 @@ export const idlFactory = ({ IDL }) => {
     'transportation' : IDL.Null,
     'original' : IDL.Null,
   });
+  const AddressDetails = IDL.Record({
+    'city' : IDL.Text,
+    'name' : IDL.Text,
+    'contactPerson' : IDL.Text,
+    'state' : IDL.Text,
+    'addressLine1' : IDL.Text,
+    'addressLine2' : IDL.Opt(IDL.Text),
+    'gstin' : IDL.Opt(IDL.Text),
+    'pinCode' : IDL.Text,
+    'phoneNumber' : IDL.Opt(IDL.Text),
+  });
   const Invoice = IDL.Record({
     'id' : IDL.Nat,
     'status' : InvoiceStatus,
@@ -431,6 +459,8 @@ export const idlFactory = ({ IDL }) => {
     'invoiceNumber' : IDL.Text,
     'invoiceType' : InvoiceType,
     'customerId' : IDL.Nat,
+    'shipToOverride' : IDL.Opt(AddressDetails),
+    'billToOverride' : IDL.Opt(AddressDetails),
   });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
@@ -648,6 +678,8 @@ export const idlFactory = ({ IDL }) => {
           IDL.Vec(LineItem),
           IDL.Text,
           InvoiceType,
+          IDL.Opt(AddressDetails),
+          IDL.Opt(AddressDetails),
         ],
         [Invoice],
         [],
@@ -679,6 +711,8 @@ export const idlFactory = ({ IDL }) => {
           InvoiceStatus,
           IDL.Text,
           InvoiceType,
+          IDL.Opt(AddressDetails),
+          IDL.Opt(AddressDetails),
         ],
         [],
         [],

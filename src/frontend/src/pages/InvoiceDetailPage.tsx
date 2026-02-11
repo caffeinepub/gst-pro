@@ -120,6 +120,15 @@ export default function InvoiceDetailPage() {
     businessProfile.bankingDetails.ifscCode &&
     businessProfile.bankingDetails.bankName;
 
+  // Get addresses with fallback to customer billing address
+  const billToAddress = invoice.billToOverride 
+    ? `${invoice.billToOverride.name}\n${invoice.billToOverride.addressLine1}${invoice.billToOverride.addressLine2 ? '\n' + invoice.billToOverride.addressLine2 : ''}\n${invoice.billToOverride.city}, ${invoice.billToOverride.state} - ${invoice.billToOverride.pinCode}\nContact: ${invoice.billToOverride.contactPerson}${invoice.billToOverride.phoneNumber ? '\nPhone: ' + invoice.billToOverride.phoneNumber : ''}${invoice.billToOverride.gstin ? '\nGSTIN: ' + invoice.billToOverride.gstin : ''}`
+    : customer.billingAddress;
+
+  const shipToAddress = invoice.shipToOverride
+    ? `${invoice.shipToOverride.name}\n${invoice.shipToOverride.addressLine1}${invoice.shipToOverride.addressLine2 ? '\n' + invoice.shipToOverride.addressLine2 : ''}\n${invoice.shipToOverride.city}, ${invoice.shipToOverride.state} - ${invoice.shipToOverride.pinCode}\nContact: ${invoice.shipToOverride.contactPerson}${invoice.shipToOverride.phoneNumber ? '\nPhone: ' + invoice.shipToOverride.phoneNumber : ''}${invoice.shipToOverride.gstin ? '\nGSTIN: ' + invoice.shipToOverride.gstin : ''}`
+    : customer.billingAddress;
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-5xl">
       {/* Header */}
@@ -130,7 +139,9 @@ export default function InvoiceDetailPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Invoice Details</h1>
-            <p className="text-muted-foreground mt-1">{getDisplayInvoiceNumber(invoice)}</p>
+            <p className="text-muted-foreground">
+              {getDisplayInvoiceNumber(invoice)} • {formatInvoiceDate(invoice.invoiceDate)}
+            </p>
           </div>
         </div>
         <InvoiceStatusBadge status={invoice.status} />
@@ -140,50 +151,40 @@ export default function InvoiceDetailPage() {
       <div className="flex flex-wrap gap-2 mb-6">
         {isDraft && (
           <>
-            <Button onClick={handleEdit} variant="outline">
-              <Edit className="mr-2 h-4 w-4" />
+            <Button onClick={handleEdit} variant="outline" className="gap-2">
+              <Edit className="h-4 w-4" />
               Edit
             </Button>
-            <Button onClick={handleFinalize} disabled={finalizeInvoice.isPending}>
-              {finalizeInvoice.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle className="mr-2 h-4 w-4" />
-              )}
+            <Button onClick={handleFinalize} className="gap-2">
+              <CheckCircle className="h-4 w-4" />
               Finalize
             </Button>
           </>
         )}
         {isFinalized && (
-          <Button onClick={() => setShowCancelDialog(true)} variant="outline" disabled={cancelInvoice.isPending}>
-            {cancelInvoice.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <XCircle className="mr-2 h-4 w-4" />
-            )}
-            Cancel Invoice
-          </Button>
+          <>
+            <Button onClick={() => setShowCancelDialog(true)} variant="outline" className="gap-2">
+              <XCircle className="h-4 w-4" />
+              Cancel Invoice
+            </Button>
+          </>
         )}
-        <Button onClick={handlePrint} variant="outline">
-          <Printer className="mr-2 h-4 w-4" />
+        <Button onClick={handlePrint} variant="outline" className="gap-2">
+          <Printer className="h-4 w-4" />
           Print
         </Button>
         <Button
           onClick={() => setShowDeleteDialog(true)}
           variant="destructive"
-          disabled={deleteInvoice.isPending}
+          className="gap-2"
         >
-          {deleteInvoice.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Trash2 className="mr-2 h-4 w-4" />
-          )}
+          <Trash2 className="h-4 w-4" />
           Delete
         </Button>
       </div>
 
-      {/* Invoice Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      {/* Invoice Details */}
+      <div className="grid gap-6 md:grid-cols-2 mb-6">
         <Card>
           <CardHeader>
             <CardTitle>Invoice Information</CardTitle>
@@ -194,12 +195,14 @@ export default function InvoiceDetailPage() {
               <p className="font-medium">{getDisplayInvoiceNumber(invoice)}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Invoice Date</p>
-              <p className="font-medium">{formatInvoiceDate(invoice.invoiceDate)}</p>
+              <p className="text-sm text-muted-foreground">Invoice Type</p>
+              <p className="font-medium">
+                {invoice.invoiceType === 'original' ? 'Original Invoice' : 'Transportation Invoice'}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Invoice Type</p>
-              <p className="font-medium capitalize">{invoice.invoiceType}</p>
+              <p className="text-sm text-muted-foreground">Invoice Date</p>
+              <p className="font-medium">{formatInvoiceDate(invoice.invoiceDate)}</p>
             </div>
             {invoice.purchaseOrderNumber && (
               <div>
@@ -212,16 +215,20 @@ export default function InvoiceDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Customer Information</CardTitle>
+            <CardTitle>Customer Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div>
-              <p className="text-sm text-muted-foreground">Name</p>
+              <p className="text-sm text-muted-foreground">Customer Name</p>
               <p className="font-medium">{customer.name}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Billing Address</p>
-              <p className="font-medium whitespace-pre-line">{customer.billingAddress}</p>
+              <p className="text-sm text-muted-foreground">Bill To Address</p>
+              <p className="font-medium whitespace-pre-line text-sm">{billToAddress}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Ship To Address</p>
+              <p className="font-medium whitespace-pre-line text-sm">{shipToAddress}</p>
             </div>
             {customer.gstin && (
               <div>
@@ -229,10 +236,6 @@ export default function InvoiceDetailPage() {
                 <p className="font-medium">{customer.gstin}</p>
               </div>
             )}
-            <div>
-              <p className="text-sm text-muted-foreground">State</p>
-              <p className="font-medium">{customer.state}</p>
-            </div>
           </CardContent>
         </Card>
       </div>
@@ -248,71 +251,84 @@ export default function InvoiceDetailPage() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 px-2">Item</th>
-                  <th className="text-right py-2 px-2">Quantity</th>
+                  <th className="text-right py-2 px-2">Qty</th>
                   <th className="text-right py-2 px-2">Rate</th>
-                  <th className="text-right py-2 px-2">Discount</th>
-                  <th className="text-right py-2 px-2">GST Rate</th>
+                  <th className="text-right py-2 px-2">Disc%</th>
                   <th className="text-right py-2 px-2">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.lineItems.map((lineItem, index) => {
                   const item = itemsMap.get(lineItem.itemId.toString());
-                  const quantity = lineItem.quantity;
-                  const rate = lineItem.unitPrice;
-                  const discount = lineItem.discount || 0;
-                  const discountAmount = (rate * quantity * discount) / 100;
-                  const taxableValue = rate * quantity - discountAmount;
-                  const gstRate = item?.defaultGstRate || 0;
-                  const gstAmount = (taxableValue * gstRate) / 100;
-                  const amount = taxableValue + gstAmount;
-
+                  const amount = lineItem.quantity * lineItem.unitPrice * (1 - (lineItem.discount || 0) / 100);
                   return (
                     <tr key={index} className="border-b">
-                      <td className="py-2 px-2">
-                        <p className="font-medium">{item?.name || 'Unknown Item'}</p>
-                        {item?.hsnSac && <p className="text-sm text-muted-foreground">HSN/SAC: {item.hsnSac}</p>}
-                      </td>
-                      <td className="text-right py-2 px-2">{quantity.toFixed(2)}</td>
-                      <td className="text-right py-2 px-2">₹{rate.toFixed(2)}</td>
-                      <td className="text-right py-2 px-2">{discount.toFixed(2)}%</td>
-                      <td className="text-right py-2 px-2">{gstRate.toFixed(2)}%</td>
-                      <td className="text-right py-2 px-2 font-medium">₹{amount.toFixed(2)}</td>
+                      <td className="py-2 px-2">{item?.name || 'Unknown Item'}</td>
+                      <td className="text-right py-2 px-2">{lineItem.quantity}</td>
+                      <td className="text-right py-2 px-2">₹{lineItem.unitPrice.toFixed(2)}</td>
+                      <td className="text-right py-2 px-2">{(lineItem.discount || 0).toFixed(2)}%</td>
+                      <td className="text-right py-2 px-2">₹{amount.toFixed(2)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
+        </CardContent>
+      </Card>
 
-          <Separator className="my-4" />
-
-          <div className="space-y-2">
+      {/* Totals */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Invoice Totals</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span>₹{totals.subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Discount</span>
+            <span>₹{totals.totalDiscount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Taxable Amount</span>
+            <span>₹{totals.taxableAmount.toFixed(2)}</span>
+          </div>
+          <Separator />
+          {totals.isInterState ? (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Taxable Amount:</span>
-              <span className="font-medium">₹{totals.taxableAmount.toFixed(2)}</span>
+              <span className="text-muted-foreground">IGST</span>
+              <span>₹{totals.igst.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">GST Amount:</span>
-              <span className="font-medium">₹{(totals.cgst + totals.sgst + totals.igst).toFixed(2)}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total Amount:</span>
-              <span>₹{totals.grandTotal.toFixed(2)}</span>
-            </div>
+          ) : (
+            <>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">CGST</span>
+                <span>₹{totals.cgst.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">SGST</span>
+                <span>₹{totals.sgst.toFixed(2)}</span>
+              </div>
+            </>
+          )}
+          <Separator />
+          <div className="flex justify-between text-lg font-bold">
+            <span>Grand Total</span>
+            <span>₹{totals.grandTotal.toFixed(2)}</span>
           </div>
         </CardContent>
       </Card>
 
       {/* Banking Details (conditional) */}
       {hasBankingDetails && (
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <CardTitle>Banking Details</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Account Name</p>
                 <p className="font-medium">{businessProfile.bankingDetails!.accountName}</p>
@@ -364,14 +380,12 @@ export default function InvoiceDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel Invoice</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel this invoice? Cancelled invoices cannot be edited or finalized again.
+              Are you sure you want to cancel this invoice? This will mark it as cancelled.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>No, Keep Invoice</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancel} className="bg-destructive text-destructive-foreground">
-              Yes, Cancel Invoice
-            </AlertDialogAction>
+            <AlertDialogCancel>No, Keep It</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancel}>Yes, Cancel Invoice</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
